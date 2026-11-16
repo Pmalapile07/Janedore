@@ -212,7 +212,12 @@
 #page-product-detail .price-original,
 #page-product-detail .price-sale,
 #page-product-detail .app-product-sale-price,
-#page-product-detail .sale {
+#page-product-detail .sale,
+#page-product-detail .product-price,
+#page-product-detail .product-price-row,
+#page-product-detail .product-price-stack,
+#page-product-detail .product-price-original,
+#page-product-detail .product-home-price {
   display: none !important;
 }
 
