@@ -477,10 +477,10 @@ function appRenderProductOptions(product, variantIndex) {
   const sizeHtml = sizes.length ? '<div class="app-product-sizes"><div class="app-product-option-label">Select a size</div><div class="app-product-size-list">' +
     sizes.map(size => {
       const available = appProductSizeStock(product, variantIndex, size) > 0;
-      return '<button type="button" class="app-product-size-button' + (appSelectedSize === size ? ' selected' : '') + (!available ? ' out-of-stock' : '') + '" data-app-size="' + appProductEscape(size) + '"' + (!available && !product.waitlist ? ' disabled aria-disabled="true"' : '') + ' aria-label="' + appProductEscape(size + (!available ? ', sold out' : '')) + '">' + appProductEscape(size) + '</button>';
+      return '<button type="button" class="app-product-size-button' + (appSelectedSize === size ? ' selected' : '') + (!available ? ' out-of-stock' : '') + '" data-app-size="' + appProductEscape(size) + '"' + (!available ? ' disabled aria-disabled="true"' : '') + ' aria-label="' + appProductEscape(size + (!available ? ', sold out' : '')) + '">' + appProductEscape(size) + '</button>';
     }).join('') + '</div></div>' : '';
   const variants = Array.isArray(product.variants) ? product.variants : [];
-  const colourHtml = variants.length > 1 ? '<div class="app-product-colours"><div class="app-product-option-label">Select a colour</div><div class="app-product-colour-list">' +
+  const colourHtml = variants.length ? '<div class="app-product-colours"><div class="app-product-option-label">Select a colour</div><div class="app-product-colour-list">' +
     variants.map((variant, index) => {
       const imgs = variant.images || {};
       const thumb = variant.swatchImage || [imgs.ghost,imgs.model,imgs.detail].map(list => Array.isArray(list) ? list[0] : '').find(Boolean) || '';
@@ -555,9 +555,8 @@ function appUpdateProductStickyState() {
   const noAvailableSize = hasSizes && !(p.sizes || []).filter(s => s !== 'OS').some(s => appProductSizeStock(p, appSelectedVariant, s) > 0);
   const soldOut = Number(p.stock) <= 0 || noAvailableSize || (!hasSizes && selectedStock <= 0);
   const needsSize = hasSizes && !appSelectedSize && !soldOut;
-  const waitlist = !!p.waitlist && (soldOut || (hasSizes && !!appSelectedSize && selectedStock <= 0));
-  if (button) button.disabled = !waitlist && (soldOut || needsSize || (hasSizes && selectedStock <= 0));
-  if (label) label.textContent = waitlist ? 'Add to waitlist' : (soldOut || (hasSizes && selectedStock <= 0) ? 'Sold out' : (needsSize ? 'Select a size' : 'Add to bag'));
+  if (button) button.disabled = soldOut || needsSize || (hasSizes && selectedStock <= 0);
+  if (label) label.textContent = soldOut || (hasSizes && selectedStock <= 0) ? 'Sold out' : (needsSize ? 'Select a size' : 'Add to bag');
 }
 function appProductCartItems() {
   try { return JSON.parse(localStorage.getItem('janedore_cart') || '[]'); } catch (_) { return []; }
