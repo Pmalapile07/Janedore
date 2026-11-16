@@ -606,6 +606,8 @@ async function appOpenProduct(productId, pushHistory = true) {
   const stockEl = document.getElementById('app-product-stock');
   stockEl.textContent = Number.isFinite(stock) && stock <= 0 ? 'Sold out' : (String(product.badge || '').toLowerCase() === 'pre-order' ? 'Available for pre-order' : '');
   document.getElementById('app-product-qty').textContent = '1';
+  document.getElementById('app-product-qty-minus').disabled = true;
+  document.getElementById('app-product-qty-plus').disabled = !(Number.isFinite(stock) && stock > 1);
   document.getElementById('app-product-description').innerHTML = appProductEscape(product.description || 'No description available.').replace(/\n/g,'<br>') +
     (product.compositionCare ? '<p><strong>Composition &amp; care</strong><br>' + appProductEscape(product.compositionCare).replace(/\n/g,'<br>') + '</p>' : '') +
     (product.measurements ? '<p><strong>Measurements</strong><br>' + appProductEscape(product.measurements).replace(/\n/g,'<br>') + '</p>' : '');
@@ -668,14 +670,21 @@ document.getElementById('app-product-share').addEventListener('click', async () 
   if (navigator.share) { try { await navigator.share(data); } catch (error) { if (error.name !== 'AbortError') console.warn(error); } }
   else { try { await navigator.clipboard.writeText(url); alert('Product link copied.'); } catch (_) { window.prompt('Copy this product link:',url); } }
 });
+function appUpdateQuantityControls() {
+  const stock = Number(appCurrentProduct && appCurrentProduct.stock);
+  const max = Number.isFinite(stock) && stock > 0 ? stock : 99;
+  document.getElementById('app-product-qty').textContent = String(appProductQuantity);
+  document.getElementById('app-product-qty-minus').disabled = appProductQuantity <= 1;
+  document.getElementById('app-product-qty-plus').disabled = appProductQuantity >= max;
+}
 document.getElementById('app-product-qty-minus').addEventListener('click', () => {
   appProductQuantity = Math.max(1,appProductQuantity-1);
-  document.getElementById('app-product-qty').textContent = String(appProductQuantity);
+  appUpdateQuantityControls();
 });
 document.getElementById('app-product-qty-plus').addEventListener('click', () => {
   const stock = Number(appCurrentProduct && appCurrentProduct.stock);
   appProductQuantity = Math.min(Number.isFinite(stock) && stock > 0 ? stock : 99,appProductQuantity+1);
-  document.getElementById('app-product-qty').textContent = String(appProductQuantity);
+  appUpdateQuantityControls();
 });
 function appAddCurrentProductToBag() {
 
