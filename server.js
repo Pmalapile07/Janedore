@@ -3712,7 +3712,12 @@ app.get('/api/app-new-in', async (req, res) => {
         salePrice: product.salePrice == null || product.salePrice === '' ? null : Number(product.salePrice),
         stock: Number(product.stock) || 0,
         badge: String(product.badge || ''),
-        imageUrl: adminImageURL(image, 700)
+        imageUrl: adminImageURL(image, 700),
+        // Include option data in the same first response as the product card,
+        // so the app can render sizes, colours and availability immediately.
+        sizes: Array.isArray(product.sizes) ? product.sizes : [],
+        stockByVariant: product.stockByVariant && typeof product.stockByVariant === 'object' ? product.stockByVariant : {},
+        variants: Array.isArray(product.variants) ? product.variants : []
       };
     }).filter(product => product.name) });
   } catch (error) {
