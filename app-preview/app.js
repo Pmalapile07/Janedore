@@ -110,8 +110,8 @@ fetch('/api/app-homepage', { headers: { Accept: 'application/json' } })
       const welcomeImageUrl = String(content.heroImageUrl);
       const welcomeImagePreload = new Image();
       welcomeImagePreload.onload = () => {
-        const backgroundValue = 'url("' + welcomeImageUrl.replace(/["\\\\]/g, '\\\\    const welcomeImage = document.getElementById('app-welcome-image');
-    if (welcomeImage && content.heroImageUrl) welcomeImage.src = content.heroImageUrl;') + '")';
+        const safeWelcomeImageUrl = welcomeImageUrl.replace(/["\\]/g, '');
+        const backgroundValue = 'url("' + safeWelcomeImageUrl + '")';
         document.documentElement.style.setProperty('--app-welcome-background', backgroundValue);
         if (welcomeScreen) welcomeScreen.style.backgroundImage = backgroundValue;
         welcomeImage.src = welcomeImageUrl;
