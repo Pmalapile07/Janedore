@@ -648,40 +648,9 @@ async function renderProductPage(product) {
   // old thumbnail strip entirely.
   const imageBarsHtml = `<div class="swipe-bars" id="product-image-bars">${images.map((u,i)=>`<div class="swipe-bar${i===imageStart?' active':''}" onclick="switchMainImage(${i})"></div>`).join('')}</div>`;
 
-  const titleCaseBreadcrumb = value => String(value || '').replace(/[-_]+/g, ' ').trim().toLowerCase().replace(/(^|\\s)\\S/g, letter => letter.toUpperCase());
-  const productCollectionValues = (Array.isArray(product.collections) ? product.collections : String(product.collections || '').split(','))
-    .map(value => String(value || '').trim().toLowerCase()).filter(Boolean);
-  const publishedCollections = typeof window._loadPublishedCollections === 'function'
-    ? await window._loadPublishedCollections()
-    : (window._publishedCollections || []);
-  const productCollection = publishedCollections.find(collection => {
-    const handle = String(collection.handle || collection.slug || collection.id || '').trim().toLowerCase();
-    const title = String(collection.title || collection.name || '').trim().toLowerCase();
-    return productCollectionValues.some(value => value === handle || value === title);
-  });
-  const collectionHandle = productCollection && (productCollection.handle || productCollection.slug || productCollection.id);
-  const collectionLabel = titleCaseBreadcrumb(productCollection && (productCollection.title || productCollection.name || collectionHandle));
-  const breadcrumbSeparator = '<span class="page-breadcrumb-sep" aria-hidden="true"> / </span>';
-  // Home / Department / Category / Product, from the category tree
-  // (taxonomy.js). A product saved straight to a department shows just
-  // that; one with no known category falls back to its collection.
-  const crumb = (slug, label) => `${breadcrumbSeparator}<span class="page-breadcrumb-link" onclick="navigateToCategory('${escapeJSString(slug)}')">${escapeHTML(label)}</span>`;
-  const deptSlug = window.JDTaxonomy ? JDTaxonomy.departmentOf(product.category) : null;
-  const categoryCrumbs = deptSlug
-    ? crumb(deptSlug, JDTaxonomy.label(deptSlug)) + (product.category !== deptSlug ? crumb(product.category, JDTaxonomy.label(product.category)) : '')
-    : '';
-  const breadcrumbHtml = `<div class="product-breadcrumb-bar">
-    <button class="product-breadcrumb-back" type="button" onclick="goBackFromProduct()" aria-label="Go back"><i class="ph ph-arrow-left"></i></button>
-    <nav class="page-breadcrumb" aria-label="Breadcrumb">
-      <span class="page-breadcrumb-link" onclick="navigateTo('home')">Home</span>
-      ${categoryCrumbs || (productCollection && collectionHandle ? `${breadcrumbSeparator}<span class="page-breadcrumb-link" onclick="navigateToCollection('${escapeJSString(collectionHandle)}')">${escapeHTML(collectionLabel)}</span>` : '')}
-      ${breadcrumbSeparator}<span class="page-breadcrumb-current">${escapeHTML(titleCaseBreadcrumb(product.name || ''))}</span>
-    </nav>
-    <button class="product-breadcrumb-share" type="button" onclick="shareCurrentProduct('${escapeJSString(product.id)}')" aria-label="Share product"><i class="ph ph-share-network"></i></button>
-  </div>`;
+
 
   DOM.productDetail.innerHTML=`
-    ${breadcrumbHtml}
     <div class="product-slider" id="product-slider">
       <div class="product-main-image" id="product-main-image" style="background-image:url('${images[imageStart]}');">
         ${productBadges.length?`<div class="product-badge-detail-stack">${productBadges.map(b=>`<span class="product-badge-detail ${badgeClass(b)}">${escapeHTML(b)}</span>`).join('')}</div>`:''}
@@ -739,9 +708,7 @@ async function renderProductPage(product) {
     <div style="max-width:720px;margin:0 auto;padding:0 0 32px;">
       ${suggestedSection}${shopByBrandSection}${relatedSection}
     </div>
-    <footer id="product-footer"></footer>`;
-  buildFooter("product-footer");
-  if (typeof renderVendorsFooter === 'function') renderVendorsFooter(S.vendors || []);
+`;
   ensureNavScrolled();
   if (typeof createStickyBar === 'function') createStickyBar(product);
   updateAddToCartState();
