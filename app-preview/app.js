@@ -106,7 +106,22 @@ fetch('/api/app-homepage', { headers: { Accept: 'application/json' } })
     const image = document.getElementById('app-home-hero-image');
     if (image && content.heroImageUrl) image.src = content.heroImageUrl;
     const welcomeImage = document.getElementById('app-welcome-image');
-    if (welcomeImage && content.heroImageUrl) welcomeImage.src = content.heroImageUrl;
+    if (welcomeImage && content.heroImageUrl) {
+      const welcomeImageUrl = String(content.heroImageUrl);
+      const welcomeImagePreload = new Image();
+      welcomeImagePreload.onload = () => {
+        const backgroundValue = 'url("' + welcomeImageUrl.replace(/["\\\\]/g, '\\\\    const welcomeImage = document.getElementById('app-welcome-image');
+    if (welcomeImage && content.heroImageUrl) welcomeImage.src = content.heroImageUrl;') + '")';
+        document.documentElement.style.setProperty('--app-welcome-background', backgroundValue);
+        if (welcomeScreen) welcomeScreen.style.backgroundImage = backgroundValue;
+        welcomeImage.src = welcomeImageUrl;
+        try { localStorage.setItem('janedore_app_welcome_image', welcomeImageUrl); } catch (_) {}
+      };
+      welcomeImagePreload.onerror = () => {
+        // Keep the last successfully cached welcome image if the new image fails.
+      };
+      welcomeImagePreload.src = welcomeImageUrl;
+    }
 
     // Use the exact heading and CTA configured for the main website hero.
     const heroHeading = document.getElementById('app-home-hero-heading');
