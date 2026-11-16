@@ -607,7 +607,7 @@ async function appOpenProduct(productId, pushHistory = true) {
   stockEl.textContent = Number.isFinite(stock) && stock <= 0 ? 'Sold out' : (String(product.badge || '').toLowerCase() === 'pre-order' ? 'Available for pre-order' : '');
   document.getElementById('app-product-qty').textContent = '1';
   document.getElementById('app-product-qty-minus').disabled = true;
-  document.getElementById('app-product-qty-plus').disabled = !(Number.isFinite(stock) && stock > 1);
+  document.getElementById('app-product-qty-plus').disabled = Number.isFinite(stock) && stock > 0 && stock <= 1;
   document.getElementById('app-product-description').innerHTML = appProductEscape(product.description || 'No description available.').replace(/\n/g,'<br>') +
     (product.compositionCare ? '<p><strong>Composition &amp; care</strong><br>' + appProductEscape(product.compositionCare).replace(/\n/g,'<br>') + '</p>' : '') +
     (product.measurements ? '<p><strong>Measurements</strong><br>' + appProductEscape(product.measurements).replace(/\n/g,'<br>') + '</p>' : '');
