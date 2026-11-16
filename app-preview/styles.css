@@ -188,7 +188,7 @@ body.app-product-open{overflow-x:hidden}
 .app-product-gallery-slide{flex:0 0 100%;width:100%;aspect-ratio:4/5;scroll-snap-align:start;background:#f4f4f4}
 .app-product-gallery-slide img{display:block;width:100%;height:100%;object-fit:cover}
 .app-product-gallery-empty,.app-product-gallery-loading{background:#f0f0f0}
-.app-product-image-actions{position:relative;z-index:3;width:100%;min-height:58px;padding:8px 14px;display:flex;align-items:center;justify-content:space-between;background:#fff;pointer-events:auto}
+.app-product-image-actions{position:relative;z-index:3;width:100%;min-height:calc(58px + env(safe-area-inset-top));padding:calc(8px + env(safe-area-inset-top)) 14px 8px;display:flex;align-items:center;justify-content:space-between;background:#fff;pointer-events:auto}
 .app-product-right-actions{display:flex;align-items:center;gap:8px;margin-left:auto;pointer-events:auto}
 .app-product-icon-button{position:relative;width:42px;height:42px;border:0;border-radius:50%;background:rgba(255,255,255,.88);color:#111;display:flex;align-items:center;justify-content:center;padding:0;pointer-events:auto;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
 .app-product-icon-button i{font-size:20px;line-height:1}
