@@ -208,7 +208,9 @@
    scoped to the product information area so the sticky bar price remains visible. */
 .product-info .price-current,
 .product-info .price-original,
-.product-info .price-sale {
+.product-info .price-sale,
+.product-info .app-product-sale-price,
+.product-info .sale {
   display: none !important;
 }
 
