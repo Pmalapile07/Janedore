@@ -204,13 +204,15 @@
   font-weight: 700;
 }
 
-/* Product detail prices belong in the sticky Add to Bag bar only. Keep this
-   scoped to the product information area so the sticky bar price remains visible. */
-.product-info .price-current,
-.product-info .price-original,
-.product-info .price-sale,
-.product-info .app-product-sale-price,
-.product-info .sale {
+/* Match the website product page: no standalone product price here.
+   The price belongs only in the sticky Add to Bag bar. Scope to the product
+   page root because the app's sale-price elements are not always inside
+   .product-info. The image's .product-badge-detail.badge-sale stays visible. */
+#page-product-detail .price-current,
+#page-product-detail .price-original,
+#page-product-detail .price-sale,
+#page-product-detail .app-product-sale-price,
+#page-product-detail .sale {
   display: none !important;
 }
 
