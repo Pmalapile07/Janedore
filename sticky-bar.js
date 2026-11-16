@@ -32,7 +32,6 @@ function createStickyBar(product) {
  const isWished = S.wishlist.some(w => w.id === product.id);
  bar.innerHTML = `
    <div class="sticky-top-row">
-     <div class="sticky-price">${stickyPriceHtml(product)}</div>
      <button class="sticky-wish-btn${isWished ? ' wished' : ''}" type="button" data-wish-id="${escapeHTML(product.id)}" onclick="toggleWish('${product.id}',this)" aria-label="Add to wishlist">${heartIconHtml(isWished)}</button>
    </div>
    <button class="sticky-add-btn" id="sticky-add-btn"
