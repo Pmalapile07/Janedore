@@ -3,6 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <script>
+    // Reuse the last homepage hero immediately as the welcome-screen background.
+    try {
+      const cachedWelcomeImage = localStorage.getItem('janedore_app_welcome_image');
+      if (cachedWelcomeImage && /^https?:\\/\\//i.test(cachedWelcomeImage)) {
+        document.documentElement.style.setProperty('--app-welcome-background', 'url("' + cachedWelcomeImage.replace(/["\\\\\\n\\r]/g, '') + '")');
+      }
+    } catch (_) {}
+  </script>
   <meta name="theme-color" content="#ffffff">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="JANEDORE">
