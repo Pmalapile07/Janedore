@@ -204,6 +204,14 @@
   font-weight: 700;
 }
 
+/* Product detail prices belong in the sticky Add to Bag bar only. Keep this
+   scoped to the product information area so the sticky bar price remains visible. */
+.product-info .price-current,
+.product-info .price-original,
+.product-info .price-sale {
+  display: none !important;
+}
+
 .product-size-color-group {
   display: flex;
   flex-direction: column;
