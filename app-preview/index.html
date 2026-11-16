@@ -7,8 +7,9 @@
     // Reuse the last homepage hero immediately as the welcome-screen background.
     try {
       const cachedWelcomeImage = localStorage.getItem('janedore_app_welcome_image');
-      if (cachedWelcomeImage && /^https?:\\/\\//i.test(cachedWelcomeImage)) {
-        document.documentElement.style.setProperty('--app-welcome-background', 'url("' + cachedWelcomeImage.replace(/["\\\\\\n\\r]/g, '') + '")');
+      if (cachedWelcomeImage && (cachedWelcomeImage.startsWith('https://') || cachedWelcomeImage.startsWith('http://'))) {
+        const safeCachedImage = cachedWelcomeImage.replace(/["\\]/g, '');
+        document.documentElement.style.setProperty('--app-welcome-background', 'url("' + safeCachedImage + '")');
       }
     } catch (_) {}
   </script>
