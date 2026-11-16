@@ -191,7 +191,7 @@ body.app-product-open{overflow-x:hidden}
 .app-product-image-actions{position:relative;z-index:3;width:100%;min-height:calc(58px + env(safe-area-inset-top));padding:calc(8px + env(safe-area-inset-top)) 14px 8px;display:flex;align-items:center;justify-content:space-between;background:#fff;pointer-events:auto}
 .app-product-right-actions{display:flex;align-items:center;gap:2px;margin-left:auto;pointer-events:auto}
 .app-product-icon-button{position:relative;width:42px;height:42px;border:0;border-radius:50%;background:rgba(255,255,255,.88);color:#111;display:flex;align-items:center;justify-content:center;padding:0;pointer-events:auto;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
-.app-product-icon-button i{font-size:20px;line-height:1}
+.app-product-icon-button i{font-size:17px;line-height:1}
 .app-product-cart-count{position:absolute;top:-3px;right:-3px;min-width:17px;height:17px;padding:0 4px;border-radius:20px;background:#111;color:#fff;font:600 9px/17px Inter,Arial,sans-serif;text-align:center}
 .app-product-cart-count[hidden]{display:none}
 .app-product-gallery-dots{position:absolute;bottom:13px;left:0;right:0;display:flex;justify-content:center;gap:5px;pointer-events:none}
@@ -248,7 +248,7 @@ body.app-product-open{overflow-x:hidden}
 
 /* App product detail: show the price only in the sticky Add to Bag bar. */
 .app-product-price{display:none!important}
-.app-product-icon-button i{font-size:20px;line-height:1}
+.app-product-icon-button i{font-size:17px;line-height:1}
 
 /* App product options mirror the live website's size and colour controls. */
 .app-product-options{display:flex;flex-direction:column;gap:22px;padding-top:20px}
