@@ -425,7 +425,7 @@ const appProductReviewsCache = new Map();
 let appRenderedProductId = '';
 let appCurrentProduct = null;
 let appProductQuantity = 1;
-let appSelectedSize = '';
+
 let appSelectedVariant = 0;
 let appGalleryImages = [];
 
@@ -582,7 +582,6 @@ async function appOpenProduct(productId, pushHistory = true) {
   appCurrentProduct = product;
   appRenderedProductId = id;
   appProductQuantity = 1;
-  appSelectedSize = '';
   appSelectedVariant = 0;
   const images = appProductImages(product);
   appGalleryImages = images.length ? images : [];
@@ -606,13 +605,6 @@ async function appOpenProduct(productId, pushHistory = true) {
   const stock = Number(product.stock);
   const stockEl = document.getElementById('app-product-stock');
   stockEl.textContent = Number.isFinite(stock) && stock <= 0 ? 'Sold out' : (String(product.badge || '').toLowerCase() === 'pre-order' ? 'Available for pre-order' : '');
-  const sizes = (Array.isArray(product.sizes) ? product.sizes : []).filter(size => String(size).toUpperCase() !== 'OS');
-  const sizeGroup = document.getElementById('app-product-size-group');
-  sizeGroup.hidden = !sizes.length;
-  document.getElementById('app-product-sizes').innerHTML = sizes.map(size => '<button class="app-product-option" type="button" data-size="' + appProductEscape(size) + '">' + appProductEscape(size) + '</button>').join('');
-  const variants = Array.isArray(product.variants) ? product.variants : [];
-  document.getElementById('app-product-variant-group').hidden = !variants.length;
-  document.getElementById('app-product-variants').innerHTML = variants.map((variant,index) => '<button class="app-product-option' + (index===0?' selected':'') + '" type="button" data-variant="' + index + '">' + appProductEscape(variant.color || variant.colour || variant.name || ('Option ' + (index+1))) + '</button>').join('');
   document.getElementById('app-product-qty').textContent = '1';
   document.getElementById('app-product-description').innerHTML = appProductEscape(product.description || 'No description available.').replace(/\n/g,'<br>') +
     (product.compositionCare ? '<p><strong>Composition &amp; care</strong><br>' + appProductEscape(product.compositionCare).replace(/\n/g,'<br>') + '</p>' : '') +
@@ -659,16 +651,6 @@ document.addEventListener('click', event => {
     appOpenProduct(card.dataset.productId);
     return;
   }
-  const sizeButton = event.target.closest('[data-size]');
-  if (sizeButton && appProductView && !appProductView.hidden) {
-    appSelectedSize = sizeButton.dataset.size;
-    document.querySelectorAll('#app-product-sizes [data-size]').forEach(button => button.classList.toggle('selected',button===sizeButton));
-  }
-  const variantButton = event.target.closest('[data-variant]');
-  if (variantButton && appProductView && !appProductView.hidden) {
-    appSelectedVariant = Number(variantButton.dataset.variant);
-    document.querySelectorAll('#app-product-variants [data-variant]').forEach(button => button.classList.toggle('selected',button===variantButton));
-  }
 });
 document.addEventListener('keydown', event => {
   const card = event.target.closest && event.target.closest('.app-new-in-card[data-product-id], .app-product-related-card[data-product-id]');
@@ -698,10 +680,8 @@ document.getElementById('app-product-qty-plus').addEventListener('click', () => 
 function appAddCurrentProductToBag() {
 
   if (!appCurrentProduct) return;
-  const sizes = Array.isArray(appCurrentProduct.sizes) ? appCurrentProduct.sizes.filter(size => String(size).toUpperCase() !== 'OS') : [];
-  if (sizes.length && !appSelectedSize) { alert('Please select a size first.'); return; }
   const items = appProductCartItems();
-  const resolvedSize = appSelectedSize || (Array.isArray(appCurrentProduct.sizes) && appCurrentProduct.sizes[0]) || 'OS';
+  const resolvedSize = 'OS';
   const existing = items.find(item => item.productId === appCurrentProduct.id && item.size === resolvedSize && Number(item.variantIndex || 0) === appSelectedVariant);
   if (existing) existing.qty = (Number(existing.qty) || 0) + appProductQuantity;
   else {
