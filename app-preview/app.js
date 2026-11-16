@@ -606,6 +606,37 @@ async function appOpenProduct(productId, pushHistory = true) {
   appShowProductView();
   if (pushHistory) history.pushState({appProductId:id}, '', '#product/' + encodeURIComponent(id));
   window.scrollTo({top:0,behavior:'instant'});
+  // Paint the product card's already-loaded image and details immediately.
+  // The full Firestore document is hydrated in the background below.
+  if (product && appRenderedProductId !== id) {
+    appCurrentProduct = product;
+    appProductQuantity = 1;
+    appSelectedVariant = 0;
+    appSelectedSize = null;
+    const previewGallery = appProductGallery(product);
+    appGalleryImages = previewGallery.images;
+    appGalleryOwners = previewGallery.owners;
+    const previewTrack = document.getElementById('app-product-gallery-track');
+    previewTrack.innerHTML = appGalleryImages.length
+      ? appGalleryImages.map((url,index) => '<div class="app-product-gallery-slide"><img src="' + appProductEscape(url) + '" alt="' + appProductEscape(product.name || product.title || 'Product image') + '" loading="' + (index ? 'lazy' : 'eager') + '"></div>').join('')
+      : '<div class="app-product-gallery-slide app-product-gallery-empty"></div>';
+    const previewDots = document.getElementById('app-product-gallery-dots');
+    previewDots.innerHTML = appGalleryImages.length > 1 ? appGalleryImages.map((_,i) => '<span class="app-product-gallery-dot' + (!i?' active':'') + '"></span>').join('') : '';
+    document.getElementById('app-product-brand').textContent = product.brand || product.vendorName || '';
+    document.getElementById('app-product-name').textContent = product.name || product.title || '';
+    const previewPrice = Number(product.price) || 0;
+    const previewSale = Number(product.salePrice);
+    document.getElementById('app-product-price').innerHTML = Number.isFinite(previewSale) && previewSale > 0 && previewSale < previewPrice
+      ? '<span class="app-product-sale-price">' + appProductMoney(previewSale) + '</span><s>' + appProductMoney(previewPrice) + '</s>'
+      : appProductMoney(previewPrice);
+    document.getElementById('app-product-description').innerHTML = appProductEscape(product.description || 'No description available.').replace(/\\n/g,'<br>');
+    document.getElementById('app-product-shipping').textContent = product.shippingReturns || 'Please see the delivery and returns information at checkout.';
+    appRenderProductOptions(product, 0);
+    document.getElementById('app-product-qty').textContent = '1';
+    document.getElementById('app-product-qty-minus').disabled = true;
+    appRenderProductStickyBar(product, previewPrice, previewSale);
+    appUpdateProductStickyState();
+  }
   // Reopening the same product restores its rendered page immediately.
   // appShowProductView hides the sticky bar while switching views, so restore
   // it before returning to the already-rendered product.
@@ -618,7 +649,9 @@ async function appOpenProduct(productId, pushHistory = true) {
   // List APIs can return abbreviated records. Always hydrate the product
   // detail from Firestore so Admin-managed sizes, stockByVariant and image
   // groups are present before rendering the app product page.
-  appProductShowLoading();
+  // Do not replace the opening screen with a "Loading product" message.
+  // A cached product is already visible; uncached products retain the page
+  // shell until the detail document arrives.
   try {
     let load = appProductLoads.get(id);
     if (!load) {
