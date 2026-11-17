@@ -394,3 +394,80 @@ body.app-cart-open .bottom-nav{display:grid!important;grid-template-columns:repe
 .app-cart-recent-sale{color:#111}
 
 .app-checkout-steps[hidden]{display:none!important}
+
+
+/* Website-matched product review UI inside the app. */
+/* Product reviews — content inside the existing Reviews accordion only. */
+.product-reviews-summary { display:grid; grid-template-columns:minmax(105px,.8fr) minmax(0,1.2fr); gap:18px; align-items:center; padding:4px 0 20px; border-bottom:1px solid #eee; margin-bottom:18px; }
+.product-reviews-average { display:flex; flex-direction:column; align-items:flex-start; gap:5px; }
+.product-reviews-average > strong { font-size:34px; line-height:1; font-weight:500; letter-spacing:-.04em; }
+.product-reviews-average > p { font-size:11px !important; color:#777 !important; letter-spacing:0 !important; }
+.product-reviews-average .product-review-stars { margin:0; }
+.product-review-breakdown { display:flex; flex-direction:column; gap:5px; }
+.product-review-breakdown-row { display:grid; grid-template-columns:23px minmax(0,1fr) 18px; align-items:center; gap:7px; font-size:10px; color:#666; }
+.product-review-breakdown-row > span:first-child { white-space:nowrap; }
+.product-review-breakdown-row > span:first-child i { font-size:9px; color:#111; }
+.product-review-breakdown-row > span:last-child { text-align:right; font-variant-numeric:tabular-nums; }
+.product-review-breakdown-track { height:5px; background:#eee; overflow:hidden; border-radius:10px; }
+.product-review-breakdown-track > span { display:block; height:100%; background:#222; border-radius:inherit; }
+.product-reviews-toolbar { display:flex; align-items:center; justify-content:flex-end; flex-wrap:wrap; gap:8px; margin:24px 0 12px; padding-top:16px; border-top:1px solid #eee; }
+.product-reviews-toolbar > span { margin-right:auto; font-size:12px; font-weight:600; letter-spacing:0; }
+.product-reviews-toolbar label { font-size:10px; color:#777; letter-spacing:0; }
+.product-reviews-toolbar select { max-width:145px; padding:7px 24px 7px 8px; border:1px solid #e5e5e5; border-radius:0; background:#fff; color:#111; font:11px 'Inter',sans-serif; text-transform:none; letter-spacing:0; }
+.product-review-list { display:flex; flex-direction:column; }
+.product-review-card { padding:16px 0 18px; border-top:1px solid #eee; }
+.product-review-card:first-child { border-top:0; padding-top:0; }
+.product-review-card-head { display:flex; align-items:center; gap:10px; }
+.product-review-author-wrap { min-width:0; flex:1 1 auto; }
+.product-review-meta { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin-top:3px; }
+.product-review-meta .product-review-date { margin:0; }
+.product-review-card > .product-review-stars { display:flex; align-items:center; gap:2px; margin:10px 0 8px; line-height:1; letter-spacing:0; }
+.product-review-card > .product-review-stars i { font-size:13px; }
+.product-review-author-line { display:flex; align-items:center; flex-wrap:wrap; column-gap:8px; row-gap:3px; }
+.app-product-accordions .product-review-author { font-size:12px; font-weight:600; letter-spacing:0; line-height:1.4; overflow-wrap:anywhere; }
+.app-product-accordions .product-review-date { margin-top:3px; font-size:10px; color:#888; }
+.app-product-accordions .product-review-card > .product-review-text { margin-top:10px; }
+.product-review-verified, .product-review-featured { display:inline-flex; align-items:center; gap:4px; font-size:9px; line-height:1.4; color:#555; white-space:nowrap; letter-spacing:0; }
+.product-review-verified { gap:4px; }
+.product-review-verified i { width:17px; height:17px; display:inline-flex; align-items:center; justify-content:center; border-radius:50%; background:#E0EBFF; font-size:11px; color:#111; }
+.product-review-featured { padding:2px 6px; background:#f3f3f3; }
+.app-product-accordions .product-review-card > .product-review-stars { margin:10px 0 8px; line-height:1; letter-spacing:0; }
+.app-product-accordions .product-review-card > .product-review-stars i { font-size:13px; }
+.app-product-accordions .product-review-text { white-space:pre-line; overflow-wrap:anywhere; font-size:12px; line-height:1.7; letter-spacing:0; }
+.product-review-brand-reply { margin-top:12px; padding:10px 12px; background:#f7f7f7; border-left:2px solid #bbb; }
+.product-review-brand-reply > span { display:block; margin-bottom:4px; font-size:9px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; }
+.app-product-accordions .product-review-brand-reply p { font-size:11px; line-height:1.6; letter-spacing:0; }
+.product-review-card .product-review-photos { margin-top:10px; }
+.product-review-reward { margin-top:8px; font-size:10px; line-height:1.5; color:#777; }
+.product-reviews-empty { padding:2px 0 16px; }
+.product-reviews-empty p { color:#666; }
+@media (max-width:420px) {
+  .product-reviews-summary { grid-template-columns:100px minmax(0,1fr); gap:12px; }
+  .product-reviews-average > strong { font-size:30px; }
+  .product-reviews-toolbar { gap:6px; }
+  .product-reviews-toolbar select { max-width:132px; }
+}
+
+.product-review-edit-note { margin:0 0 14px; font-size:11px; line-height:1.5; color:#777; letter-spacing:0; }
+
+.product-review-actions { display:flex; align-items:center; flex-wrap:wrap; gap:10px 14px; margin-top:14px; padding-top:0; border-top:0; }
+.product-review-helpful-label { font-size:10px; color:#777; letter-spacing:0; }
+.product-review-votes { display:flex; align-items:center; gap:10px; }
+.product-review-action, .product-review-flag { display:inline-flex; align-items:center; justify-content:center; gap:5px; border:0; padding:4px 2px; background:transparent; color:#666; font:11px 'Inter',sans-serif; cursor:pointer; }
+.product-review-action i, .product-review-flag i { font-size:15px; }
+.product-review-action.is-selected { color:#111; }
+.product-review-flag.is-selected, .product-review-flag.is-selected i { color:#d32f2f; }
+.product-review-action:disabled { opacity:.55; cursor:default; }
+.product-review-flag { margin-left:auto; font-size:10px; }
+.product-review-flag i { font-size:12px; }
+
+.app-product-accordions .product-review-text{white-space:pre-line;overflow-wrap:anywhere;font-size:12px;line-height:1.7;letter-spacing:0}
+.app-product-accordions .product-review-author{font-size:12px;font-weight:600;line-height:1.4;overflow-wrap:anywhere}
+.app-product-accordions .product-review-date{font-size:10px;color:#888}
+.app-product-accordions .product-review-card>.product-review-stars{margin:10px 0 8px;line-height:1}
+.app-product-accordions .product-review-card>.product-review-stars i{font-size:13px}
+.app-product-accordions .product-review-brand-reply p{font-size:11px;line-height:1.6}
+.app-product-accordions .product-review-photos{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.app-product-accordions .product-review-photo{width:76px;height:76px;object-fit:cover;border-radius:4px}
+.app-product-accordions .product-review-card{padding:16px 0 18px;border-top:1px solid #eee}
+.app-product-accordions .product-review-card:first-child{border-top:0;padding-top:0}
