@@ -7,6 +7,156 @@
 function loadCartFromStorage() { try { const saved = localStorage.getItem('janedore_cart'); if (saved) S.cart = JSON.parse(saved); } catch(e) { S.cart = []; } }
 function saveCartToStorage() { try { localStorage.setItem('janedore_cart', JSON.stringify(S.cart)); } catch(e) {} scheduleBagSync(); }
 
+/* ============================================================
+   ACCOUNT CART SYNC — one bag across the website and Capacitor app.
+   Guests remain local-only. Signed-in customers sync through their
+   own customers/{uid}.cart document field.
+   ============================================================ */
+let _cartSyncedUid = null;
+let _cartAccountUnsubscribe = null;
+let _cartAccountSyncTimer = null;
+
+function cartSyncLines(items) {
+  return (Array.isArray(items) ? items : []).map(function(item) {
+    return {
+      productId: String(item.productId || ''),
+      variantIndex: Math.max(0, Number(item.variantIndex) || 0),
+      size: String(item.size || 'OS'),
+      qty: Math.max(1, Math.min(99, Math.floor(Number(item.qty) || 1)))
+    };
+  }).filter(function(item) { return !!item.productId; });
+}
+
+function cartSyncSignature(items) {
+  return JSON.stringify(cartSyncLines(items).sort(function(a, b) {
+    return (a.productId + '|' + a.variantIndex + '|' + a.size)
+      .localeCompare(b.productId + '|' + b.variantIndex + '|' + b.size);
+  }));
+}
+
+function hydrateAccountCart(items) {
+  return cartSyncLines(items).map(function(item) {
+    const product = getCartProduct(item.productId);
+    if (!product) return null;
+    const variant = getCartVariant(product, item.variantIndex);
+    return {
+      productId: item.productId,
+      variantIndex: item.variantIndex,
+      size: item.size,
+      qty: item.qty,
+      name: sanitizeHTML(product.name),
+      brand: sanitizeHTML(product.brand),
+      price: product.price,
+      salePrice: product.salePrice,
+      color: sanitizeHTML(variant.color || 'Default'),
+      thumbnail: getProductThumbnail(product, item.variantIndex)
+    };
+  }).filter(Boolean);
+}
+
+function scheduleCartAccountSync() {
+  const user = firebase.auth().currentUser;
+  if (!user || user.isAnonymous || _cartSyncedUid !== user.uid) return;
+  clearTimeout(_cartAccountSyncTimer);
+  _cartAccountSyncTimer = setTimeout(function() {
+    const currentUser = firebase.auth().currentUser;
+    if (!currentUser || currentUser.isAnonymous || currentUser.uid !== _cartSyncedUid) return;
+    const lines = cartSyncLines(S.cart);
+    db.collection('customers').doc(currentUser.uid).set({
+      cart: lines,
+      cartUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true }).catch(function(err) {
+      console.warn('[CART] Could not sync bag to account:', err.message);
+    });
+  }, 350);
+}
+
+async function syncCartOnLogin(uid) {
+  if (_cartSyncedUid === uid) return;
+  if (_cartAccountUnsubscribe) {
+    _cartAccountUnsubscribe();
+    _cartAccountUnsubscribe = null;
+  }
+  clearTimeout(_cartAccountSyncTimer);
+
+  // If Firebase switches directly between accounts, never merge the
+  // previous customer's local mirror into the next customer's bag.
+  if (_cartSyncedUid && _cartSyncedUid !== uid) {
+    S.cart = [];
+    try { localStorage.removeItem('janedore_cart'); } catch (e) {}
+  }
+
+  await window.productsReady;
+  const user = firebase.auth().currentUser;
+  if (!user || user.isAnonymous || user.uid !== uid) return;
+
+  try {
+    const ref = db.collection('customers').doc(uid);
+    const doc = await ref.get();
+    const remoteLines = cartSyncLines(doc.exists ? doc.data().cart : []);
+    const localLines = cartSyncLines(S.cart);
+    const merged = new Map();
+
+    // A line present in both device storage and the account is one bag
+    // line, not two purchases. Keep the greater quantity to avoid
+    // duplicating a bag when the same account opens on another device.
+    remoteLines.concat(localLines).forEach(function(line) {
+      const key = line.productId + '|' + line.variantIndex + '|' + line.size;
+      const previous = merged.get(key);
+      if (!previous || line.qty > previous.qty) merged.set(key, line);
+    });
+
+    const mergedLines = Array.from(merged.values());
+    S.cart = hydrateAccountCart(mergedLines);
+    saveCartToStorage();
+    _cartSyncedUid = uid;
+
+    const mergedSignature = cartSyncSignature(S.cart);
+    if (mergedSignature !== cartSyncSignature(remoteLines)) {
+      await ref.set({
+        cart: cartSyncLines(S.cart),
+        cartUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    }
+
+    updateBadges();
+    if (S.currentPage === 'cart') renderCartPage();
+
+    // Keep the open website and app in step when the other one changes
+    // the same customer's bag.
+    _cartAccountUnsubscribe = ref.onSnapshot(function(snapshot) {
+      const activeUser = firebase.auth().currentUser;
+      if (!activeUser || activeUser.isAnonymous || activeUser.uid !== _cartSyncedUid || !snapshot.exists) return;
+      if (snapshot.metadata && snapshot.metadata.hasPendingWrites) return;
+      const incoming = cartSyncLines(snapshot.data().cart);
+      if (cartSyncSignature(incoming) === cartSyncSignature(S.cart)) return;
+      S.cart = hydrateAccountCart(incoming);
+      saveCartToStorage();
+      updateBadges();
+      renderCartPage();
+    }, function(err) {
+      console.warn('[CART] Account bag listener failed:', err.message);
+    });
+  } catch (err) {
+    console.warn('[CART] Could not sync bag with account:', err.message);
+  }
+}
+
+function clearCartOnLogout() {
+  if (!_cartSyncedUid) return;
+  clearTimeout(_cartAccountSyncTimer);
+  if (_cartAccountUnsubscribe) {
+    _cartAccountUnsubscribe();
+    _cartAccountUnsubscribe = null;
+  }
+  _cartSyncedUid = null;
+  S.cart = [];
+  try { localStorage.removeItem('janedore_cart'); } catch (e) {}
+  updateBadges();
+  renderCartPage();
+}
+
+
 // ---------- Bag reminders (server.js /api/bag) ----------
 // Once we know the shopper's email (signed in, or typed at checkout), the
 // bag's products, sizes and quantities are sent to the server, which emails
