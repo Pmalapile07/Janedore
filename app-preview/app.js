@@ -540,7 +540,7 @@ function appRenderProductStickyBar(product, regular, sale) {
   bar.innerHTML = '<button class="app-product-sticky-add" id="app-product-sticky-add" type="button"' +
     ((Number.isFinite(Number(product.stock)) && Number(product.stock) <= 0) ? ' disabled' : '') +
     '><span class="app-product-sticky-label">' + ((Number.isFinite(Number(product.stock)) && Number(product.stock) <= 0) ? 'Sold out' : 'Add to bag') +
-    '</span></button><button class="app-product-sticky-wish' + (wished ? ' wished' : '') + '" id="app-product-sticky-wish" type="button" aria-label="' + (wished ? 'Remove from wishlist' : 'Add to wishlist') + '" aria-pressed="' + wished + '"><i class="' + (wished ? 'ph ph-fill ph-heart-straight' : 'ph ph-heart-straight') + '" aria-hidden="true"></i></button>';
+    '</span></button><button class="app-product-sticky-wish' + (wished ? ' wished' : '') + '" id="app-product-sticky-wish" type="button" aria-label="' + (wished ? 'Remove from wishlist' : 'Add to wishlist') + '" aria-pressed="' + wished + '"><i class="' + (wished ? 'ph-fill ph-heart-straight' : 'ph ph-heart-straight') + '" aria-hidden="true"></i></button>';
   bar.hidden = false;
   document.getElementById('app-product-sticky-add').onclick = appAddCurrentProductToBag;
   document.getElementById('app-product-sticky-wish').onclick = event => {
