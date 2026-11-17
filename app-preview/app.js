@@ -998,6 +998,11 @@ function appProductClose() {
   }
   if (appProductReturnToCollection) {
     appProductReturnToCollection = false;
+    const tabMemory = appTabMemories.get(appActiveTab) || {scrollY:0,productId:null,productScrollY:0};
+    tabMemory.productId = null;
+    tabMemory.productScrollY = 0;
+    appTabMemories.set(appActiveTab, tabMemory);
+    appPersistScrollMemories();
     appProductView.hidden = true;
     const stickyBar = document.getElementById('app-product-sticky-bar');
     if (stickyBar) stickyBar.hidden = true;
