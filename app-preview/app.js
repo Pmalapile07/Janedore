@@ -237,6 +237,7 @@ document.addEventListener('click', event => {
   const icon = button.querySelector('i');
   if (icon) icon.className = active ? 'ph ph-heart-straight' : 'ph-fill ph-heart-straight';
   button.classList.toggle('is-wishlisted', !active);
+  appShowAddedToast(active ? 'Removed from wishlist' : 'Added to wishlist', active ? 'ph-heart-break' : 'ph-heart');
 });
 
 // Keep the New In progress indicator in sync with horizontal scrolling.
@@ -584,6 +585,7 @@ function appRenderProductStickyBar(product, regular, sale) {
     const icon = button.querySelector('i');
     if (icon) icon.className = next ? 'ph ph-fill ph-heart-straight' : 'ph ph-heart-straight';
     bar.dataset.wished = String(next);
+    appShowAddedToast(next ? 'Added to wishlist' : 'Removed from wishlist', next ? 'ph-heart' : 'ph-heart-break');
   };
   appUpdateProductStickyState();
 }
@@ -602,6 +604,41 @@ function appUpdateProductStickyState() {
 }
 function appProductCartItems() {
   try { return JSON.parse(localStorage.getItem('janedore_cart') || '[]'); } catch (_) { return []; }
+}
+const APP_ADDED_TOAST_MS = 3000;
+let appAddedToastTimer = null;
+function appShowAddedToast(message, icon) {
+  let toast = document.getElementById('app-added-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'app-added-toast';
+    toast.className = 'app-added-toast';
+    toast.setAttribute('role', 'status');
+    toast.setAttribute('aria-live', 'polite');
+    toast.innerHTML = '<div class="app-added-toast-progress"></div>' +
+      '<i class="ph ph-check-circle app-added-toast-icon" aria-hidden="true"></i>' +
+      '<span class="app-added-toast-text"></span>' +
+      '<button type="button" class="app-added-toast-close" aria-label="Dismiss"><i class="ph ph-x" aria-hidden="true"></i></button>';
+    toast.querySelector('.app-added-toast-close').addEventListener('click', appHideAddedToast);
+    document.body.appendChild(toast);
+  }
+  toast.querySelector('.app-added-toast-text').textContent = message || 'Added to bag';
+  const iconEl = toast.querySelector('.app-added-toast-icon');
+  if (iconEl) iconEl.className = 'ph ' + (icon || 'ph-check-circle') + ' app-added-toast-icon';
+  const progress = toast.querySelector('.app-added-toast-progress');
+  progress.style.transition = 'none';
+  progress.style.transform = 'scaleX(1)';
+  void progress.offsetWidth;
+  progress.style.transition = 'transform ' + APP_ADDED_TOAST_MS + 'ms linear';
+  progress.style.transform = 'scaleX(0)';
+  toast.classList.add('show');
+  window.clearTimeout(appAddedToastTimer);
+  appAddedToastTimer = window.setTimeout(appHideAddedToast, APP_ADDED_TOAST_MS);
+}
+function appHideAddedToast() {
+  window.clearTimeout(appAddedToastTimer);
+  const toast = document.getElementById('app-added-toast');
+  if (toast) toast.classList.remove('show');
 }
 function appUpdateCartCount() {
   const count = appProductCartItems().reduce((sum, item) => sum + (Number(item.qty) || 0), 0);
@@ -967,6 +1004,7 @@ function appAddCurrentProductToBag() {
   }
   localStorage.setItem('janedore_cart',JSON.stringify(items));
   appUpdateCartCount();
+  appShowAddedToast('Added to bag', 'ph-check-circle');
   
   const button = document.getElementById('app-product-sticky-add');
   const label = button && button.querySelector('.app-product-sticky-label');
