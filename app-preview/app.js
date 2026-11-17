@@ -580,6 +580,13 @@ function appUpdateCartCount() {
   const count = appProductCartItems().reduce((sum, item) => sum + (Number(item.qty) || 0), 0);
   const badge = document.getElementById('app-product-cart-count');
   if (badge) { badge.textContent = count > 9 ? '9+' : String(count); badge.hidden = count < 1; }
+  const headerCart = document.getElementById('app-header-cart');
+  if (headerCart) {
+    let headerBadge = headerCart.querySelector('.app-header-cart-count');
+    if (!headerBadge) { headerBadge = document.createElement('span'); headerBadge.className = 'app-header-cart-count'; headerCart.appendChild(headerBadge); }
+    headerBadge.textContent = count > 9 ? '9+' : String(count);
+    headerBadge.hidden = count < 1;
+  }
 }
 function appShowProductView() {
   const stickyBar = document.getElementById('app-product-sticky-bar');
@@ -779,7 +786,7 @@ document.getElementById('app-product-back').addEventListener('click', () => {
   if (history.state && history.state.appProductId) history.back();
   else appProductClose();
 });
-document.getElementById('app-product-cart').addEventListener('click', () => { window.location.href = '/cart'; });
+// Product-page cart action is wired to the native app bag below.
 document.getElementById('app-product-share').addEventListener('click', async () => {
   if (!appCurrentProduct) return;
   const url = location.href;
@@ -787,6 +794,98 @@ document.getElementById('app-product-share').addEventListener('click', async () 
   if (navigator.share) { try { await navigator.share(data); } catch (error) { if (error.name !== 'AbortError') console.warn(error); } }
   else { try { await navigator.clipboard.writeText(url); alert('Product link copied.'); } catch (_) { window.prompt('Copy this product link:',url); } }
 });
+
+/* APP BAG — uses the same janedore_cart storage key as the website. */
+const appCartView = document.getElementById('app-cart-view');
+const appCartContent = document.getElementById('app-cart-content');
+let appCartReturnTab = 'Home';
+function appCartFormat(value) { return appProductMoney(value); }
+function appCartOpen() {
+  if (!appCartView) return;
+  const selected = navItems.find(item => item.classList.contains('selected'));
+  appCartReturnTab = selected ? selected.dataset.tab : 'Home';
+  appProductView.hidden = true;
+  const sticky = document.getElementById('app-product-sticky-bar');
+  if (sticky) sticky.hidden = true;
+  document.querySelectorAll('.app-tab-content').forEach(view => { view.hidden = true; });
+  const header = document.querySelector('.app-header');
+  const bottom = document.querySelector('.bottom-nav');
+  if (header) header.hidden = true;
+  if (bottom) bottom.hidden = true;
+  document.body.classList.remove('app-product-open');
+  appCartView.hidden = false;
+  appRenderCart();
+  window.scrollTo({top:0,behavior:'instant'});
+  history.pushState({appCart:true},'',location.pathname + location.search + '#bag');
+}
+function appCartClose(fromHistory) {
+  if (!appCartView || appCartView.hidden) return;
+  appCartView.hidden = true;
+  document.querySelectorAll('.app-tab-content').forEach(view => { view.hidden = view.dataset.view !== appCartReturnTab; });
+  const header = document.querySelector('.app-header');
+  const bottom = document.querySelector('.bottom-nav');
+  if (header) header.hidden = false;
+  if (bottom) bottom.hidden = false;
+  const selected = navItems.find(item => item.dataset.tab === appCartReturnTab);
+  if (selected) {
+    navItems.forEach(item => { const active = item === selected; item.classList.toggle('selected',active); if(active)item.setAttribute('aria-current','page');else item.removeAttribute('aria-current'); });
+    moveNavIndicator(selected);
+  }
+  if (!fromHistory && location.hash === '#bag') history.back();
+  window.scrollTo({top:0,behavior:'instant'});
+}
+function appRenderCart() {
+  if (!appCartContent) return;
+  const items = appProductCartItems();
+  const qty = items.reduce((sum,item)=>sum+(Number(item.qty)||0),0);
+  const count = document.getElementById('app-cart-header-count');
+  if (count) count.textContent = qty + (qty === 1 ? ' item' : ' items');
+  appUpdateCartCount();
+  if (!items.length) {
+    appCartContent.innerHTML = '<div class="app-cart-empty"><i class="ph ph-tote-simple" aria-hidden="true"></i><h2>Your bag is empty</h2><p>Find something you love.</p><button type="button" id="app-cart-shop">Continue shopping</button></div>';
+    document.getElementById('app-cart-shop').addEventListener('click',()=>appCartClose(false));
+    return;
+  }
+  let subtotal = 0;
+  const cards = items.map((item,index)=>{
+    const regular = Number(item.price)||0, sale = Number(item.salePrice)||0;
+    const unit = sale > 0 && sale < regular ? sale : regular;
+    const quantity = Math.max(1,Number(item.qty)||1);
+    subtotal += unit*quantity;
+    const image = typeof item.thumbnail === 'string' && /^https:\/\//i.test(item.thumbnail) ? item.thumbnail : '';
+    const variant = item.color && item.color !== 'Default' ? ' · '+item.color : '';
+    const size = item.size && item.size !== 'OS' ? ' · Size '+item.size : '';
+    return '<article class="app-cart-item" data-cart-index="'+index+'">'+
+      '<div class="app-cart-item-image">'+(image?'<img src="'+appProductEscape(image)+'" alt="">':'')+'</div>'+
+      '<div class="app-cart-item-info"><p class="app-cart-item-brand">'+appProductEscape(item.brand||'')+'</p>'+
+      '<h2>'+appProductEscape(item.name||'Product')+'</h2><p class="app-cart-item-variant">'+appProductEscape((variant+size).replace(/^ · /,''))+'</p>'+
+      '<div class="app-cart-item-controls"><button type="button" data-cart-action="minus" data-index="'+index+'" aria-label="Decrease quantity" '+(quantity<=1?'disabled':'')+'>−</button><span>'+quantity+'</span><button type="button" data-cart-action="plus" data-index="'+index+'" aria-label="Increase quantity">+</button><button class="app-cart-remove" type="button" data-cart-action="remove" data-index="'+index+'">Remove</button></div></div>'+
+      '<div class="app-cart-item-price">'+appCartFormat(unit*quantity)+'</div></article>';
+  }).join('');
+  appCartContent.innerHTML = '<div class="app-cart-items">'+cards+'</div>'+
+    '<div class="app-cart-summary"><div><span>Subtotal</span><strong>'+appCartFormat(subtotal)+'</strong></div>'+
+    '<p>Delivery is calculated at checkout.</p><button type="button" id="app-cart-checkout">Proceed to checkout</button></div>';
+}
+if (document.getElementById('app-header-cart')) document.getElementById('app-header-cart').addEventListener('click',appCartOpen);
+if (document.getElementById('app-product-cart')) document.getElementById('app-product-cart').addEventListener('click',appCartOpen);
+if (document.getElementById('app-cart-back')) document.getElementById('app-cart-back').addEventListener('click',()=>appCartClose(false));
+if (appCartContent) appCartContent.addEventListener('click',event=>{
+  const button=event.target.closest('[data-cart-action]');
+  if(button){
+    const index=Number(button.dataset.index),items=appProductCartItems(),item=items[index];
+    if(!item)return;
+    if(button.dataset.cartAction==='remove')items.splice(index,1);
+    else if(button.dataset.cartAction==='minus')item.qty=Math.max(1,(Number(item.qty)||1)-1);
+    else if(button.dataset.cartAction==='plus')item.qty=(Number(item.qty)||1)+1;
+    localStorage.setItem('janedore_cart',JSON.stringify(items));
+    if(typeof scheduleBagSync==='function')scheduleBagSync();
+    appRenderCart();
+    return;
+  }
+  if(event.target.closest('#app-cart-checkout')) window.location.href='/checkout';
+});
+document.getElementById('app-cart-shop')?.addEventListener('click',()=>appCartClose(false));
+
 function appUpdateQuantityControls() {
   const stock = appCurrentProduct ? appProductSizeStock(appCurrentProduct, appSelectedVariant, appSelectedSize || 'OS') : 0;
   const max = stock > 0 ? stock : 99;
@@ -844,6 +943,7 @@ function appAddCurrentProductToBag() {
   }
 }
 window.addEventListener('popstate', () => {
+  if (appCartView && !appCartView.hidden) { appCartClose(true); return; }
   if (location.hash.startsWith('#product/')) appOpenProduct(decodeURIComponent(location.hash.slice(9)),false);
   else if (appProductView && !appProductView.hidden) appProductClose();
 });
