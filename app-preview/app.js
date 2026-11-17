@@ -56,143 +56,20 @@ appAuth.onAuthStateChanged(user => {
 
 const nav = document.querySelector('.bottom-nav');
 const navItems = [...document.querySelectorAll('.nav-item')];
-const homeNavItem = navItems.find(item => item.dataset.tab === 'Home');
 const navIndicator = document.querySelector('.nav-indicator');
-let rotatingNavItems = navItems.filter(item => item !== homeNavItem);
-
-let navAnimationTimer = null;
-let navAnimationGhosts = [];
-
-function renderNavigationWindow(animate = false, direction = 1) {
-  if (!nav || !homeNavItem || !navIndicator) return;
-  const previousVisible = new Set(navItems.filter(item => !item.hidden));
-  const previousRects = new Map([...previousVisible].map(item => [item, item.getBoundingClientRect()]));
-  if (navAnimationTimer) window.clearTimeout(navAnimationTimer);
-  navAnimationGhosts.forEach(ghost => ghost.remove());
-  navAnimationGhosts = [];
-  navItems.forEach(item => {
-    item.style.transition = 'none';
-    item.style.transform = '';
-    item.style.opacity = '';
-  });
-  const visibleItems = [homeNavItem, ...rotatingNavItems.slice(0, 4)];
-  const visible = new Set(visibleItems);
-
-  nav.insertBefore(homeNavItem, navIndicator);
-  rotatingNavItems.forEach(item => nav.insertBefore(item, navIndicator));
-
-  // Hide items outside the five-slot window before measuring the new layout.
-  navItems.forEach(item => {
-    if (!visible.has(item)) item.hidden = true;
-  });
-  visibleItems.forEach(item => { item.hidden = false; });
-
-  if (!animate || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-  const cellWidth = nav.clientWidth / 5;
-  const entering = visibleItems.filter(item => !previousVisible.has(item));
-  const retained = visibleItems.filter(item => previousVisible.has(item) && previousRects.has(item));
-  const exiting = [...previousVisible].filter(item => !visible.has(item) && previousRects.has(item));
-
-  // FLIP: retained icons start at their old screen positions, then glide into
-  // their new slots. Newly revealed icons enter from the right-hand edge.
-  retained.forEach(item => {
-    const oldRect = previousRects.get(item);
-    const newRect = item.getBoundingClientRect();
-    const deltaX = oldRect.left - newRect.left;
-    item.style.transition = 'none';
-    item.style.transform = `translate3d(${deltaX}px,0,0)`;
-    item.style.opacity = '1';
-  });
-  entering.forEach(item => {
-    item.style.transition = 'none';
-    item.style.transform = `translate3d(${direction * cellWidth}px,0,0)`;
-    item.style.opacity = '0';
-  });
-
-  // A non-interactive visual ghost lets the icon leaving the window glide
-  // out to the left instead of vanishing when its real button is hidden.
-  const ghosts = exiting.map(item => {
-    const rect = previousRects.get(item);
-    const ghost = item.cloneNode(true);
-    ghost.removeAttribute('data-tab');
-    ghost.removeAttribute('hidden');
-    ghost.removeAttribute('aria-current');
-    ghost.setAttribute('aria-hidden', 'true');
-    ghost.disabled = true;
-    Object.assign(ghost.style, {
-      position:'fixed', left:`${rect.left}px`, top:`${rect.top}px`,
-      width:`${rect.width}px`, height:`${rect.height}px`,
-      margin:'0', zIndex:'30', pointerEvents:'none',
-      transition:'none', transform:'translate3d(0,0,0)', opacity:'1'
-    });
-    ghost.querySelector('.nav-count')?.remove();
-    document.body.appendChild(ghost);
-    return ghost;
-  });
-  navAnimationGhosts = ghosts;
-
-  // Commit the starting transforms, then animate all icons on the same curve.
-  void nav.offsetWidth;
-  const glide = 'transform 520ms cubic-bezier(.22,1,.36,1), opacity 360ms ease';
-  retained.forEach(item => {
-    item.style.transition = glide;
-    item.style.transform = 'translate3d(0,0,0)';
-  });
-  entering.forEach(item => {
-    item.style.transition = glide;
-    item.style.transform = 'translate3d(0,0,0)';
-    item.style.opacity = '1';
-  });
-  ghosts.forEach(ghost => {
-    ghost.style.transition = glide;
-    ghost.style.transform = `translate3d(${-direction * cellWidth}px,0,0)`;
-    ghost.style.opacity = '0';
-  });
-
-  if (navAnimationTimer) window.clearTimeout(navAnimationTimer);
-  navAnimationTimer = window.setTimeout(() => {
-    [...retained, ...entering].forEach(item => {
-      item.style.transition = '';
-      item.style.transform = '';
-      item.style.opacity = '';
-    });
-    ghosts.forEach(ghost => ghost.remove());
-    navAnimationGhosts = [];
-    navAnimationTimer = null;
-  }, 580);
-}
 
 function moveNavIndicator(item) {
-  if (!nav || !item || !navIndicator || item.hidden) return;
-  const x = item.offsetLeft + (item.offsetWidth - navIndicator.offsetWidth) / 2;
+  if (!nav || !item || !navIndicator) return;
+  const navRect = nav.getBoundingClientRect();
+  const itemRect = item.getBoundingClientRect();
+  const x = itemRect.left - navRect.left + (itemRect.width - navIndicator.offsetWidth) / 2;
   nav.style.setProperty('--indicator-x', `${x}px`);
 }
 
-function rotateNavigationTo(item) {
-  if (!item || item === homeNavItem) return;
-  const index = rotatingNavItems.indexOf(item);
-  if (index > 0) rotatingNavItems = rotatingNavItems.slice(index).concat(rotatingNavItems.slice(0, index));
-}
-
-function appSelectNavigationTab(tabName, activeButton) {
-  nav?.classList.remove('nav-selection-offscreen');
-  rotateNavigationTo(activeButton);
-  renderNavigationWindow(true);
-  navItems.forEach(item => {
-    const active = item === activeButton;
-    item.classList.toggle('selected', active);
-    if (active) item.setAttribute('aria-current', 'page');
-    else item.removeAttribute('aria-current');
-  });
-  requestAnimationFrame(() => moveNavIndicator(activeButton));
-}
-
-const initialNavItem = navItems.find(item => item.classList.contains('selected')) || homeNavItem;
-renderNavigationWindow();
-requestAnimationFrame(() => moveNavIndicator(initialNavItem));
+const initialNavItem = navItems.find(item => item.classList.contains('selected')) || navItems[0];
+moveNavIndicator(initialNavItem);
 window.addEventListener('resize', () => {
-  requestAnimationFrame(() => moveNavIndicator(navItems.find(item => item.classList.contains('selected'))));
+  moveNavIndicator(navItems.find(item => item.classList.contains('selected')));
 });
 
 const tabViews = [...document.querySelectorAll('.app-tab-content[data-view]')];
@@ -212,13 +89,20 @@ function appSaveCurrentTabMemory() {
   appTabMemories.set(appActiveTab, memory);
 }
 
-
+function appSelectNavigationTab(tabName, activeButton) {
+  navItems.forEach(item => {
+    const active = item === activeButton;
+    item.classList.toggle('selected', active);
+    if (active) item.setAttribute('aria-current', 'page');
+    else item.removeAttribute('aria-current');
+  });
+  moveNavIndicator(activeButton);
+}
 
 function appRestoreTab(tabName, activeButton) {
   appActiveTab = tabName;
   const memory = appTabMemories.get(tabName) || {scrollY:0, productId:null, productScrollY:0};
   appSelectNavigationTab(tabName, activeButton);
-  if (appCartView) appCartView.hidden = true;
   if (location.hash.startsWith('#product/') || location.hash === '#bag') {
     history.replaceState(null, '', location.pathname + location.search);
   }
@@ -239,12 +123,8 @@ function appRestoreTab(tabName, activeButton) {
 }
 
 function activateTab(tabName, activeButton) {
-  if (tabName === appActiveTab && (!appProductView || appProductView.hidden) && (tabName !== 'Cart' || (appCartView && !appCartView.hidden))) return;
+  if (tabName === appActiveTab && (!appProductView || appProductView.hidden)) return;
   appSaveCurrentTabMemory();
-  if (tabName === 'Cart') {
-    appCartOpen(true, activeButton);
-    return;
-  }
   appRestoreTab(tabName, activeButton);
 }
 
@@ -253,42 +133,6 @@ navItems.forEach(button => {
     activateTab(button.dataset.tab, button);
   });
 });
-
-/* Swipe the navigation window without changing the currently selected tab. */
-let navSwipeStart = null;
-if (nav) {
-  nav.addEventListener('pointerdown', event => {
-    if (event.pointerType === 'mouse' && event.button !== 0) return;
-    navSwipeStart = {x:event.clientX, y:event.clientY, pointerId:event.pointerId};
-  });
-  nav.addEventListener('pointerup', event => {
-    if (!navSwipeStart || navSwipeStart.pointerId !== event.pointerId) return;
-    const deltaX = event.clientX - navSwipeStart.x;
-    const deltaY = event.clientY - navSwipeStart.y;
-    navSwipeStart = null;
-    if (Math.abs(deltaX) < 30 || Math.abs(deltaX) < Math.abs(deltaY) * 1.25) return;
-
-    const stepWidth = Math.max(1, nav.clientWidth / 5);
-    const steps = Math.min(3, Math.max(1, Math.round(Math.abs(deltaX) / stepWidth)));
-    for (let step = 0; step < steps; step++) {
-      if (deltaX < 0) {
-        rotatingNavItems.push(rotatingNavItems.shift());
-      } else {
-        rotatingNavItems.unshift(rotatingNavItems.pop());
-      }
-    }
-    renderNavigationWindow(true, deltaX < 0 ? 1 : -1);
-    const selected = navItems.find(item => item.classList.contains('selected'));
-    if (selected && !selected.hidden) {
-      nav.classList.remove('nav-selection-offscreen');
-      requestAnimationFrame(() => moveNavIndicator(selected));
-    } else {
-      nav.classList.add('nav-selection-offscreen');
-    }
-  });
-  nav.addEventListener('pointercancel', () => { navSwipeStart = null; });
-}
-
 
 // The app reads the shared homepage hero and category tiles from the
 // same Firestore content managed in Admin. The labels below are placeholders
@@ -763,13 +607,12 @@ function appUpdateCartCount() {
   const count = appProductCartItems().reduce((sum, item) => sum + (Number(item.qty) || 0), 0);
   const badge = document.getElementById('app-product-cart-count');
   if (badge) { badge.textContent = count > 9 ? '9+' : String(count); badge.hidden = count < 1; }
-  const navCart = document.querySelector('.nav-item[data-tab="Cart"]');
-  if (navCart) {
-    const navBadge = navCart.querySelector('.nav-count');
-    if (navBadge) {
-      navBadge.textContent = count > 9 ? '9+' : String(count);
-      navBadge.hidden = count < 1;
-    }
+  const headerCart = document.getElementById('app-header-cart');
+  if (headerCart) {
+    let headerBadge = headerCart.querySelector('.app-header-cart-count');
+    if (!headerBadge) { headerBadge = document.createElement('span'); headerBadge.className = 'app-header-cart-count'; headerCart.appendChild(headerBadge); }
+    headerBadge.textContent = count > 9 ? '9+' : String(count);
+    headerBadge.hidden = count < 1;
   }
 }
 function appShowProductView() {
@@ -992,13 +835,10 @@ const appCartView = document.getElementById('app-cart-view');
 const appCartContent = document.getElementById('app-cart-content');
 let appCartReturnTab = 'Home';
 function appCartFormat(value) { return appProductMoney(value); }
-function appCartOpen(fromNavigation = false, activeButton = null) {
+function appCartOpen() {
   if (!appCartView) return;
-  if (!fromNavigation) appSaveCurrentTabMemory();
-  appCartReturnTab = appActiveTab === 'Cart' ? appCartReturnTab : appActiveTab;
-  appActiveTab = 'Cart';
-  const cartButton = activeButton || navItems.find(item => item.dataset.tab === 'Cart');
-  if (cartButton) appSelectNavigationTab('Cart', cartButton);
+  const selected = navItems.find(item => item.classList.contains('selected'));
+  appCartReturnTab = selected ? selected.dataset.tab : 'Home';
   appProductView.hidden = true;
   const sticky = document.getElementById('app-product-sticky-bar');
   if (sticky) sticky.hidden = true;
@@ -1006,20 +846,27 @@ function appCartOpen(fromNavigation = false, activeButton = null) {
   const header = document.querySelector('.app-header');
   const bottom = document.querySelector('.bottom-nav');
   if (header) header.hidden = true;
-  if (bottom) bottom.hidden = false;
+  if (bottom) bottom.hidden = true;
   document.body.classList.remove('app-product-open');
   appCartView.hidden = false;
   appRenderCart();
   window.scrollTo({top:0,behavior:'instant'});
-  if (location.hash !== '#bag') history.pushState({appCart:true},'',location.pathname + location.search + '#bag');
+  history.pushState({appCart:true},'',location.pathname + location.search + '#bag');
 }
 function appCartClose(fromHistory) {
   if (!appCartView || appCartView.hidden) return;
-  if (!fromHistory && location.hash === '#bag') { history.back(); return; }
   appCartView.hidden = true;
+  document.querySelectorAll('.app-tab-content').forEach(view => { view.hidden = view.dataset.view !== appCartReturnTab; });
+  const header = document.querySelector('.app-header');
+  const bottom = document.querySelector('.bottom-nav');
+  if (header) header.hidden = false;
+  if (bottom) bottom.hidden = false;
   const selected = navItems.find(item => item.dataset.tab === appCartReturnTab);
-  if (selected) appRestoreTab(appCartReturnTab, selected);
-  else appRestoreTab('Home', homeNavItem);
+  if (selected) {
+    navItems.forEach(item => { const active = item === selected; item.classList.toggle('selected',active); if(active)item.setAttribute('aria-current','page');else item.removeAttribute('aria-current'); });
+    moveNavIndicator(selected);
+  }
+  if (!fromHistory && location.hash === '#bag') history.back();
   window.scrollTo({top:0,behavior:'instant'});
 }
 function appRenderCart() {
@@ -1054,6 +901,7 @@ function appRenderCart() {
     '<div class="app-cart-summary"><div><span>Subtotal</span><strong>'+appCartFormat(subtotal)+'</strong></div>'+
     '<p>Delivery is calculated at checkout.</p><button type="button" id="app-cart-checkout">Proceed to checkout</button></div>';
 }
+if (document.getElementById('app-header-cart')) document.getElementById('app-header-cart').addEventListener('click',appCartOpen);
 if (document.getElementById('app-product-cart')) document.getElementById('app-product-cart').addEventListener('click',appCartOpen);
 if (document.getElementById('app-cart-back')) document.getElementById('app-cart-back').addEventListener('click',()=>appCartClose(false));
 if (appCartContent) appCartContent.addEventListener('click',event=>{
