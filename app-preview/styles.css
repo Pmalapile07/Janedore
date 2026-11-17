@@ -31,14 +31,14 @@ body{background:#fff;color:var(--ink);font-family:Inter,Arial,sans-serif;-webkit
 .bottom-nav{position:fixed;z-index:20;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(calc(100% - 32px),398px);height:76px;padding:5px 7px;background:rgba(255,255,255,.76);border:1px solid rgba(255,255,255,.88);border-radius:999px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));backdrop-filter:blur(30px) saturate(180%);-webkit-backdrop-filter:blur(30px) saturate(180%);box-shadow:0 4px 22px rgba(0,0,0,.065),inset 0 1px 0 rgba(255,255,255,.7)}
 .bottom-nav{isolation:isolate}
 .nav-indicator{position:absolute;z-index:0;top:50%;left:0;width:72px;height:58px;border-radius:999px;background:rgba(255,255,255,.2);border:0;outline:0;backdrop-filter:blur(12px) saturate(190%) brightness(1.08);-webkit-backdrop-filter:blur(12px) saturate(190%) brightness(1.08);box-shadow:0 2px 8px rgba(0,0,0,.045);transform:translate(var(--indicator-x,0px),-50%);transition:transform .42s cubic-bezier(.22,.8,.24,1);pointer-events:none}
-.nav-item{position:relative;z-index:1;width:64px;height:58px;min-width:0;justify-self:center;align-self:center;border:0;border-radius:999px;background:transparent;color:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:4px 0;transition:color .28s ease,transform .28s cubic-bezier(.2,.8,.2,1);transform:scale(.96)}
+.nav-item{position:relative;z-index:1;width:64px;height:58px;min-width:0;justify-self:center;align-self:center;border:0;border-radius:999px;background:transparent;color:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:4px 0;transition:color .28s ease;transform:none}
 .nav-item i{font-size:20px;line-height:1}
 .nav-item .nav-label{font-size:9px;line-height:1.1;font-weight:500;letter-spacing:.01em;white-space:nowrap}
 .nav-item .home-mark{width:26px;height:26px;overflow:visible;fill:none;stroke:currentColor;stroke-width:200;stroke-linecap:butt;stroke-linejoin:round}
 .nav-item .home-mark circle{fill:currentColor;stroke:none}
-.nav-item.selected{background:transparent;color:#000;transform:scale(1)}
+.nav-item.selected{background:transparent;color:#000;transform:none}
 .nav-item.selected i,.nav-item.selected .home-mark,.nav-item.selected .nav-label{filter:none}
-.nav-item:active{transform:scale(.94)}
+.nav-item:active{transform:none}
 @media(prefers-reduced-motion:reduce){.nav-item,.nav-indicator{transition:none}}
 
 .view{padding:calc(16px + env(safe-area-inset-top)) 16px 120px}
