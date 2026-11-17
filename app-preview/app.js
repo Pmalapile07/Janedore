@@ -922,6 +922,7 @@ let appCartRenderVersion = 0;
 let appCartPromoFeedback = null;
 let appAppliedDiscount = null;
 const appCartVendorCache = new Map();
+const appCartHydratedProductIds = new Set();
 const appCartVendorLoads = new Map();
 
 try {
@@ -962,13 +963,14 @@ function appCartDiscountAmount(items, subtotal) {
 function appCartLoadProduct(productId) {
   const id = String(productId || '');
   if (!id) return Promise.resolve(null);
-  if (appProductCache.has(id)) return Promise.resolve(appProductCache.get(id));
+  if (appCartHydratedProductIds.has(id) && appProductCache.has(id)) return Promise.resolve(appProductCache.get(id));
   let load = appProductLoads.get(id);
   if (!load) {
     load = appProductDb.collection('products').doc(id).get();
     appProductLoads.set(id, load);
   }
   return load.then(function(snapshot) {
+    appCartHydratedProductIds.add(id);
     if (!snapshot.exists) return null;
     const product = Object.assign({}, snapshot.data(), {id: snapshot.id});
     appProductCache.set(id, product);
@@ -1357,6 +1359,7 @@ function appAddCurrentProductToBag() {
     const variant = (appCurrentProduct.variants || [])[appSelectedVariant] || {};
     items.push({
       productId:appCurrentProduct.id,
+      vendorId:appCurrentProduct.vendorId || 'vendor-janedore',
       variantIndex:appSelectedVariant,
       size:resolvedSize,
       qty:appProductQuantity,
