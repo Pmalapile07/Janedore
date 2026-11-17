@@ -36,8 +36,8 @@ body{background:#fff;color:var(--ink);font-family:Inter,Arial,sans-serif;-webkit
 .nav-item .nav-label{font-size:9px;line-height:1.1;font-weight:500;letter-spacing:.01em;white-space:nowrap}
 .nav-item .home-mark{width:26px;height:26px;overflow:visible;fill:none;stroke:currentColor;stroke-width:200;stroke-linecap:butt;stroke-linejoin:round}
 .nav-item .home-mark circle{fill:currentColor;stroke:none}
-.nav-cart-dot{position:absolute;top:calc(50% - 3px);left:calc(50% + 12px);width:6px;height:6px;border-radius:50%;background:#809ADD;pointer-events:none}
-.nav-cart-dot[hidden]{display:none!important}
+.nav-cart-count{position:absolute;top:7px;right:9px;min-width:17px;height:17px;padding:0 4px;border-radius:999px;background:#809ADD;color:#fff;display:flex;align-items:center;justify-content:center;font:600 9px/1 Inter,Arial,sans-serif;font-variant-numeric:tabular-nums;pointer-events:none}
+.nav-cart-count[hidden]{display:none!important}
 .nav-item.selected{background:transparent;color:#000;transform:none}
 .nav-item.selected i,.nav-item.selected .home-mark,.nav-item.selected .nav-label{filter:none}
 .nav-item:active{transform:none}
@@ -362,9 +362,9 @@ body.app-cart-open .bottom-nav{display:grid!important;grid-template-columns:repe
 .app-cart-promo-message.success{color:#27633c}
 .app-cart-promo-message.error{color:#b42318}
 .app-cart-promo-message.info{color:#555}
-.app-cart-total-head{display:flex;align-items:center;justify-content:space-between;padding-top:0;margin-top:0;border-top:0;font:600 16px Inter,Arial,sans-serif}
-.app-cart-total-head>span{font-size:18px}
-.app-cart-total-head strong{font-weight:600}
+.app-cart-total-head{display:flex;align-items:center;justify-content:space-between;padding-top:0;margin-top:0;border-top:0;font:600 12px Inter,Arial,sans-serif}
+.app-cart-total-head>span{font-size:12px;font-weight:600}
+.app-cart-total-head strong{font-size:12px;font-weight:600}
 .app-cart-total-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:11px 0;color:#333;font:400 12px Inter,Arial,sans-serif}
 .app-cart-summary>.app-cart-total-row:not(.discount){margin-bottom:3px}
 .app-cart-total-row.discount{color:#809ADD;font-weight:600}
