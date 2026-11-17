@@ -151,7 +151,8 @@ function activateTab(tabName, activeButton) {
     appRestoreTab(tabName, activeButton);
     return;
   }
-  if (tabName === appActiveTab && (!appProductView || appProductView.hidden)) return;
+  const collectionPage = document.getElementById('app-shop-page');
+  if (tabName === appActiveTab && (!appProductView || appProductView.hidden) && (!collectionPage || collectionPage.hidden)) return;
   appSaveCurrentTabMemory();
   appRestoreTab(tabName, activeButton);
 }
