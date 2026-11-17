@@ -235,17 +235,16 @@
     <main class="app-tab-content" data-view="Account" aria-label="Account" hidden></main>
     <section class="app-cart-view" id="app-cart-view" aria-label="Shopping bag" hidden>
       <header class="app-cart-header">
-        <button class="app-cart-back" id="app-cart-back" type="button" aria-label="Back"><i class="ph ph-arrow-left" aria-hidden="true"></i></button>
-        <h1>My bag</h1>
-        <span class="app-cart-header-count" id="app-cart-header-count">0 items</span>
+        <div class="app-cart-heading-group">
+          <h1>My bag</h1>
+          <span class="app-cart-header-count" id="app-cart-header-count">0 items</span>
+        </div>
+        <div class="app-checkout-steps" aria-label="Bag, checkout and payment progress">
+          <span class="app-checkout-step is-current" data-step="1" title="Bag" aria-current="step"><span class="app-checkout-step-num">1</span><i class="ph ph-check" aria-hidden="true"></i></span>
+          <span class="app-checkout-step" data-step="2" title="Checkout"><span class="app-checkout-step-num">2</span><i class="ph ph-check" aria-hidden="true"></i></span>
+          <span class="app-checkout-step" data-step="3" title="Payment"><span class="app-checkout-step-num">3</span><i class="ph ph-check" aria-hidden="true"></i></span>
+        </div>
       </header>
-      <div class="app-checkout-steps" aria-label="Bag, checkout and payment progress">
-        <span class="app-checkout-step is-current" aria-current="step">1</span>
-        <span class="app-checkout-step-connector" aria-hidden="true"></span>
-        <span class="app-checkout-step">2</span>
-        <span class="app-checkout-step-connector" aria-hidden="true"></span>
-        <span class="app-checkout-step">3</span>
-      </div>
       <div class="app-cart-content" id="app-cart-content" aria-live="polite"></div>
     </section>
     <section class="app-product-view" id="app-product-view" aria-label="Product details" hidden>
