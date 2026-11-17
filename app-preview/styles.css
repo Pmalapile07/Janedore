@@ -215,17 +215,12 @@ body.app-product-open{overflow-x:hidden}
 .app-product-quantity-control button{display:inline-flex;align-items:center;justify-content:center;width:36px;height:40px;padding:0;border:0;background:transparent;color:#111;font:300 27px/1 Inter,Arial,sans-serif}
 .app-product-quantity-control button:disabled{color:#999}
 .app-product-quantity-control span{min-width:24px;text-align:center;font-size:16px;font-weight:400;font-variant-numeric:tabular-nums}
-.app-product-sticky-bar{position:fixed!important;z-index:850;left:0;right:0;bottom:0;width:100%;display:flex;flex-direction:column;gap:6px;background:#fff;padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));box-shadow:none;opacity:.999}
-.app-product-sticky-top-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:4px}
-.app-product-sticky-price{display:flex;align-items:baseline;gap:8px;color:#111;font:500 16px/1.3 Inter,Arial,sans-serif;letter-spacing:var(--ui-letter-spacing,0);text-transform:uppercase}
-.app-product-sticky-price s{color:#999;font-size:13px;font-weight:400}
-.app-product-sticky-price .sale{color:#c0392b;font-weight:700}
-.app-product-sticky-wish{flex-shrink:0;position:relative;width:20px;height:20px;margin:0;padding:0;border:0;background:none;color:#111;display:flex;align-items:center;justify-content:center;cursor:pointer}
-.app-product-sticky-wish:before{content:'';position:absolute;inset:-12px}
-.app-product-sticky-wish .ms-icon{display:inline-block;width:1em;height:1em;overflow:hidden;flex-shrink:0;font-size:20px;line-height:1;font-variation-settings:'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 24}.app-product-sticky-wish .ms-icon.ms-filled{font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 24}
-.app-product-sticky-add{width:100%;height:46px;border:0;background:#111;color:#fff;display:flex;align-items:center;justify-content:center;padding:0 24px;font:500 13px Inter,Arial,sans-serif;letter-spacing:var(--ui-letter-spacing,0);text-transform:uppercase}
+.app-product-sticky-bar{position:static;width:100%;display:flex;align-items:stretch;gap:10px;margin:22px 0 4px;padding:0;background:transparent;box-shadow:none}
+.app-product-sticky-wish{flex:0 0 48px;width:48px;height:46px;margin:0;padding:0;border:1px solid #111;border-radius:0;background:#fff;color:#111;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.app-product-sticky-wish i{font-size:19px;line-height:1}
+.app-product-sticky-wish.wished{background:#fff;color:#111}
+.app-product-sticky-add{flex:1;min-width:0;height:46px;border:0;background:#111;color:#fff;display:flex;align-items:center;justify-content:center;padding:0 20px;font:500 12px Inter,Arial,sans-serif;letter-spacing:var(--ui-letter-spacing,0);text-transform:uppercase}
 .app-product-sticky-add:disabled{background:#ccc;color:#fff}
-.app-product-sticky-button-price{display:none}
 .app-product-sticky-bar[hidden]{display:none!important}
 .app-product-accordions{margin-top:28px;border-top:1px solid #e8e8e8}
 .app-product-accordions details{border-bottom:1px solid #e8e8e8;padding:17px 0}
@@ -247,8 +242,9 @@ body.app-product-open{overflow-x:hidden}
 .app-product-related-card span{display:block;margin-top:3px}
 @media(min-width:600px){.app-product-view{max-width:430px;margin:0 auto;min-height:850px}.app-product-gallery-slide{aspect-ratio:4/5}}
 
-/* App product detail: show the price only in the sticky Add to Bag bar. */
-.app-product-price{display:none!important}
+/* App product detail: price appears above the product name. */
+.app-product-price{display:flex!important;margin:0 0 7px;font:600 16px/1.4 Inter,Arial,sans-serif}
+.app-product-price s{color:#999;font-size:13px;font-weight:400}
 .app-product-icon-button i{font-size:17px;line-height:1}
 
 /* App product options mirror the live website's size and colour controls. */
@@ -299,3 +295,7 @@ body.app-product-open{overflow-x:hidden}
 .app-header-cart-count{position:absolute;top:0;right:-3px;min-width:16px;height:16px;padding:0 4px;border-radius:20px;background:#111;color:#fff;font:600 9px/16px Inter,Arial,sans-serif;text-align:center}
 .app-header-cart-count[hidden]{display:none}
 @media(max-width:360px){.app-cart-item{grid-template-columns:88px minmax(0,1fr) auto;gap:10px}.app-cart-item-image{width:88px}}
+
+/* Keep the floating app navigation available while viewing product details. */
+body.app-product-open .bottom-nav{display:flex!important;z-index:900}
+body.app-product-open .app-product-content{padding-bottom:120px}
