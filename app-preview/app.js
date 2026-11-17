@@ -594,6 +594,25 @@ function appShopRenderProducts() {
       '<div class="app-new-in-price">' + price + '</div></article>';
   }).join('');
 }
+// Handle product selection directly inside the All Products collection grid.
+// Keep wishlist taps independent from opening the product detail screen.
+const appShopProductGrid = document.getElementById('app-shop-product-grid');
+if (appShopProductGrid) {
+  appShopProductGrid.addEventListener('click', event => {
+    const card = event.target.closest('.app-new-in-card[data-product-id]');
+    if (!card || !appShopProductGrid.contains(card) || event.target.closest('.app-new-in-wishlist')) return;
+    event.preventDefault();
+    event.stopPropagation();
+    appOpenProduct(card.dataset.productId);
+  });
+  appShopProductGrid.addEventListener('keydown', event => {
+    const card = event.target.closest('.app-new-in-card[data-product-id]');
+    if (!card || !appShopProductGrid.contains(card) || (event.key !== 'Enter' && event.key !== ' ')) return;
+    event.preventDefault();
+    event.stopPropagation();
+    appOpenProduct(card.dataset.productId);
+  });
+}
 async function appShopLoadProducts() {
   if (appShopLoaded) { appShopRenderProducts(); return; }
   if (appShopLoading) return appShopLoading;
