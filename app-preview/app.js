@@ -130,6 +130,11 @@ function appRestoreTab(tabName, activeButton) {
 
 function activateTab(tabName, activeButton) {
   if (tabName === 'Cart') { appCartOpen(); return; }
+  const cartView = document.getElementById('app-cart-view');
+  if (cartView && !cartView.hidden) {
+    appRestoreTab(tabName, activeButton);
+    return;
+  }
   if (tabName === appActiveTab && (!appProductView || appProductView.hidden)) return;
   appSaveCurrentTabMemory();
   appRestoreTab(tabName, activeButton);
@@ -1303,7 +1308,6 @@ function appRenderCart(skipHydration) {
     });
   }
 }
-if (document.getElementById('app-cart-back')) document.getElementById('app-cart-back').addEventListener('click', function() { appCartClose(false); });
 if (appCartContent) {
   appCartContent.addEventListener('click', function(event) {
     const recentCard = event.target.closest('.app-cart-recent-card[data-product-id]');
