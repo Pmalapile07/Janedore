@@ -263,10 +263,10 @@ body.app-product-open{overflow-x:hidden}
 /* Native app bag */
 .app-cart-view{position:relative;min-height:100dvh;background:#fff;padding-bottom:calc(28px + env(safe-area-inset-bottom,0px));}
 .app-cart-view[hidden]{display:none!important}
-.app-cart-header{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:14px;min-height:58px;padding:calc(8px + env(safe-area-inset-top,0px)) 16px 8px;background:#fff;border-bottom:1px solid #eee}
+.app-cart-header{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:58px;padding:calc(8px + env(safe-area-inset-top,0px)) 16px 8px;background:#fff;border-bottom:1px solid #eee}
+.app-cart-heading-group{display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-width:0}
 .app-cart-header h1{margin:0;font:600 17px Inter,Arial,sans-serif;letter-spacing:-.02em}
-.app-cart-back{width:36px;height:36px;border:0;background:none;color:#111;font-size:21px;display:grid;place-items:center;padding:0}
-.app-cart-header-count{margin-left:auto;color:#777;font:400 12px Inter,Arial,sans-serif}
+.app-cart-header-count{margin:0;color:#777;font:400 11px Inter,Arial,sans-serif}
 .app-cart-content{padding:16px}
 .app-cart-empty{min-height:58vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px 16px}
 .app-cart-empty>i{font-size:34px;color:#222;margin-bottom:18px}
@@ -274,7 +274,8 @@ body.app-product-open{overflow-x:hidden}
 .app-cart-empty p{margin:0 0 22px;color:#777;font:400 13px Inter,Arial,sans-serif}
 .app-cart-empty button{height:46px;padding:0 28px;border:0;background:#111;color:#fff;font:500 12px Inter,Arial,sans-serif;text-transform:uppercase}
 .app-cart-items{display:flex;flex-direction:column}
-.app-cart-item{display:grid;grid-template-columns:104px minmax(0,1fr) auto;gap:13px;padding:16px 0;border-bottom:1px solid #eee;align-items:start}
+.app-cart-item{display:grid;grid-template-columns:104px minmax(0,1fr) auto;gap:13px;padding:16px 0;border-bottom:0;align-items:start}
+.app-cart-item:not(:last-child){border-bottom:1px solid #eee}
 .app-cart-item-image{width:104px;aspect-ratio:3/4;background:#f4f4f4;overflow:hidden}
 .app-cart-item-image img{display:block;width:100%;height:100%;object-fit:cover}
 .app-cart-item-info{min-width:0}
@@ -286,7 +287,7 @@ body.app-product-open{overflow-x:hidden}
 .app-cart-item-controls button:disabled{color:#bbb}
 .app-cart-item-controls .app-cart-remove{width:auto;height:auto;border:0;margin-left:4px;padding:4px 0;color:#777;font:400 10px Inter,Arial,sans-serif;text-decoration:underline}
 .app-cart-item-price{white-space:nowrap;font:500 12px Inter,Arial,sans-serif}
-.app-cart-summary{margin-top:22px;padding:18px 0;border-top:1px solid #ddd}
+.app-cart-summary{margin-top:22px;padding:18px 0;border-top:0}
 .app-cart-summary>div{display:flex;justify-content:space-between;align-items:center;font:400 13px Inter,Arial,sans-serif}
 .app-cart-summary>div strong{font-weight:600}
 .app-cart-summary p{margin:12px 0 18px;color:#777;font:400 11px Inter,Arial,sans-serif}
@@ -328,11 +329,14 @@ body.app-cart-open .bottom-nav{display:grid!important;grid-template-columns:repe
 .app-cart-view{padding-bottom:calc(132px + env(safe-area-inset-bottom,0px))}
 .app-cart-content{padding-bottom:28px}
 
-/* Three numbered checkout stages — intentionally no site logo or labels. */
-.app-checkout-steps{display:flex;align-items:center;justify-content:center;gap:0;padding:17px 16px 18px;background:#fff}
-.app-checkout-step{width:30px;height:30px;box-sizing:border-box;display:grid;place-items:center;border:1px solid #d5d5d5;border-radius:50%;background:#fff;color:#777;font:500 12px/1 Inter,Arial,sans-serif}
-.app-checkout-step.is-current{border:2px solid #809ADD;background:#E0EBFF;color:#111;font-weight:600}
-.app-checkout-step-connector{width:48px;height:1px;background:#d9d9d9}
+/* App bag progress mirrors the website's three compact header circles. */
+.app-checkout-steps{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex:0 0 auto;margin-left:auto;padding:0;background:transparent}
+.app-checkout-step{width:32px;height:32px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;border:1.5px solid #d5d5d5;border-radius:50%;background:#fff;color:#777;font:500 14px/1 Inter,Arial,sans-serif}
+.app-checkout-step i{display:none;font-size:16px}
+.app-checkout-step.is-current{border:2px solid #809ADD;background:#fff;color:#111}
+.app-checkout-step.is-done{border:2px solid #E0EBFF;background:#E0EBFF;color:#111}
+.app-checkout-step.is-done .app-checkout-step-num{display:none}
+.app-checkout-step.is-done i{display:block}
 
 /* Brand-specific free-delivery progress. */
 .app-cart-delivery-banner{display:flex;align-items:center;gap:12px;margin:0 0 14px;padding:13px 14px;background:#E0EBFF;color:#111}
