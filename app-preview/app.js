@@ -75,6 +75,14 @@ window.addEventListener('resize', () => {
 const tabViews = [...document.querySelectorAll('.app-tab-content[data-view]')];
 
 function activateTab(tabName, activeButton) {
+  if (appProductView && !appProductView.hidden) {
+    appProductView.hidden = true;
+    document.body.classList.remove('app-product-open');
+    const header = document.querySelector('.app-header');
+    if (header) header.hidden = false;
+    const purchaseRow = document.getElementById('app-product-sticky-bar');
+    if (purchaseRow) purchaseRow.hidden = true;
+  }
   tabViews.forEach(view => {
     view.hidden = view.dataset.view !== tabName;
   });
@@ -524,37 +532,25 @@ function appSelectProductVariant(index) {
   if (first >= 0 && track) track.scrollTo({left:first * track.clientWidth,behavior:'smooth'});
 }
 function appRenderProductStickyBar(product, regular, sale) {
-  let bar = document.getElementById('app-product-sticky-bar');
-  if (!bar) {
-    bar = document.createElement('div');
-    bar.id = 'app-product-sticky-bar';
-    bar.className = 'app-product-sticky-bar';
-    document.body.appendChild(bar);
-  }
-  const isSale = Number.isFinite(sale) && sale > 0 && sale < regular;
-  const current = isSale ? sale : regular;
+  const bar = document.getElementById('app-product-sticky-bar');
+  if (!bar) return;
   const wished = bar.dataset.wishProductId === String(product.id) && bar.dataset.wished === 'true';
   bar.dataset.wishProductId = String(product.id);
   bar.dataset.wished = String(wished);
-  bar.innerHTML = '<div class="app-product-sticky-top-row">' +
-    '<div class="app-product-sticky-price">' +
-    (isSale ? '<span class="sale">' + appProductMoney(current) + '</span><s>' + appProductMoney(regular) + '</s>' : appProductMoney(current)) +
-    '</div><button class="app-product-sticky-wish' + (wished ? ' wished' : '') + '" id="app-product-sticky-wish" type="button" aria-label="' + (wished ? 'Remove from wishlist' : 'Add to wishlist') + '" aria-pressed="' + wished + '"><span class="material-symbols-outlined ms-icon wish-icon' + (wished ? ' ms-filled' : '') + '" aria-hidden="true">favorite</span></button></div>' +
-    '<button class="app-product-sticky-add" id="app-product-sticky-add" type="button"' +
+  bar.innerHTML = '<button class="app-product-sticky-add" id="app-product-sticky-add" type="button"' +
     ((Number.isFinite(Number(product.stock)) && Number(product.stock) <= 0) ? ' disabled' : '') +
     '><span class="app-product-sticky-label">' + ((Number.isFinite(Number(product.stock)) && Number(product.stock) <= 0) ? 'Sold out' : 'Add to bag') +
-    '</span><span class="app-product-sticky-button-price">' + appProductMoney(current) + '</span></button>';
+    '</span></button><button class="app-product-sticky-wish' + (wished ? ' wished' : '') + '" id="app-product-sticky-wish" type="button" aria-label="' + (wished ? 'Remove from wishlist' : 'Add to wishlist') + '" aria-pressed="' + wished + '"><i class="' + (wished ? 'ph ph-fill ph-heart-straight' : 'ph ph-heart-straight') + '" aria-hidden="true"></i></button>';
   bar.hidden = false;
   document.getElementById('app-product-sticky-add').onclick = appAddCurrentProductToBag;
   document.getElementById('app-product-sticky-wish').onclick = event => {
     const button = event.currentTarget;
-    const active = button.getAttribute('aria-pressed') === 'true';
-    const next = !active;
+    const next = button.getAttribute('aria-pressed') !== 'true';
     button.setAttribute('aria-pressed', String(next));
     button.setAttribute('aria-label', next ? 'Remove from wishlist' : 'Add to wishlist');
     button.classList.toggle('wished', next);
-    const icon = button.querySelector('.wish-icon');
-    if (icon) icon.classList.toggle('ms-filled', next);
+    const icon = button.querySelector('i');
+    if (icon) icon.className = next ? 'ph ph-fill ph-heart-straight' : 'ph ph-heart-straight';
     bar.dataset.wished = String(next);
   };
   appUpdateProductStickyState();
@@ -562,7 +558,6 @@ function appRenderProductStickyBar(product, regular, sale) {
 function appUpdateProductStickyState() {
   const bar = document.getElementById('app-product-sticky-bar');
   if (!bar || !appProductView || appProductView.hidden || !appCurrentProduct) return;
-  bar.classList.remove('minimized');
   const label = bar.querySelector('.app-product-sticky-label');
   const button = bar.querySelector('.app-product-sticky-add');
   const p = appCurrentProduct, hasSizes = appProductHasSizes(p);
@@ -597,7 +592,7 @@ function appShowProductView() {
   const header = document.querySelector('.app-header');
   const bottomNav = document.querySelector('.bottom-nav');
   if (header) header.hidden = true;
-  if (bottomNav) bottomNav.hidden = true;
+  if (bottomNav) bottomNav.hidden = false;
 }
 function appProductClose() {
   if (!appProductView || appProductView.hidden) return;
