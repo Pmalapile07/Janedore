@@ -176,6 +176,7 @@ function rotateNavigationTo(item) {
 }
 
 function appSelectNavigationTab(tabName, activeButton) {
+  nav?.classList.remove('nav-selection-offscreen');
   rotateNavigationTo(activeButton);
   renderNavigationWindow(true);
   navItems.forEach(item => {
