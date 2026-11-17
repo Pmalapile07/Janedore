@@ -119,6 +119,8 @@ function appRestoreTab(tabName, activeButton) {
     cartView.hidden = true;
     document.body.classList.remove('app-cart-open');
   }
+  const collectionPage = document.getElementById('app-shop-page');
+  if (collectionPage) collectionPage.hidden = true;
   appActiveTab = tabName;
   const memory = appTabMemories.get(tabName) || {scrollY:0, productId:null, productScrollY:0};
   appSelectNavigationTab(tabName, activeButton);
@@ -209,11 +211,10 @@ fetch('/api/app-homepage', { headers: { Accept: 'application/json' } })
         url: /^https:\/\//i.test(value) ? value : '/shop'
       };
       if (link.type === 'products') {
-        heroButton.href = '#shop';
+        heroButton.href = '#all-products';
         heroButton.addEventListener('click', function(event) {
           event.preventDefault();
-          const shopButton = navItems.find(item => item.dataset.tab === 'Shop');
-          if (shopButton) activateTab('Shop', shopButton);
+          appOpenHomeCollection();
         });
       } else {
         heroButton.href = destinations[link.type] || '/shop';
@@ -572,10 +573,25 @@ async function appShopLoadProducts() {
     .finally(() => { appShopLoading = null; });
   return appShopLoading;
 }
+function appOpenHomeCollection() {
+  if (appProductView && !appProductView.hidden) appProductView.hidden = true;
+  appSaveCurrentTabMemory();
+  const homeView = tabViews.find(view => view.dataset.view === 'Home');
+  const collectionPage = document.getElementById('app-shop-page');
+  if (!homeView || !collectionPage) return;
+  tabViews.forEach(view => { view.hidden = view !== homeView; });
+  collectionPage.hidden = false;
+  const appHeader = document.querySelector('.app-header');
+  if (appHeader) appHeader.hidden = true;
+  appShopLoadProducts();
+  window.scrollTo({top:0,behavior:'instant'});
+}
 const appShopBack = document.getElementById('app-shop-back');
 if (appShopBack) appShopBack.addEventListener('click', () => {
+  const collectionPage = document.getElementById('app-shop-page');
+  if (collectionPage) collectionPage.hidden = true;
   const homeButton = navItems.find(item => item.dataset.tab === 'Home');
-  if (homeButton) activateTab('Home', homeButton);
+  if (homeButton) appRestoreTab('Home', homeButton);
 });
 const appProductReviewsCache = new Map();
 let appRenderedProductId = '';
