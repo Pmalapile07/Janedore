@@ -1433,7 +1433,7 @@ function appRenderCart(skipHydration) {
     const quantityLeading = quantity <= 1
       ? '<button type="button" class="app-cart-qty-action" data-cart-action="remove" data-index="' + index + '" aria-label="Remove ' + appProductEscape(item.name || 'product') + '"><i class="ph ph-trash" aria-hidden="true"></i></button>'
       : '<button type="button" class="app-cart-qty-action" data-cart-action="minus" data-index="' + index + '" aria-label="Decrease quantity"><i class="ph ph-minus" aria-hidden="true"></i></button>';
-    return '<article class="app-cart-item" data-cart-index="' + index + '">' +
+    return '<article class="app-cart-item" data-cart-index="' + index + '" data-product-id="' + appProductEscape(item.productId || '') + '" role="button" tabindex="0" aria-label="View product details for ' + appProductEscape(item.name || 'Product') + '">' +
       '<div class="app-cart-item-image">' + (image ? '<img src="' + appProductEscape(image) + '" alt="">' : '') + '</div>' +
       '<div class="app-cart-item-info"><span class="app-cart-item-badge-slot">' + (badge ? '<span class="app-cart-item-badge' + (badge === 'SALE' ? ' is-sale' : '') + '">' + appProductEscape(badge) + '</span>' : '') + '</span>' +
       '<p class="app-cart-item-brand">' + appProductEscape(item.brand || '') + '</p>' +
@@ -1463,6 +1463,13 @@ if (appCartContent) {
   appCartContent.addEventListener('click', function(event) {
     const recentCard = event.target.closest('.app-cart-recent-card[data-product-id]');
     if (recentCard) { appOpenProduct(recentCard.dataset.productId); return; }
+    // Open the exact product represented by a cart row. Quantity controls
+    // remain independent and must never trigger product navigation.
+    const cartProduct = event.target.closest('.app-cart-item[data-product-id]');
+    if (cartProduct && !event.target.closest('[data-cart-action]')) {
+      appOpenProduct(cartProduct.dataset.productId);
+      return;
+    }
     const button = event.target.closest('[data-cart-action]');
     if (button) {
       const index = Number(button.dataset.index);
@@ -1483,6 +1490,12 @@ if (appCartContent) {
     if (event.target.closest('#app-cart-promo-remove')) appCartRemovePromoCode();
   });
   appCartContent.addEventListener('keydown', function(event) {
+    const cartProduct = event.target.closest && event.target.closest('.app-cart-item[data-product-id]');
+    if (cartProduct && event.target === cartProduct && (event.key === 'Enter' || event.key === ' ')) {
+      event.preventDefault();
+      appOpenProduct(cartProduct.dataset.productId);
+      return;
+    }
     if (event.target && event.target.id === 'app-cart-promo-input' && event.key === 'Enter') {
       event.preventDefault();
       appCartApplyPromoCode();
