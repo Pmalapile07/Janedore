@@ -74,9 +74,22 @@ window.addEventListener('resize', () => {
 
 const tabViews = [...document.querySelectorAll('.app-tab-content[data-view]')];
 let appActiveTab = initialNavItem ? initialNavItem.dataset.tab : 'Home';
-const appTabMemories = new Map();
+const appScrollMemoryKey = 'janedore_app_scroll_history_v1';
+let appSavedScrollState = {};
+try { appSavedScrollState = JSON.parse(localStorage.getItem(appScrollMemoryKey) || '{}') || {}; } catch (_) {}
+const appTabMemories = new Map(Object.entries(appSavedScrollState.tabs || {}));
+let appCollectionMemory = appSavedScrollState.collection || {scrollY:0};
 if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
 let appScrollRestoreToken = 0;
+
+function appPersistScrollMemories() {
+  try {
+    localStorage.setItem(appScrollMemoryKey, JSON.stringify({
+      tabs:Object.fromEntries(appTabMemories),
+      collection:appCollectionMemory
+    }));
+  } catch (_) {}
+}
 
 function appRestoreScrollPosition(scrollY) {
   const targetY = Math.max(0, Number(scrollY) || 0);
@@ -90,6 +103,12 @@ function appRestoreScrollPosition(scrollY) {
 }
 
 function appSaveCurrentTabMemory() {
+  const collectionPage = document.getElementById('app-shop-page');
+  if (collectionPage && !collectionPage.hidden && (!appProductView || appProductView.hidden)) {
+    appCollectionMemory.scrollY = window.scrollY;
+    appPersistScrollMemories();
+    return;
+  }
   const memory = appTabMemories.get(appActiveTab) || {scrollY:0, productId:null, productScrollY:0};
   if (appProductView && !appProductView.hidden) {
     memory.productId = appCurrentProduct && appCurrentProduct.id ? String(appCurrentProduct.id) : (appRenderedProductId || null);
@@ -100,7 +119,32 @@ function appSaveCurrentTabMemory() {
     memory.productScrollY = 0;
   }
   appTabMemories.set(appActiveTab, memory);
+  appPersistScrollMemories();
 }
+
+let appScrollSaveQueued = false;
+window.addEventListener('scroll', () => {
+  if (appScrollSaveQueued) return;
+  appScrollSaveQueued = true;
+  requestAnimationFrame(() => {
+    appScrollSaveQueued = false;
+    const collectionPage = document.getElementById('app-shop-page');
+    if (collectionPage && !collectionPage.hidden && (!appProductView || appProductView.hidden)) {
+      appCollectionMemory.scrollY = window.scrollY;
+      appPersistScrollMemories();
+    } else if (!appProductView || appProductView.hidden) {
+      const memory = appTabMemories.get(appActiveTab) || {scrollY:0,productId:null,productScrollY:0};
+      memory.scrollY = window.scrollY;
+      appTabMemories.set(appActiveTab, memory);
+      appPersistScrollMemories();
+    } else {
+      const memory = appTabMemories.get(appActiveTab) || {scrollY:0,productId:null,productScrollY:0};
+      memory.productScrollY = window.scrollY;
+      appTabMemories.set(appActiveTab, memory);
+      appPersistScrollMemories();
+    }
+  });
+});
 
 function appSelectNavigationTab(tabName, activeButton) {
   navItems.forEach(item => {
@@ -586,12 +630,12 @@ function appOpenHomeCollection() {
   const appHeader = document.querySelector('.app-header');
   if (appHeader) appHeader.hidden = true;
   appShopLoadProducts();
-  window.scrollTo({top:0,behavior:'instant'});
+  appRestoreScrollPosition(appCollectionMemory.scrollY || 0);
 }
 const appShopBack = document.getElementById('app-shop-back');
 if (appShopBack) appShopBack.addEventListener('click', () => {
   const collectionPage = document.getElementById('app-shop-page');
-  if (collectionPage) collectionPage.hidden = true;
+  if (collectionPage) { appCollectionMemory.scrollY = window.scrollY; collectionPage.hidden = true; appPersistScrollMemories(); }
   const homeButton = navItems.find(item => item.dataset.tab === 'Home');
   if (homeButton) appRestoreTab('Home', homeButton);
 });
@@ -916,6 +960,7 @@ function appUpdateCartIndicator() {
   if (cartButton) cartButton.setAttribute('aria-label', count ? 'Shopping bag, ' + count + (count === 1 ? ' item' : ' items') : 'Shopping bag');
 }
 let appProductReturnToCart = false;
+let appProductReturnToCollection = false;
 function appShowProductView() {
   const cartView = document.getElementById('app-cart-view');
   appProductReturnToCart = !!(cartView && !cartView.hidden);
@@ -951,10 +996,28 @@ function appProductClose() {
     window.scrollTo({top:0,behavior:'instant'});
     return;
   }
+  if (appProductReturnToCollection) {
+    appProductReturnToCollection = false;
+    appProductView.hidden = true;
+    const stickyBar = document.getElementById('app-product-sticky-bar');
+    if (stickyBar) stickyBar.hidden = true;
+    document.body.classList.remove('app-product-open');
+    tabViews.forEach(view => { view.hidden = true; });
+    const collectionPage = document.getElementById('app-shop-page');
+    if (collectionPage) collectionPage.hidden = false;
+    const header = document.querySelector('.app-header');
+    const bottomNav = document.querySelector('.bottom-nav');
+    if (header) header.hidden = true;
+    if (bottomNav) bottomNav.hidden = false;
+    if (location.hash.startsWith('#product/')) history.replaceState(null, '', location.pathname + location.search);
+    appRestoreScrollPosition(appCollectionMemory.scrollY || 0);
+    return;
+  }
   const memory = appTabMemories.get(appActiveTab) || {scrollY:0,productId:null,productScrollY:0};
   memory.productId = null;
   memory.productScrollY = 0;
   appTabMemories.set(appActiveTab,memory);
+  appPersistScrollMemories();
   appProductView.hidden = true;
   const stickyBar = document.getElementById('app-product-sticky-bar');
   if (stickyBar) stickyBar.hidden = true;
@@ -981,6 +1044,8 @@ async function appOpenProduct(productId, pushHistory = true) {
   let product = appProductCache.get(id) || null;
   if (product) appRecordRecentlyViewed(product);
   const openedFromCart = !!(document.getElementById('app-cart-view') && !document.getElementById('app-cart-view').hidden);
+  const collectionPage = document.getElementById('app-shop-page');
+  appProductReturnToCollection = !openedFromCart && !!(collectionPage && !collectionPage.hidden);
   if (!openedFromCart) {
     const tabMemory = appTabMemories.get(appActiveTab) || {scrollY:0,productId:null,productScrollY:0};
     tabMemory.productId = id;
