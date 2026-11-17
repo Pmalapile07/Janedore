@@ -376,3 +376,5 @@ body.app-cart-open .bottom-nav{display:grid!important;grid-template-columns:repe
 .app-cart-recent-price{display:flex;gap:7px;align-items:center;font:500 11px Inter,Arial,sans-serif}
 .app-cart-recent-price s{color:#888;font-weight:400}
 .app-cart-recent-sale{color:#111}
+
+.app-checkout-steps[hidden]{display:none!important}
