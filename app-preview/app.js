@@ -1276,8 +1276,6 @@ function appRenderCart(skipHydration) {
   }
   const subtotal = appCartSubtotal(items);
   const discountAmount = appCartDiscountAmount(items, subtotal);
-  const shipping = appCartGetShipments(items);
-  const packageCount = Math.max(1, shipping.length);
   const cards = items.map(function(item, index) {
     const quantity = Math.max(1, Number(item.qty) || 1);
     const image = typeof item.thumbnail === 'string' && /^https:\/\//i.test(item.thumbnail) ? item.thumbnail : '';
@@ -1296,10 +1294,10 @@ function appRenderCart(skipHydration) {
   appCartContent.innerHTML = appCartDeliveryBanner(items) +
     '<div class="app-cart-items">' + cards + '</div>' +
     appCartPromoHtml() +
-    '<div class="app-cart-summary"><div class="app-cart-total-head"><span>Total to pay</span><strong>' + appCartFormat(Math.max(0, subtotal - discountAmount)) + '</strong></div>' +
-    '<div class="app-cart-total-row"><span>Subtotal</span><span>' + appCartFormat(subtotal) + '</span></div>' +
+    '<div class="app-cart-summary"><div class="app-cart-total-row"><span>Subtotal</span><span>' + appCartFormat(subtotal) + '</span></div>' +
     discountRow +
-    '<div class="app-cart-total-row"><span>Delivery fee' + (packageCount > 1 ? ' (' + packageCount + ' packages)' : '') + '</span><span>Calculated at checkout</span></div>' +
+    '<div class="app-cart-total-row"><span>Delivery</span><span>Calculated at checkout</span></div>' +
+    '<div class="app-cart-total-head"><span>Total to pay</span><strong>' + appCartFormat(Math.max(0, subtotal - discountAmount)) + '</strong></div>' +
     '<button type="button" id="app-cart-checkout">Proceed to checkout</button></div>' + recentSection;
   appCartRenderRecentlyViewed(renderVersion);
   if (!skipHydration) {
