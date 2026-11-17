@@ -601,14 +601,28 @@ window.appFlagProductReview=async function(reviewId,button){
 };
 async function appLoadProductReviews(productId){
   const box=document.getElementById('app-product-reviews');if(!box)return;
-  appReviewProductId=productId;appReviewSort='newest';appReviewItems=[];
-  box.innerHTML='<p>Loading reviews…</p>';
+  appReviewProductId=productId;appReviewSort='newest';
+
+  // Show previously fetched reviews immediately; refresh them quietly in the background.
+  const cachedReviews=appProductReviewsCache.get(productId);
+  if(cachedReviews){
+    appReviewItems=cachedReviews;
+    appRenderProductReviews(productId);
+  }else{
+    appReviewItems=[];
+    box.innerHTML='';
+  }
+
   try{
     const snap=await appProductDb.collection('reviews').where('productId','==',productId).limit(100).get();
     if(!appCurrentProduct||appCurrentProduct.id!==productId||appReviewProductId!==productId)return;
-    appReviewItems=snap.docs.map(doc=>Object.assign({id:doc.id},doc.data())).sort((a,b)=>appReviewTime(b)-appReviewTime(a));
+    const freshReviews=snap.docs.map(doc=>Object.assign({id:doc.id},doc.data())).sort((a,b)=>appReviewTime(b)-appReviewTime(a));
+    appProductReviewsCache.set(productId,freshReviews);
+    appReviewItems=freshReviews;
     appRenderProductReviews(productId);
-  }catch(error){if(appCurrentProduct&&appCurrentProduct.id===productId)box.textContent='Customer reviews are unavailable right now.';}
+  }catch(error){
+    if(!cachedReviews&&appCurrentProduct&&appCurrentProduct.id===productId)box.textContent='Customer reviews are unavailable right now.';
+  }
 }
 
 function appProductMoney(value) {
