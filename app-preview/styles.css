@@ -73,7 +73,7 @@ body{background:#fff;color:var(--ink);font-family:Inter,Arial,sans-serif;-webkit
 .app-new-in{padding:22px 0 30px;overflow:hidden}
 .app-new-in-heading{padding:0 12px 12px}
 .app-new-in-heading h2{margin:0;color:#111;font:600 17px/1.25 Inter,Arial,sans-serif;letter-spacing:0}
-.app-new-in-track{display:flex;gap:4px;width:100%;padding:0 0 4px 12px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scroll-padding-left:12px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.app-new-in-track{display:flex;gap:8px;width:100%;padding:0 0 4px 12px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scroll-padding-left:12px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .app-new-in-track::-webkit-scrollbar{display:none}
 .app-new-in-card{flex:0 0 calc((100% - 20px)/2);max-width:none;min-width:0;scroll-snap-align:start;color:#111}
 .app-new-in-track::after{content:"";flex:0 0 12px}
@@ -380,7 +380,7 @@ body.app-cart-open .bottom-nav{display:grid!important;grid-template-columns:repe
 /* Recently viewed products — horizontal swipe slider. */
 .app-cart-recent{margin:30px -12px 0;padding:0 0 10px;overflow:hidden}
 .app-cart-recent h2{margin:0;padding:0 12px 13px;color:#111;font:600 16px/1.25 Inter,Arial,sans-serif}
-.app-cart-recent-track{display:flex;gap:4px;padding:0 12px 6px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.app-cart-recent-track{display:flex;gap:8px;padding:0 12px 6px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .app-cart-recent-track::-webkit-scrollbar{display:none}
 .app-cart-recent-track .app-new-in-name{display:-webkit-box;min-width:0;min-height:30px;max-height:30px;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow-wrap:anywhere}
 .app-cart-recent-track .app-new-in-card{flex:0 0 calc((100% - 8px)/2);min-width:0}
