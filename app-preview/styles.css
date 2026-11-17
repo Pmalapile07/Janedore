@@ -348,7 +348,7 @@ body.app-cart-open .bottom-nav{display:grid!important;grid-template-columns:repe
 .app-cart-delivery-track span{display:block;height:100%;background:#809ADD;transition:width .25s ease}
 
 /* Discount code and matching totals. */
-.app-cart-promo{margin-top:20px;padding:16px 0;border-top:1px solid #e5e5e5;border-bottom:1px solid #e5e5e5}
+.app-cart-promo{margin-top:20px;padding:16px 0;border-top:1px solid #e5e5e5;border-bottom:0}
 .app-cart-promo h2{margin:0 0 12px;font:500 13px Inter,Arial,sans-serif}
 .app-cart-promo-row{display:flex;gap:8px}
 .app-cart-promo-row input{flex:1;min-width:0;height:44px;box-sizing:border-box;padding:0 12px;border:1px solid #d8d8d8;border-radius:0;background:#fff;color:#111;font:400 12px Inter,Arial,sans-serif;text-transform:uppercase}
@@ -361,7 +361,7 @@ body.app-cart-open .bottom-nav{display:grid!important;grid-template-columns:repe
 .app-cart-promo-message.success{color:#27633c}
 .app-cart-promo-message.error{color:#b42318}
 .app-cart-promo-message.info{color:#555}
-.app-cart-total-head{display:flex;align-items:center;justify-content:space-between;padding-bottom:15px;margin-bottom:9px;border-bottom:1px solid #ddd;font:600 16px Inter,Arial,sans-serif}
+.app-cart-total-head{display:flex;align-items:center;justify-content:space-between;padding-top:13px;margin-top:14px;border-top:0;font:600 16px Inter,Arial,sans-serif}
 .app-cart-total-head strong{font-weight:600}
 .app-cart-total-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:11px 0;color:#333;font:400 12px Inter,Arial,sans-serif}
 .app-cart-total-row.discount{color:#809ADD;font-weight:600}
