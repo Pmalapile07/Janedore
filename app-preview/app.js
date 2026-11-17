@@ -643,12 +643,12 @@ function appHideAddedToast() {
 function appUpdateCartCount() {
   const count = appProductCartItems().reduce((sum, item) => sum + (Number(item.qty) || 0), 0);
   const badge = document.getElementById('app-product-cart-count');
-  if (badge) { badge.textContent = count > 9 ? '9+' : String(count); badge.hidden = count < 1; }
+  if (badge) { badge.textContent = '(' + (count > 9 ? '9+' : String(count)) + ')'; badge.hidden = count < 1; }
   const headerCart = document.getElementById('app-header-cart');
   if (headerCart) {
     let headerBadge = headerCart.querySelector('.app-header-cart-count');
     if (!headerBadge) { headerBadge = document.createElement('span'); headerBadge.className = 'app-header-cart-count'; headerCart.appendChild(headerBadge); }
-    headerBadge.textContent = count > 9 ? '9+' : String(count);
+    headerBadge.textContent = '(' + (count > 9 ? '9+' : String(count)) + ')';
     headerBadge.hidden = count < 1;
   }
 }
