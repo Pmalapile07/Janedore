@@ -138,6 +138,7 @@ function appRestoreTab(tabName, activeButton) {
   const purchaseRow = document.getElementById('app-product-sticky-bar');
   if (purchaseRow) purchaseRow.hidden = true;
   tabViews.forEach(view => { view.hidden = view.dataset.view !== tabName; });
+  if (tabName === 'Shop') appShopLoadProducts();
   appRestoreScrollPosition(memory.scrollY);
 }
 
@@ -934,7 +935,7 @@ function appOpenWishlistDestination() {
   document.body.classList.remove('app-product-open');
   const header = document.querySelector('.app-header');
   const bottom = document.querySelector('.bottom-nav');
-  if (header) header.hidden = false;
+  if (header) header.hidden = appActiveTab === 'Shop';
   if (bottom) bottom.hidden = false;
   tabViews.forEach(view => { view.hidden = view.dataset.view !== 'Wishlist'; });
   window.scrollTo({top:0,behavior:'instant'});
