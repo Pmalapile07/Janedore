@@ -1294,11 +1294,27 @@ function appRenderCart(skipHydration) {
     const image = typeof item.thumbnail === 'string' && /^https:\/\//i.test(item.thumbnail) ? item.thumbnail : '';
     const variant = item.color && item.color !== 'Default' ? ' · ' + item.color : '';
     const size = item.size && item.size !== 'OS' ? ' · Size ' + item.size : '';
+    const product = appProductCache.get(String(item.productId || '')) || null;
+    const badge = product
+      ? (Number(product.stock) <= 0
+        ? 'SOLD OUT'
+        : (String(product.badge || '').trim().toLowerCase() === 'pre-order'
+          ? 'PRE-ORDER'
+          : ((Number(product.salePrice) > 0 && Number(product.salePrice) < Number(product.price))
+            ? 'SALE'
+            : (product.badge && !['new','sale','sold out','sold','free delivery'].includes(String(product.badge).toLowerCase())
+              ? String(product.badge).toUpperCase()
+              : 'NEW')))
+      : '';
+    const quantityLeading = quantity <= 1
+      ? '<button type="button" class="app-cart-qty-action" data-cart-action="remove" data-index="' + index + '" aria-label="Remove ' + appProductEscape(item.name || 'product') + '"><i class="ph ph-trash" aria-hidden="true"></i></button>'
+      : '<button type="button" class="app-cart-qty-action" data-cart-action="minus" data-index="' + index + '" aria-label="Decrease quantity"><i class="ph ph-minus" aria-hidden="true"></i></button>';
     return '<article class="app-cart-item" data-cart-index="' + index + '">' +
       '<div class="app-cart-item-image">' + (image ? '<img src="' + appProductEscape(image) + '" alt="">' : '') + '</div>' +
       '<div class="app-cart-item-info"><p class="app-cart-item-brand">' + appProductEscape(item.brand || '') + '</p>' +
       '<h2>' + appProductEscape(item.name || 'Product') + '</h2><p class="app-cart-item-variant">' + appProductEscape((variant + size).replace(/^ · /, '')) + '</p>' +
-      '<div class="app-cart-item-controls"><button type="button" data-cart-action="minus" data-index="' + index + '" aria-label="Decrease quantity" ' + (quantity <= 1 ? 'disabled' : '') + '>−</button><span>' + quantity + '</span><button type="button" data-cart-action="plus" data-index="' + index + '" aria-label="Increase quantity">+</button><button class="app-cart-remove" type="button" data-cart-action="remove" data-index="' + index + '">Remove</button></div></div>' +
+      '<div class="app-cart-item-quantity-wrap"><div class="app-cart-item-controls">' + quantityLeading + '<span>' + quantity + '</span><button type="button" class="app-cart-qty-action" data-cart-action="plus" data-index="' + index + '" aria-label="Increase quantity"><i class="ph ph-plus" aria-hidden="true"></i></button></div>' +
+      (badge ? '<span class="app-cart-item-badge' + (badge === 'SALE' ? ' is-sale' : '') + '">' + appProductEscape(badge) + '</span>' : '') + '</div></div>' +
       '<div class="app-cart-item-price">' + appCartFormat(appCartUnitPrice(item) * quantity) + '</div></article>';
   }).join('');
   const discountRow = appAppliedDiscount
