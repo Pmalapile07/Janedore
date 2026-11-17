@@ -63,7 +63,7 @@ let rotatingNavItems = navItems.filter(item => item !== homeNavItem);
 let navAnimationTimer = null;
 let navAnimationGhosts = [];
 
-function renderNavigationWindow(animate = false) {
+function renderNavigationWindow(animate = false, direction = 1) {
   if (!nav || !homeNavItem || !navIndicator) return;
   const previousVisible = new Set(navItems.filter(item => !item.hidden));
   const previousRects = new Map([...previousVisible].map(item => [item, item.getBoundingClientRect()]));
@@ -106,7 +106,7 @@ function renderNavigationWindow(animate = false) {
   });
   entering.forEach(item => {
     item.style.transition = 'none';
-    item.style.transform = `translate3d(${cellWidth}px,0,0)`;
+    item.style.transform = `translate3d(${direction * cellWidth}px,0,0)`;
     item.style.opacity = '0';
   });
 
@@ -146,7 +146,7 @@ function renderNavigationWindow(animate = false) {
   });
   ghosts.forEach(ghost => {
     ghost.style.transition = glide;
-    ghost.style.transform = `translate3d(-${cellWidth}px,0,0)`;
+    ghost.style.transform = `translate3d(${-direction * cellWidth}px,0,0)`;
     ghost.style.opacity = '0';
   });
 
@@ -277,7 +277,7 @@ if (nav) {
         rotatingNavItems.unshift(rotatingNavItems.pop());
       }
     }
-    renderNavigationWindow(true);
+    renderNavigationWindow(true, deltaX < 0 ? 1 : -1);
     const selected = navItems.find(item => item.classList.contains('selected'));
     if (selected && !selected.hidden) {
       nav.classList.remove('nav-selection-offscreen');
