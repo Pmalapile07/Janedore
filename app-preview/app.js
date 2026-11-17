@@ -1221,6 +1221,7 @@ const appCartView = document.getElementById('app-cart-view');
 const appCartContent = document.getElementById('app-cart-content');
 let appCartReturnTab = 'Home';
 let appCartRenderVersion = 0;
+let appCartNeedsRender = true;
 let appCartPromoFeedback = null;
 let appCartPromoPending = false;
 let appAppliedDiscount = null;
@@ -1549,7 +1550,9 @@ function appCartOpen() {
   document.body.classList.remove('app-product-open');
   document.body.classList.add('app-cart-open');
   appCartView.hidden = false;
-  appRenderCart();
+  // Keep the existing cart DOM when returning from another tab. Only rebuild
+  // it when the cart contents have actually changed or it has never rendered.
+  if (appCartNeedsRender) appRenderCart();
   window.scrollTo({top:0,behavior:'instant'});
   if (!alreadyOpen && location.hash !== '#bag') history.pushState({appCart:true}, '', location.pathname + location.search + '#bag');
 }
@@ -1577,6 +1580,7 @@ function appCartClose(fromHistory) {
 }
 function appRenderCart(skipHydration) {
   if (!appCartContent) return;
+  appCartNeedsRender = false;
   const items = appProductCartItems();
   const renderVersion = ++appCartRenderVersion;
   const stepper = document.querySelector('.app-checkout-steps');
@@ -1730,6 +1734,7 @@ function appAddCurrentProductToBag() {
     });
   }
   localStorage.setItem('janedore_cart',JSON.stringify(items));
+  appCartNeedsRender = true;
   appUpdateCartIndicator();
   appShowAddedToast('Added to bag', 'ph-check-circle', 'cart');
   
