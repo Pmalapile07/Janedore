@@ -478,9 +478,9 @@ body.app-cart-open .bottom-nav{display:grid!important;grid-template-columns:repe
 .app-shop-header{position:sticky;top:0;z-index:8;display:flex;align-items:center;justify-content:center;min-height:48px;margin:0 -16px;padding:0 16px;background:rgba(255,255,255,.96)}
 .app-shop-back{position:absolute;left:16px;display:flex;align-items:center;justify-content:center;width:34px;height:38px;padding:0;border:0;background:transparent;color:#111;font-size:22px}
 .app-shop-header h1{margin:0;color:#111;font:600 14px/1.2 Inter,Arial,sans-serif;letter-spacing:.08em;text-align:center;text-transform:uppercase}
-.app-shop-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:8px -16px 0;padding:12px 16px;border-top:1px solid #eee;border-bottom:1px solid #eee}
-.app-shop-toolbar button{display:inline-flex;align-items:center;gap:8px;padding:3px 0;border:0;background:transparent;color:#111;font:500 11px Inter,Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase}
-.app-shop-toolbar button i{font-size:17px}
+.app-shop-toolbar{display:grid;grid-template-columns:1fr 1fr;align-items:stretch;margin:8px -16px 0;padding:0;border-top:1px solid #eee;border-bottom:1px solid #eee}
+.app-shop-toolbar button{display:flex;align-items:center;justify-content:center;min-height:44px;padding:3px 0;border:0;background:transparent;color:#111;font:500 11px Inter,Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase}
+.app-shop-toolbar button+button{border-left:1px solid #eee}
 .app-shop-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:8px;row-gap:22px}
 .app-shop-grid .app-new-in-card{min-width:0;max-width:none;flex:none;width:auto}
 .app-shop-grid .app-new-in-image{aspect-ratio:25/33}
