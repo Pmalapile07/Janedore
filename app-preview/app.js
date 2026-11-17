@@ -73,19 +73,23 @@ window.addEventListener('resize', () => {
 });
 
 const tabViews = [...document.querySelectorAll('.app-tab-content[data-view]')];
+let appActiveTab = initialNavItem ? initialNavItem.dataset.tab : 'Home';
+const appTabMemories = new Map();
 
-function activateTab(tabName, activeButton) {
+function appSaveCurrentTabMemory() {
+  const memory = appTabMemories.get(appActiveTab) || {scrollY:0, productId:null, productScrollY:0};
   if (appProductView && !appProductView.hidden) {
-    appProductView.hidden = true;
-    document.body.classList.remove('app-product-open');
-    const header = document.querySelector('.app-header');
-    if (header) header.hidden = false;
-    const purchaseRow = document.getElementById('app-product-sticky-bar');
-    if (purchaseRow) purchaseRow.hidden = true;
+    memory.productId = appCurrentProduct && appCurrentProduct.id ? String(appCurrentProduct.id) : (appRenderedProductId || null);
+    memory.productScrollY = window.scrollY;
+  } else {
+    memory.scrollY = window.scrollY;
+    memory.productId = null;
+    memory.productScrollY = 0;
   }
-  tabViews.forEach(view => {
-    view.hidden = view.dataset.view !== tabName;
-  });
+  appTabMemories.set(appActiveTab, memory);
+}
+
+function appSelectNavigationTab(tabName, activeButton) {
   navItems.forEach(item => {
     const active = item === activeButton;
     item.classList.toggle('selected', active);
@@ -93,7 +97,35 @@ function activateTab(tabName, activeButton) {
     else item.removeAttribute('aria-current');
   });
   moveNavIndicator(activeButton);
-  window.scrollTo({ top: 0, behavior: 'instant' });
+}
+
+function appRestoreTab(tabName, activeButton) {
+  appActiveTab = tabName;
+  const memory = appTabMemories.get(tabName) || {scrollY:0, productId:null, productScrollY:0};
+  appSelectNavigationTab(tabName, activeButton);
+  if (location.hash.startsWith('#product/') || location.hash === '#bag') {
+    history.replaceState(null, '', location.pathname + location.search);
+  }
+  if (memory.productId) {
+    appOpenProduct(memory.productId, false).then(() => {
+      requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo({top:memory.productScrollY || 0,behavior:'instant'})));
+    });
+    return;
+  }
+  appProductView.hidden = true;
+  document.body.classList.remove('app-product-open');
+  const header = document.querySelector('.app-header');
+  if (header) header.hidden = false;
+  const purchaseRow = document.getElementById('app-product-sticky-bar');
+  if (purchaseRow) purchaseRow.hidden = true;
+  tabViews.forEach(view => { view.hidden = view.dataset.view !== tabName; });
+  window.scrollTo({top:memory.scrollY || 0,behavior:'instant'});
+}
+
+function activateTab(tabName, activeButton) {
+  if (tabName === appActiveTab && (!appProductView || appProductView.hidden)) return;
+  appSaveCurrentTabMemory();
+  appRestoreTab(tabName, activeButton);
 }
 
 navItems.forEach(button => {
@@ -596,17 +628,21 @@ function appShowProductView() {
 }
 function appProductClose() {
   if (!appProductView || appProductView.hidden) return;
+  const memory = appTabMemories.get(appActiveTab) || {scrollY:0,productId:null,productScrollY:0};
+  memory.productId = null;
+  memory.productScrollY = 0;
+  appTabMemories.set(appActiveTab,memory);
   appProductView.hidden = true;
   const stickyBar = document.getElementById('app-product-sticky-bar');
   if (stickyBar) stickyBar.hidden = true;
   document.body.classList.remove('app-product-open');
-  document.querySelectorAll('.app-tab-content').forEach(view => { view.hidden = view.dataset.view !== 'Home'; });
+  tabViews.forEach(view => { view.hidden = view.dataset.view !== appActiveTab; });
   const header = document.querySelector('.app-header');
   const bottomNav = document.querySelector('.bottom-nav');
   if (header) header.hidden = false;
   if (bottomNav) bottomNav.hidden = false;
   if (location.hash.startsWith('#product/')) history.replaceState(null, '', location.pathname + location.search);
-  window.scrollTo({top:0,behavior:'instant'});
+  window.scrollTo({top:memory.scrollY || 0,behavior:'instant'});
 }
 function appProductShowLoading() {
   appShowProductView();
@@ -620,6 +656,10 @@ async function appOpenProduct(productId, pushHistory = true) {
   const id = String(productId || '').trim();
   if (!id) return;
   let product = appProductCache.get(id) || null;
+  const tabMemory = appTabMemories.get(appActiveTab) || {scrollY:0,productId:null,productScrollY:0};
+  tabMemory.productId = id;
+  tabMemory.productScrollY = 0;
+  appTabMemories.set(appActiveTab,tabMemory);
   appShowProductView();
   if (pushHistory) history.pushState({appProductId:id}, '', '#product/' + encodeURIComponent(id));
   window.scrollTo({top:0,behavior:'instant'});
