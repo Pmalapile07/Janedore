@@ -100,6 +100,7 @@ function appSelectNavigationTab(tabName, activeButton) {
 }
 
 function appRestoreTab(tabName, activeButton) {
+  appProductReturnToCart = false;
   const cartView = document.getElementById('app-cart-view');
   if (cartView && !cartView.hidden) {
     cartView.hidden = true;
@@ -738,10 +739,13 @@ async function appOpenProduct(productId, pushHistory = true) {
   if (!id) return;
   let product = appProductCache.get(id) || null;
   if (product) appRecordRecentlyViewed(product);
-  const tabMemory = appTabMemories.get(appActiveTab) || {scrollY:0,productId:null,productScrollY:0};
-  tabMemory.productId = id;
-  tabMemory.productScrollY = 0;
-  appTabMemories.set(appActiveTab,tabMemory);
+  const openedFromCart = !!(document.getElementById('app-cart-view') && !document.getElementById('app-cart-view').hidden);
+  if (!openedFromCart) {
+    const tabMemory = appTabMemories.get(appActiveTab) || {scrollY:0,productId:null,productScrollY:0};
+    tabMemory.productId = id;
+    tabMemory.productScrollY = 0;
+    appTabMemories.set(appActiveTab,tabMemory);
+  }
   appShowProductView();
   if (pushHistory) history.pushState({appProductId:id}, '', '#product/' + encodeURIComponent(id));
   window.scrollTo({top:0,behavior:'instant'});
