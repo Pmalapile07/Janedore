@@ -75,6 +75,19 @@ window.addEventListener('resize', () => {
 const tabViews = [...document.querySelectorAll('.app-tab-content[data-view]')];
 let appActiveTab = initialNavItem ? initialNavItem.dataset.tab : 'Home';
 const appTabMemories = new Map();
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+let appScrollRestoreToken = 0;
+
+function appRestoreScrollPosition(scrollY) {
+  const targetY = Math.max(0, Number(scrollY) || 0);
+  const token = ++appScrollRestoreToken;
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      if (token !== appScrollRestoreToken) return;
+      window.scrollTo({top:targetY,behavior:'instant'});
+    });
+  });
+}
 
 function appSaveCurrentTabMemory() {
   const memory = appTabMemories.get(appActiveTab) || {scrollY:0, productId:null, productScrollY:0};
@@ -114,7 +127,7 @@ function appRestoreTab(tabName, activeButton) {
   }
   if (memory.productId) {
     appOpenProduct(memory.productId, false).then(() => {
-      requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo({top:memory.productScrollY || 0,behavior:'instant'})));
+      appRestoreScrollPosition(memory.productScrollY);
     });
     return;
   }
@@ -125,7 +138,7 @@ function appRestoreTab(tabName, activeButton) {
   const purchaseRow = document.getElementById('app-product-sticky-bar');
   if (purchaseRow) purchaseRow.hidden = true;
   tabViews.forEach(view => { view.hidden = view.dataset.view !== tabName; });
-  window.scrollTo({top:memory.scrollY || 0,behavior:'instant'});
+  appRestoreScrollPosition(memory.scrollY);
 }
 
 function activateTab(tabName, activeButton) {
@@ -859,7 +872,7 @@ function appProductClose() {
   if (header) header.hidden = false;
   if (bottomNav) bottomNav.hidden = false;
   if (location.hash.startsWith('#product/')) history.replaceState(null, '', location.pathname + location.search);
-  window.scrollTo({top:memory.scrollY || 0,behavior:'instant'});
+  appRestoreScrollPosition(memory.scrollY);
 }
 function appProductShowLoading() {
   appShowProductView();
