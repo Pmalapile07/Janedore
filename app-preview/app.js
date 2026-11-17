@@ -935,7 +935,7 @@ function appOpenWishlistDestination() {
   document.body.classList.remove('app-product-open');
   const header = document.querySelector('.app-header');
   const bottom = document.querySelector('.bottom-nav');
-  if (header) header.hidden = appActiveTab === 'Shop';
+  if (header) header.hidden = false;
   if (bottom) bottom.hidden = false;
   tabViews.forEach(view => { view.hidden = view.dataset.view !== 'Wishlist'; });
   window.scrollTo({top:0,behavior:'instant'});
@@ -1002,7 +1002,7 @@ function appProductClose() {
   tabViews.forEach(view => { view.hidden = view.dataset.view !== appActiveTab; });
   const header = document.querySelector('.app-header');
   const bottomNav = document.querySelector('.bottom-nav');
-  if (header) header.hidden = false;
+  if (header) header.hidden = appActiveTab === 'Shop';
   if (bottomNav) bottomNav.hidden = false;
   if (location.hash.startsWith('#product/')) history.replaceState(null, '', location.pathname + location.search);
   appRestoreScrollPosition(memory.scrollY);
