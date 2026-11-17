@@ -123,6 +123,7 @@ function appRestoreTab(tabName, activeButton) {
 }
 
 function activateTab(tabName, activeButton) {
+  if (tabName === 'Cart') { appCartOpen(); return; }
   if (tabName === appActiveTab && (!appProductView || appProductView.hidden)) return;
   appSaveCurrentTabMemory();
   appRestoreTab(tabName, activeButton);
@@ -237,7 +238,7 @@ document.addEventListener('click', event => {
   const icon = button.querySelector('i');
   if (icon) icon.className = active ? 'ph ph-heart-straight' : 'ph-fill ph-heart-straight';
   button.classList.toggle('is-wishlisted', !active);
-  appShowAddedToast(active ? 'Removed from wishlist' : 'Added to wishlist', active ? 'ph-heart-break' : 'ph-heart');
+  appShowAddedToast(active ? 'Removed from wishlist' : 'Added to wishlist', active ? 'ph-heart-break' : 'ph-heart', 'wishlist');
 });
 
 // Keep the New In progress indicator in sync with horizontal scrolling.
@@ -585,7 +586,7 @@ function appRenderProductStickyBar(product, regular, sale) {
     const icon = button.querySelector('i');
     if (icon) icon.className = next ? 'ph ph-fill ph-heart-straight' : 'ph ph-heart-straight';
     bar.dataset.wished = String(next);
-    appShowAddedToast(next ? 'Added to wishlist' : 'Removed from wishlist', next ? 'ph-heart' : 'ph-heart-break');
+    appShowAddedToast(next ? 'Added to wishlist' : 'Removed from wishlist', next ? 'ph-heart' : 'ph-heart-break', 'wishlist');
   };
   appUpdateProductStickyState();
 }
@@ -607,7 +608,7 @@ function appProductCartItems() {
 }
 const APP_ADDED_TOAST_MS = 3000;
 let appAddedToastTimer = null;
-function appShowAddedToast(message, icon) {
+function appShowAddedToast(message, icon, destination) {
   let toast = document.getElementById('app-added-toast');
   if (!toast) {
     toast = document.createElement('div');
@@ -619,10 +620,18 @@ function appShowAddedToast(message, icon) {
       '<i class="ph ph-check-circle app-added-toast-icon" aria-hidden="true"></i>' +
       '<span class="app-added-toast-text"></span>' +
       '<button type="button" class="app-added-toast-close" aria-label="Dismiss"><i class="ph ph-x" aria-hidden="true"></i></button>';
-    toast.querySelector('.app-added-toast-close').addEventListener('click', appHideAddedToast);
+    toast.addEventListener('click', event => {
+      if (event.target.closest('.app-added-toast-close')) return;
+      const target = toast.dataset.destination;
+      appHideAddedToast();
+      if (target === 'cart') appCartOpen();
+      else if (target === 'wishlist') appOpenWishlistDestination();
+    });
+    toast.querySelector('.app-added-toast-close').addEventListener('click', event => { event.stopPropagation(); appHideAddedToast(); });
     document.body.appendChild(toast);
   }
   toast.querySelector('.app-added-toast-text').textContent = message || 'Added to bag';
+  toast.dataset.destination = destination || (/wishlist/i.test(message || '') ? 'wishlist' : 'cart');
   const iconEl = toast.querySelector('.app-added-toast-icon');
   if (iconEl) iconEl.className = 'ph ' + (icon || 'ph-check-circle') + ' app-added-toast-icon';
   const progress = toast.querySelector('.app-added-toast-progress');
@@ -635,6 +644,20 @@ function appShowAddedToast(message, icon) {
   window.clearTimeout(appAddedToastTimer);
   appAddedToastTimer = window.setTimeout(appHideAddedToast, APP_ADDED_TOAST_MS);
 }
+function appOpenWishlistDestination() {
+  appSaveCurrentTabMemory();
+  appActiveTab = 'Wishlist';
+  if (appProductView) appProductView.hidden = true;
+  const cartView = document.getElementById('app-cart-view');
+  if (cartView) cartView.hidden = true;
+  document.body.classList.remove('app-product-open');
+  const header = document.querySelector('.app-header');
+  const bottom = document.querySelector('.bottom-nav');
+  if (header) header.hidden = false;
+  if (bottom) bottom.hidden = false;
+  tabViews.forEach(view => { view.hidden = view.dataset.view !== 'Wishlist'; });
+  window.scrollTo({top:0,behavior:'instant'});
+}
 function appHideAddedToast() {
   window.clearTimeout(appAddedToastTimer);
   const toast = document.getElementById('app-added-toast');
@@ -644,13 +667,6 @@ function appUpdateCartCount() {
   const count = appProductCartItems().reduce((sum, item) => sum + (Number(item.qty) || 0), 0);
   const badge = document.getElementById('app-product-cart-count');
   if (badge) { badge.textContent = '(' + (count > 9 ? '9+' : String(count)) + ')'; badge.hidden = count < 1; }
-  const headerCart = document.getElementById('app-header-cart');
-  if (headerCart) {
-    let headerBadge = headerCart.querySelector('.app-header-cart-count');
-    if (!headerBadge) { headerBadge = document.createElement('span'); headerBadge.className = 'app-header-cart-count'; headerCart.appendChild(headerBadge); }
-    headerBadge.textContent = '(' + (count > 9 ? '9+' : String(count)) + ')';
-    headerBadge.hidden = count < 1;
-  }
 }
 function appShowProductView() {
   const stickyBar = document.getElementById('app-product-sticky-bar');
@@ -938,8 +954,6 @@ function appRenderCart() {
     '<div class="app-cart-summary"><div><span>Subtotal</span><strong>'+appCartFormat(subtotal)+'</strong></div>'+
     '<p>Delivery is calculated at checkout.</p><button type="button" id="app-cart-checkout">Proceed to checkout</button></div>';
 }
-if (document.getElementById('app-header-cart')) document.getElementById('app-header-cart').addEventListener('click',appCartOpen);
-if (document.getElementById('app-product-cart')) document.getElementById('app-product-cart').addEventListener('click',appCartOpen);
 if (document.getElementById('app-cart-back')) document.getElementById('app-cart-back').addEventListener('click',()=>appCartClose(false));
 if (appCartContent) appCartContent.addEventListener('click',event=>{
   const button=event.target.closest('[data-cart-action]');
@@ -1004,7 +1018,7 @@ function appAddCurrentProductToBag() {
   }
   localStorage.setItem('janedore_cart',JSON.stringify(items));
   appUpdateCartCount();
-  appShowAddedToast('Added to bag', 'ph-check-circle');
+  appShowAddedToast('Added to bag', 'ph-check-circle', 'cart');
   
   const button = document.getElementById('app-product-sticky-add');
   const label = button && button.querySelector('.app-product-sticky-label');
