@@ -675,11 +675,14 @@ function appHideAddedToast() {
   if (toast) toast.classList.remove('show');
 }
 function appUpdateCartIndicator() {
-  const hasItems = appProductCartItems().length > 0;
-  const dot = document.querySelector('.nav-cart-dot');
-  if (dot) dot.hidden = !hasItems;
+  const count = appProductCartItems().reduce((sum, item) => sum + Math.max(0, Number(item.qty) || 0), 0);
+  const badge = document.querySelector('.nav-cart-count');
+  if (badge) {
+    badge.textContent = count > 9 ? '9+' : String(count);
+    badge.hidden = count < 1;
+  }
   const cartButton = document.querySelector('.nav-item[data-tab="Cart"]');
-  if (cartButton) cartButton.setAttribute('aria-label', hasItems ? 'Shopping bag, has items' : 'Shopping bag');
+  if (cartButton) cartButton.setAttribute('aria-label', count ? 'Shopping bag, ' + count + (count === 1 ? ' item' : ' items') : 'Shopping bag');
 }
 let appProductReturnToCart = false;
 function appShowProductView() {
