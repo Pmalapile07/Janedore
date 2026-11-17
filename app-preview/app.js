@@ -100,6 +100,11 @@ function appSelectNavigationTab(tabName, activeButton) {
 }
 
 function appRestoreTab(tabName, activeButton) {
+  const cartView = document.getElementById('app-cart-view');
+  if (cartView && !cartView.hidden) {
+    cartView.hidden = true;
+    document.body.classList.remove('app-cart-open');
+  }
   appActiveTab = tabName;
   const memory = appTabMemories.get(tabName) || {scrollY:0, productId:null, productScrollY:0};
   appSelectNavigationTab(tabName, activeButton);
@@ -668,7 +673,12 @@ function appUpdateCartCount() {
   const badge = document.getElementById('app-product-cart-count');
   if (badge) { badge.textContent = '(' + (count > 9 ? '9+' : String(count)) + ')'; badge.hidden = count < 1; }
 }
+let appProductReturnToCart = false;
 function appShowProductView() {
+  const cartView = document.getElementById('app-cart-view');
+  appProductReturnToCart = !!(cartView && !cartView.hidden);
+  if (cartView) cartView.hidden = true;
+  document.body.classList.remove('app-cart-open');
   const stickyBar = document.getElementById('app-product-sticky-bar');
   if (stickyBar) stickyBar.hidden = true;
   appProductView.hidden = false;
@@ -681,6 +691,24 @@ function appShowProductView() {
 }
 function appProductClose() {
   if (!appProductView || appProductView.hidden) return;
+  if (appProductReturnToCart) {
+    appProductReturnToCart = false;
+    appProductView.hidden = true;
+    const stickyBar = document.getElementById('app-product-sticky-bar');
+    if (stickyBar) stickyBar.hidden = true;
+    document.body.classList.remove('app-product-open');
+    const cartView = document.getElementById('app-cart-view');
+    if (cartView) cartView.hidden = false;
+    const header = document.querySelector('.app-header');
+    const bottomNav = document.querySelector('.bottom-nav');
+    if (header) header.hidden = true;
+    if (bottomNav) bottomNav.hidden = false;
+    document.body.classList.add('app-cart-open');
+    if (location.hash.startsWith('#product/')) history.replaceState({appCart:true}, '', location.pathname + location.search + '#bag');
+    appRenderCart();
+    window.scrollTo({top:0,behavior:'instant'});
+    return;
+  }
   const memory = appTabMemories.get(appActiveTab) || {scrollY:0,productId:null,productScrollY:0};
   memory.productId = null;
   memory.productScrollY = 0;
@@ -709,6 +737,7 @@ async function appOpenProduct(productId, pushHistory = true) {
   const id = String(productId || '').trim();
   if (!id) return;
   let product = appProductCache.get(id) || null;
+  if (product) appRecordRecentlyViewed(product);
   const tabMemory = appTabMemories.get(appActiveTab) || {scrollY:0,productId:null,productScrollY:0};
   tabMemory.productId = id;
   tabMemory.productScrollY = 0;
@@ -772,6 +801,8 @@ async function appOpenProduct(productId, pushHistory = true) {
     if (snap.exists) {
       product = {...(product || {}), ...snap.data(), id:snap.id};
       appProductCache.set(id, product);
+      appCartHydratedProductIds.add(id);
+      appRecordRecentlyViewed(product);
     }
   } catch (error) {
     console.warn('[APP PRODUCT] Firestore detail lookup failed; using cached data:', error.message);
