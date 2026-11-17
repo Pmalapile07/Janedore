@@ -1099,7 +1099,8 @@ function appCartDiscountDescription(discount) {
 async function appCartApplyPromoCode() {
   const input = document.getElementById('app-cart-promo-input');
   if (!input) return;
-  const code = appCartSafeCode(input.value);
+  const enteredCode = input.value;
+  const code = appCartSafeCode(enteredCode);
   if (!code) {
     appCartPromoFeedback = {message:'Please enter a valid discount code.', type:'error'};
     appRenderCart();
@@ -1136,6 +1137,8 @@ async function appCartApplyPromoCode() {
   } catch (error) {
     appCartPromoFeedback = {message:error.message || 'This code could not be applied. Please try again.', type:'error'};
     appRenderCart();
+    const nextInput = document.getElementById('app-cart-promo-input');
+    if (nextInput) nextInput.value = enteredCode;
   }
 }
 function appCartRemovePromoCode() {
