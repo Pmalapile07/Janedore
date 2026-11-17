@@ -253,6 +253,42 @@ navItems.forEach(button => {
   });
 });
 
+/* Swipe the navigation window without changing the currently selected tab. */
+let navSwipeStart = null;
+if (nav) {
+  nav.addEventListener('pointerdown', event => {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    navSwipeStart = {x:event.clientX, y:event.clientY, pointerId:event.pointerId};
+  });
+  nav.addEventListener('pointerup', event => {
+    if (!navSwipeStart || navSwipeStart.pointerId !== event.pointerId) return;
+    const deltaX = event.clientX - navSwipeStart.x;
+    const deltaY = event.clientY - navSwipeStart.y;
+    navSwipeStart = null;
+    if (Math.abs(deltaX) < 30 || Math.abs(deltaX) < Math.abs(deltaY) * 1.25) return;
+
+    const stepWidth = Math.max(1, nav.clientWidth / 5);
+    const steps = Math.min(3, Math.max(1, Math.round(Math.abs(deltaX) / stepWidth)));
+    for (let step = 0; step < steps; step++) {
+      if (deltaX < 0) {
+        rotatingNavItems.push(rotatingNavItems.shift());
+      } else {
+        rotatingNavItems.unshift(rotatingNavItems.pop());
+      }
+    }
+    renderNavigationWindow(true);
+    const selected = navItems.find(item => item.classList.contains('selected'));
+    if (selected && !selected.hidden) {
+      nav.classList.remove('nav-selection-offscreen');
+      requestAnimationFrame(() => moveNavIndicator(selected));
+    } else {
+      nav.classList.add('nav-selection-offscreen');
+    }
+  });
+  nav.addEventListener('pointercancel', () => { navSwipeStart = null; });
+}
+
+
 // The app reads the shared homepage hero and category tiles from the
 // same Firestore content managed in Admin. The labels below are placeholders
 // only until categories have been added in Admin > Categories.
