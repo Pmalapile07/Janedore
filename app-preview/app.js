@@ -934,6 +934,7 @@ const appCartContent = document.getElementById('app-cart-content');
 let appCartReturnTab = 'Home';
 let appCartRenderVersion = 0;
 let appCartPromoFeedback = null;
+let appCartPromoPending = false;
 let appAppliedDiscount = null;
 const appCartVendorCache = new Map();
 const appCartHydratedProductIds = new Set();
@@ -1092,7 +1093,7 @@ function appCartPromoHtml() {
   if (appAppliedDiscount) {
     body = '<div class="app-cart-promo-applied"><span><i class="ph ph-check-circle" aria-hidden="true"></i> ' + appProductEscape(appAppliedDiscount.code || 'Discount') + ' applied</span><button type="button" id="app-cart-promo-remove">Remove</button></div>';
   } else {
-    body = '<div class="app-cart-promo-row"><input id="app-cart-promo-input" type="text" placeholder="Enter code" autocomplete="off" autocapitalize="off" aria-label="Discount code"><button type="button" id="app-cart-promo-apply">Apply</button></div>';
+    body = '<div class="app-cart-promo-row"><input id="app-cart-promo-input" type="text" placeholder="Enter code" autocomplete="off" autocapitalize="off" aria-label="Discount code"' + (appCartPromoPending ? ' disabled' : '') + '><button type="button" id="app-cart-promo-apply"' + (appCartPromoPending ? ' disabled aria-busy="true"' : '') + '>' + (appCartPromoPending ? 'Applying…' : 'Apply') + '</button></div>';
   }
   const feedback = appCartPromoFeedback
     ? '<p class="app-cart-promo-message ' + appProductEscape(appCartPromoFeedback.type) + '" role="status">' + appProductEscape(appCartPromoFeedback.message) + '</p>'
@@ -1107,6 +1108,7 @@ function appCartDiscountDescription(discount) {
   return 'Discount';
 }
 async function appCartApplyPromoCode() {
+  if (appCartPromoPending) return;
   const input = document.getElementById('app-cart-promo-input');
   if (!input) return;
   const enteredCode = input.value;
@@ -1118,6 +1120,11 @@ async function appCartApplyPromoCode() {
   }
   const items = appProductCartItems();
   const subtotal = appCartSubtotal(items);
+  appCartPromoPending = true;
+  appCartPromoFeedback = null;
+  appRenderCart();
+  const pendingInput = document.getElementById('app-cart-promo-input');
+  if (pendingInput) pendingInput.value = enteredCode;
   try {
     const response = await fetch('/api/discounts/lookup', {
       method:'POST',
@@ -1142,10 +1149,15 @@ async function appCartApplyPromoCode() {
       description:appCartDiscountDescription(discount)
     };
     appCartSaveDiscount();
+    appCartPromoPending = false;
     appCartPromoFeedback = {message:'Discount applied: ' + appAppliedDiscount.description, type:'success'};
     appRenderCart();
   } catch (error) {
-    appCartPromoFeedback = {message:error.message || 'This code could not be applied. Please try again.', type:'error'};
+    appCartPromoPending = false;
+    const message = error && error.name === 'TypeError'
+      ? 'Could not reach the discount service. Please check your connection and try again.'
+      : (error.message || 'This code could not be applied. Please try again.');
+    appCartPromoFeedback = {message:message, type:'error'};
     appRenderCart();
     const nextInput = document.getElementById('app-cart-promo-input');
     if (nextInput) nextInput.value = enteredCode;
@@ -1311,10 +1323,10 @@ function appRenderCart(skipHydration) {
       : '<button type="button" class="app-cart-qty-action" data-cart-action="minus" data-index="' + index + '" aria-label="Decrease quantity"><i class="ph ph-minus" aria-hidden="true"></i></button>';
     return '<article class="app-cart-item" data-cart-index="' + index + '">' +
       '<div class="app-cart-item-image">' + (image ? '<img src="' + appProductEscape(image) + '" alt="">' : '') + '</div>' +
-      '<div class="app-cart-item-info"><p class="app-cart-item-brand">' + appProductEscape(item.brand || '') + '</p>' +
+      '<div class="app-cart-item-info"><span class="app-cart-item-badge-slot">' + (badge ? '<span class="app-cart-item-badge' + (badge === 'SALE' ? ' is-sale' : '') + '">' + appProductEscape(badge) + '</span>' : '') + '</span>' +
+      '<p class="app-cart-item-brand">' + appProductEscape(item.brand || '') + '</p>' +
       '<h2>' + appProductEscape(item.name || 'Product') + '</h2><p class="app-cart-item-variant">' + appProductEscape((variant + size).replace(/^ · /, '')) + '</p>' +
-      '<div class="app-cart-item-quantity-wrap"><div class="app-cart-item-controls">' + quantityLeading + '<span>' + quantity + '</span><button type="button" class="app-cart-qty-action" data-cart-action="plus" data-index="' + index + '" aria-label="Increase quantity"><i class="ph ph-plus" aria-hidden="true"></i></button></div>' +
-      (badge ? '<span class="app-cart-item-badge' + (badge === 'SALE' ? ' is-sale' : '') + '">' + appProductEscape(badge) + '</span>' : '') + '</div></div>' +
+      '<div class="app-cart-item-quantity-wrap"><div class="app-cart-item-controls">' + quantityLeading + '<span>' + quantity + '</span><button type="button" class="app-cart-qty-action" data-cart-action="plus" data-index="' + index + '" aria-label="Increase quantity"><i class="ph ph-plus" aria-hidden="true"></i></button></div></div></div>' +
       '<div class="app-cart-item-price">' + appCartFormat(appCartUnitPrice(item) * quantity) + '</div></article>';
   }).join('');
   const discountRow = appAppliedDiscount
