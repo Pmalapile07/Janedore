@@ -555,11 +555,11 @@ function appRenderProductReviews(productId) {
     (reviews.length>1?'<div class="product-reviews-toolbar"><label for="app-product-review-sort">Sort by</label><select id="app-product-review-sort" onchange="appSortProductReviews(this.value)"><option value="newest">Most recent</option><option value="highest">Highest rating</option><option value="lowest">Lowest rating</option></select></div>':'')+
     '<div class="product-review-list">'+sorted.map(review=>{
       const date=appReviewTime(review)?appReviewDate(appReviewTime(review)):'';
-      const author=String(review.name||'Anonymous').trim().toLocaleLowerCase('en-ZA').replace(/(^|[\\s'-])([\\p{L}])/gu,(_,s,l)=>s+l.toLocaleUpperCase('en-ZA'));
+      const author=String(review.name||'Anonymous').trim().toLocaleLowerCase('en-ZA').replace(/\b[a-z]/g,letter=>letter.toLocaleUpperCase('en-ZA'));
       const rating=Math.max(0,Math.min(5,Number(review.rating)||0));
       const verified=review.verified===true?'<span class="product-review-verified"><i class="ph ph-check-circle" aria-hidden="true"></i> Verified purchase</span>':'';
       const featured=review.featured===true?'<span class="product-review-featured">Featured</span>':'';
-      const photos=(Array.isArray(review.imageUrls)&&review.imageUrls.length?review.imageUrls:[review.imageUrl]).filter(u=>/^https:\\/\\/res\\.cloudinary\\.com\\//.test(u||''));
+      const photos=(Array.isArray(review.imageUrls)&&review.imageUrls.length?review.imageUrls:[review.imageUrl]).filter(u=>String(u||'').startsWith('https://res.cloudinary.com/'));
       const photoHtml=photos.length?'<div class="product-review-photos">'+photos.map(u=>'<img class="product-review-photo" src="'+appProductEscape(u)+'" alt="Photo from '+appProductEscape(author)+'" loading="lazy">').join('')+'</div>':'';
       const reply=review.vendorReply?'<div class="product-review-brand-reply"><span>Brand reply</span><p>'+appProductEscape(review.vendorReply)+'</p></div>':'';
       const interaction=appReviewInteraction(review.id||'');
