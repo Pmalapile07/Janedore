@@ -308,3 +308,11 @@ body.app-product-open{overflow-x:hidden}
 /* Keep the floating app navigation available while viewing product details. */
 body.app-product-open .bottom-nav{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr));z-index:900}
 body.app-product-open .app-product-content{padding-bottom:120px}
+
+
+/* Keep product content on one consistent 16px horizontal grid. */
+.app-new-in-heading{padding-left:16px;padding-right:16px}
+.app-new-in-track{padding-left:16px;scroll-padding-left:16px}
+.app-new-in-track::after{flex-basis:16px}
+.app-product-image-actions{padding-left:16px;padding-right:16px}
+.app-product-related-track{scroll-padding-left:0}
