@@ -61,11 +61,20 @@ const navIndicator = document.querySelector('.nav-indicator');
 let rotatingNavItems = navItems.filter(item => item !== homeNavItem);
 
 let navAnimationTimer = null;
+let navAnimationGhosts = [];
 
 function renderNavigationWindow(animate = false) {
   if (!nav || !homeNavItem || !navIndicator) return;
   const previousVisible = new Set(navItems.filter(item => !item.hidden));
   const previousRects = new Map([...previousVisible].map(item => [item, item.getBoundingClientRect()]));
+  if (navAnimationTimer) window.clearTimeout(navAnimationTimer);
+  navAnimationGhosts.forEach(ghost => ghost.remove());
+  navAnimationGhosts = [];
+  navItems.forEach(item => {
+    item.style.transition = 'none';
+    item.style.transform = '';
+    item.style.opacity = '';
+  });
   const visibleItems = [homeNavItem, ...rotatingNavItems.slice(0, 4)];
   const visible = new Set(visibleItems);
 
@@ -107,6 +116,7 @@ function renderNavigationWindow(animate = false) {
     const rect = previousRects.get(item);
     const ghost = item.cloneNode(true);
     ghost.removeAttribute('data-tab');
+    ghost.removeAttribute('hidden');
     ghost.removeAttribute('aria-current');
     ghost.setAttribute('aria-hidden', 'true');
     ghost.disabled = true;
@@ -120,6 +130,7 @@ function renderNavigationWindow(animate = false) {
     document.body.appendChild(ghost);
     return ghost;
   });
+  navAnimationGhosts = ghosts;
 
   // Commit the starting transforms, then animate all icons on the same curve.
   void nav.offsetWidth;
@@ -147,6 +158,7 @@ function renderNavigationWindow(animate = false) {
       item.style.opacity = '';
     });
     ghosts.forEach(ghost => ghost.remove());
+    navAnimationGhosts = [];
     navAnimationTimer = null;
   }, 580);
 }
