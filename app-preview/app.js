@@ -580,7 +580,8 @@ function appOpenHomeCollection() {
   const homeView = tabViews.find(view => view.dataset.view === 'Home');
   const collectionPage = document.getElementById('app-shop-page');
   if (!homeView || !collectionPage) return;
-  tabViews.forEach(view => { view.hidden = view !== homeView; });
+  // The collection is a separate screen, not content appended below Home.
+  tabViews.forEach(view => { view.hidden = true; });
   collectionPage.hidden = false;
   const appHeader = document.querySelector('.app-header');
   if (appHeader) appHeader.hidden = true;
