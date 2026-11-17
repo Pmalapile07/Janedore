@@ -229,7 +229,29 @@
       <p>Terms of use: Product presentation may be provided by Janedore or the respective brands and designers.</p>
     </section>
 </main>
-    <main class="app-tab-content" data-view="Shop" aria-label="Shop" hidden></main>
+    <main class="app-tab-content app-shop-page" data-view="Shop" aria-label="Shop" hidden>
+      <header class="app-shop-header">
+        <button class="app-shop-back" id="app-shop-back" type="button" aria-label="Go back"><i class="ph ph-arrow-left" aria-hidden="true"></i></button>
+        <h1 id="app-shop-page-title">All products</h1>
+      </header>
+      <div class="app-shop-toolbar">
+        <button type="button" id="app-shop-sort-toggle" aria-expanded="false"><i class="ph ph-arrows-down-up" aria-hidden="true"></i><span>Sort</span></button>
+        <button type="button" id="app-shop-filter-toggle" aria-expanded="false"><i class="ph ph-sliders-horizontal" aria-hidden="true"></i><span>Filter</span></button>
+      </div>
+      <div class="app-shop-sort-panel" id="app-shop-sort-panel" hidden>
+        <button type="button" data-shop-sort="featured">Featured</button>
+        <button type="button" data-shop-sort="newest">Newest</button>
+        <button type="button" data-shop-sort="price-low">Price: low to high</button>
+        <button type="button" data-shop-sort="price-high">Price: high to low</button>
+      </div>
+      <div class="app-shop-filter-panel" id="app-shop-filter-panel" hidden>
+        <label>Brand<select id="app-shop-brand-filter"><option value="all">All brands</option></select></label>
+        <label>Category<select id="app-shop-category-filter"><option value="all">All categories</option></select></label>
+        <button type="button" id="app-shop-clear-filters">Clear filters</button>
+      </div>
+      <p class="app-shop-product-count" id="app-shop-product-count">Loading products</p>
+      <div class="app-shop-grid" id="app-shop-product-grid" aria-live="polite"><p class="app-new-in-empty">Loading products…</p></div>
+    </main>
     <main class="app-tab-content" data-view="Discover" aria-label="Discover" hidden></main>
     <main class="app-tab-content" data-view="Wishlist" aria-label="Wishlist" hidden></main>
     <main class="app-tab-content" data-view="Account" aria-label="Account" hidden></main>
