@@ -1087,7 +1087,7 @@ function appCartPromoHtml() {
   if (appAppliedDiscount) {
     body = '<div class="app-cart-promo-applied"><span><i class="ph ph-check-circle" aria-hidden="true"></i> ' + appProductEscape(appAppliedDiscount.code || 'Discount') + ' applied</span><button type="button" id="app-cart-promo-remove">Remove</button></div>';
   } else {
-    body = '<div class="app-cart-promo-row"><input id="app-cart-promo-input" type="text" placeholder="Enter code" autocomplete="off" autocapitalize="characters" aria-label="Discount code"><button type="button" id="app-cart-promo-apply">Apply</button></div>';
+    body = '<div class="app-cart-promo-row"><input id="app-cart-promo-input" type="text" placeholder="Enter code" autocomplete="off" autocapitalize="off" aria-label="Discount code"><button type="button" id="app-cart-promo-apply">Apply</button></div>';
   }
   const feedback = appCartPromoFeedback
     ? '<p class="app-cart-promo-message ' + appProductEscape(appCartPromoFeedback.type) + '" role="status">' + appProductEscape(appCartPromoFeedback.message) + '</p>'
@@ -1185,17 +1185,28 @@ async function appCartRenderRecentlyViewed(renderVersion) {
       return;
     }
     track.innerHTML = products.map(function(product) {
+      const regularPrice = Number(product.price) || 0;
+      const salePrice = product.salePrice == null || product.salePrice === '' ? NaN : Number(product.salePrice);
+      const sale = Number.isFinite(salePrice) && salePrice > 0 && salePrice < regularPrice;
+      const badge = Number(product.stock) <= 0
+        ? 'SOLD OUT'
+        : (String(product.badge || '').trim().toLowerCase() === 'pre-order'
+          ? 'PRE-ORDER'
+          : sale
+            ? 'SALE'
+            : (product.badge && !['new','sale','sold out','sold','free delivery'].includes(String(product.badge).toLowerCase())
+              ? String(product.badge).toUpperCase()
+              : 'NEW'));
+      const price = sale
+        ? '<span class="app-new-in-old-price">R' + regularPrice.toFixed(2) + '</span><span class="app-new-in-sale-price">R' + salePrice.toFixed(2) + '</span>'
+        : '<span>R' + regularPrice.toFixed(2) + '</span>';
       const image = appProductImages(product)[0] || product.imageUrl || '';
-      const regular = Number(product.price) || 0;
-      const sale = Number(product.salePrice) || 0;
-      const price = sale > 0 && sale < regular
-        ? '<span class="app-cart-recent-sale">' + appProductEscape(appCartFormat(sale)) + '</span><s>' + appProductEscape(appCartFormat(regular)) + '</s>'
-        : '<span>' + appProductEscape(appCartFormat(regular)) + '</span>';
-      return '<button type="button" class="app-cart-recent-card" data-product-id="' + appProductEscape(product.id) + '">' +
-        '<span class="app-cart-recent-image">' + (image ? '<img src="' + appProductEscape(image) + '" alt="" loading="lazy">' : '') + '</span>' +
-        '<span class="app-cart-recent-brand">' + appProductEscape(product.brand || '') + '</span>' +
-        '<span class="app-cart-recent-name">' + appProductEscape(product.name || product.title || 'Product') + '</span>' +
-        '<span class="app-cart-recent-price">' + price + '</span></button>';
+      return '<article class="app-new-in-card' + (Number(product.stock) <= 0 ? ' is-sold-out' : '') + '" data-product-id="' + appProductEscape(product.id || '') + '" role="button" tabindex="0" aria-label="View ' + appProductEscape(product.name || product.title || 'Product') + '">' +
+        '<div class="app-new-in-image">' + (badge ? '<span class="app-new-in-badge' + (badge === 'SALE' ? ' is-sale' : '') + '">' + appProductEscape(badge) + '</span>' : '') + (image ? '<img src="' + appProductEscape(image) + '" alt="' + appProductEscape(product.name || product.title || 'Product') + '" loading="lazy">' : '') + '<button class="app-new-in-wishlist" type="button" aria-label="Add to wishlist" aria-pressed="false"><i class="ph ph-heart-straight" aria-hidden="true"></i></button></div>' +
+        '<div class="app-new-in-brand">' + appProductEscape(product.brand || '') + '</div>' +
+        '<div class="app-new-in-name">' + appProductEscape(product.name || product.title || 'Product') + '</div>' +
+        '<div class="app-new-in-price">' + price + '</div>' +
+      '</article>';
     }).join('');
     section.hidden = false;
   } catch (error) {
@@ -1267,7 +1278,7 @@ function appRenderCart(skipHydration) {
   const count = document.getElementById('app-cart-header-count');
   if (count) count.textContent = qty + (qty === 1 ? ' item' : ' items');
   appUpdateCartCount();
-  const recentSection = '<section class="app-cart-recent" id="app-cart-recent" hidden><h2>Recently viewed</h2><div class="app-cart-recent-track" id="app-cart-recent-track"></div></section>';
+  const recentSection = '<section class="app-cart-recent" id="app-cart-recent" hidden><h2>Recently viewed</h2><div class="app-new-in-track app-cart-recent-track" id="app-cart-recent-track"></div></section>';
   if (!items.length) {
     appCartContent.innerHTML = '<div class="app-cart-empty"><i class="ph ph-tote-simple" aria-hidden="true"></i><h2>Your bag is empty</h2><p>Find something you love.</p><button type="button" id="app-cart-shop">Continue shopping</button></div>' + recentSection;
     appCartRenderRecentlyViewed(renderVersion);
@@ -1294,10 +1305,10 @@ function appRenderCart(skipHydration) {
   appCartContent.innerHTML = appCartDeliveryBanner(items) +
     '<div class="app-cart-items">' + cards + '</div>' +
     appCartPromoHtml() +
-    '<div class="app-cart-summary"><div class="app-cart-total-row"><span>Subtotal</span><span>' + appCartFormat(subtotal) + '</span></div>' +
+    '<div class="app-cart-summary">' +
     discountRow +
     '<div class="app-cart-total-row"><span>Delivery</span><span>Calculated at checkout</span></div>' +
-    '<div class="app-cart-total-head"><span>Total to pay</span><strong>' + appCartFormat(Math.max(0, subtotal - discountAmount)) + '</strong></div>' +
+    '<div class="app-cart-total-head"><span>Subtotal</span><strong>' + appCartFormat(Math.max(0, subtotal - discountAmount)) + '</strong></div>' +
     '<button type="button" id="app-cart-checkout">Proceed to checkout</button></div>' + recentSection;
   appCartRenderRecentlyViewed(renderVersion);
   if (!skipHydration) {
