@@ -56,20 +56,51 @@ appAuth.onAuthStateChanged(user => {
 
 const nav = document.querySelector('.bottom-nav');
 const navItems = [...document.querySelectorAll('.nav-item')];
+const homeNavItem = navItems.find(item => item.dataset.tab === 'Home');
 const navIndicator = document.querySelector('.nav-indicator');
+let rotatingNavItems = navItems.filter(item => item !== homeNavItem);
+
+function renderNavigationWindow() {
+  if (!nav || !homeNavItem || !navIndicator) return;
+  // Home is fixed. The other seven destinations form a circular queue;
+  // only the next four in that queue are visible at any one time.
+  nav.insertBefore(homeNavItem, navIndicator);
+  rotatingNavItems.forEach(item => nav.insertBefore(item, navIndicator));
+  const visible = new Set([homeNavItem, ...rotatingNavItems.slice(0, 4)]);
+  navItems.forEach(item => { item.hidden = !visible.has(item); });
+}
 
 function moveNavIndicator(item) {
-  if (!nav || !item || !navIndicator) return;
-  const navRect = nav.getBoundingClientRect();
-  const itemRect = item.getBoundingClientRect();
-  const x = itemRect.left - navRect.left + (itemRect.width - navIndicator.offsetWidth) / 2;
+  if (!nav || !item || !navIndicator || item.hidden) return;
+  // offsetLeft/offsetWidth ignore the button's visual transform, so the glass
+  // capsule is centred on the actual grid cell on every selection and resize.
+  const x = item.offsetLeft + (item.offsetWidth - navIndicator.offsetWidth) / 2;
   nav.style.setProperty('--indicator-x', `${x}px`);
 }
 
-const initialNavItem = navItems.find(item => item.classList.contains('selected')) || navItems[0];
-moveNavIndicator(initialNavItem);
+function rotateNavigationTo(item) {
+  if (!item || item === homeNavItem) return;
+  const index = rotatingNavItems.indexOf(item);
+  if (index > 0) rotatingNavItems = rotatingNavItems.slice(index).concat(rotatingNavItems.slice(0, index));
+}
+
+function appSelectNavigationTab(tabName, activeButton) {
+  rotateNavigationTo(activeButton);
+  renderNavigationWindow();
+  navItems.forEach(item => {
+    const active = item === activeButton;
+    item.classList.toggle('selected', active);
+    if (active) item.setAttribute('aria-current', 'page');
+    else item.removeAttribute('aria-current');
+  });
+  requestAnimationFrame(() => moveNavIndicator(activeButton));
+}
+
+const initialNavItem = navItems.find(item => item.classList.contains('selected')) || homeNavItem;
+renderNavigationWindow();
+requestAnimationFrame(() => moveNavIndicator(initialNavItem));
 window.addEventListener('resize', () => {
-  moveNavIndicator(navItems.find(item => item.classList.contains('selected')));
+  requestAnimationFrame(() => moveNavIndicator(navItems.find(item => item.classList.contains('selected'))));
 });
 
 const tabViews = [...document.querySelectorAll('.app-tab-content[data-view]')];
@@ -89,20 +120,13 @@ function appSaveCurrentTabMemory() {
   appTabMemories.set(appActiveTab, memory);
 }
 
-function appSelectNavigationTab(tabName, activeButton) {
-  navItems.forEach(item => {
-    const active = item === activeButton;
-    item.classList.toggle('selected', active);
-    if (active) item.setAttribute('aria-current', 'page');
-    else item.removeAttribute('aria-current');
-  });
-  moveNavIndicator(activeButton);
-}
+
 
 function appRestoreTab(tabName, activeButton) {
   appActiveTab = tabName;
   const memory = appTabMemories.get(tabName) || {scrollY:0, productId:null, productScrollY:0};
   appSelectNavigationTab(tabName, activeButton);
+  if (appCartView) appCartView.hidden = true;
   if (location.hash.startsWith('#product/') || location.hash === '#bag') {
     history.replaceState(null, '', location.pathname + location.search);
   }
@@ -123,8 +147,12 @@ function appRestoreTab(tabName, activeButton) {
 }
 
 function activateTab(tabName, activeButton) {
-  if (tabName === appActiveTab && (!appProductView || appProductView.hidden)) return;
+  if (tabName === appActiveTab && (!appProductView || appProductView.hidden) && (tabName !== 'Cart' || (appCartView && !appCartView.hidden))) return;
   appSaveCurrentTabMemory();
+  if (tabName === 'Cart') {
+    appCartOpen(true, activeButton);
+    return;
+  }
   appRestoreTab(tabName, activeButton);
 }
 
@@ -607,12 +635,13 @@ function appUpdateCartCount() {
   const count = appProductCartItems().reduce((sum, item) => sum + (Number(item.qty) || 0), 0);
   const badge = document.getElementById('app-product-cart-count');
   if (badge) { badge.textContent = count > 9 ? '9+' : String(count); badge.hidden = count < 1; }
-  const headerCart = document.getElementById('app-header-cart');
-  if (headerCart) {
-    let headerBadge = headerCart.querySelector('.app-header-cart-count');
-    if (!headerBadge) { headerBadge = document.createElement('span'); headerBadge.className = 'app-header-cart-count'; headerCart.appendChild(headerBadge); }
-    headerBadge.textContent = count > 9 ? '9+' : String(count);
-    headerBadge.hidden = count < 1;
+  const navCart = document.querySelector('.nav-item[data-tab="Cart"]');
+  if (navCart) {
+    const navBadge = navCart.querySelector('.nav-count');
+    if (navBadge) {
+      navBadge.textContent = count > 9 ? '9+' : String(count);
+      navBadge.hidden = count < 1;
+    }
   }
 }
 function appShowProductView() {
@@ -835,10 +864,13 @@ const appCartView = document.getElementById('app-cart-view');
 const appCartContent = document.getElementById('app-cart-content');
 let appCartReturnTab = 'Home';
 function appCartFormat(value) { return appProductMoney(value); }
-function appCartOpen() {
+function appCartOpen(fromNavigation = false, activeButton = null) {
   if (!appCartView) return;
-  const selected = navItems.find(item => item.classList.contains('selected'));
-  appCartReturnTab = selected ? selected.dataset.tab : 'Home';
+  if (!fromNavigation) appSaveCurrentTabMemory();
+  appCartReturnTab = appActiveTab === 'Cart' ? appCartReturnTab : appActiveTab;
+  appActiveTab = 'Cart';
+  const cartButton = activeButton || navItems.find(item => item.dataset.tab === 'Cart');
+  if (cartButton) appSelectNavigationTab('Cart', cartButton);
   appProductView.hidden = true;
   const sticky = document.getElementById('app-product-sticky-bar');
   if (sticky) sticky.hidden = true;
@@ -846,27 +878,20 @@ function appCartOpen() {
   const header = document.querySelector('.app-header');
   const bottom = document.querySelector('.bottom-nav');
   if (header) header.hidden = true;
-  if (bottom) bottom.hidden = true;
+  if (bottom) bottom.hidden = false;
   document.body.classList.remove('app-product-open');
   appCartView.hidden = false;
   appRenderCart();
   window.scrollTo({top:0,behavior:'instant'});
-  history.pushState({appCart:true},'',location.pathname + location.search + '#bag');
+  if (location.hash !== '#bag') history.pushState({appCart:true},'',location.pathname + location.search + '#bag');
 }
 function appCartClose(fromHistory) {
   if (!appCartView || appCartView.hidden) return;
+  if (!fromHistory && location.hash === '#bag') { history.back(); return; }
   appCartView.hidden = true;
-  document.querySelectorAll('.app-tab-content').forEach(view => { view.hidden = view.dataset.view !== appCartReturnTab; });
-  const header = document.querySelector('.app-header');
-  const bottom = document.querySelector('.bottom-nav');
-  if (header) header.hidden = false;
-  if (bottom) bottom.hidden = false;
   const selected = navItems.find(item => item.dataset.tab === appCartReturnTab);
-  if (selected) {
-    navItems.forEach(item => { const active = item === selected; item.classList.toggle('selected',active); if(active)item.setAttribute('aria-current','page');else item.removeAttribute('aria-current'); });
-    moveNavIndicator(selected);
-  }
-  if (!fromHistory && location.hash === '#bag') history.back();
+  if (selected) appRestoreTab(appCartReturnTab, selected);
+  else appRestoreTab('Home', homeNavItem);
   window.scrollTo({top:0,behavior:'instant'});
 }
 function appRenderCart() {
@@ -901,7 +926,6 @@ function appRenderCart() {
     '<div class="app-cart-summary"><div><span>Subtotal</span><strong>'+appCartFormat(subtotal)+'</strong></div>'+
     '<p>Delivery is calculated at checkout.</p><button type="button" id="app-cart-checkout">Proceed to checkout</button></div>';
 }
-if (document.getElementById('app-header-cart')) document.getElementById('app-header-cart').addEventListener('click',appCartOpen);
 if (document.getElementById('app-product-cart')) document.getElementById('app-product-cart').addEventListener('click',appCartOpen);
 if (document.getElementById('app-cart-back')) document.getElementById('app-cart-back').addEventListener('click',()=>appCartClose(false));
 if (appCartContent) appCartContent.addEventListener('click',event=>{
