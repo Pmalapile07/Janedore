@@ -1257,6 +1257,8 @@ function appRenderCart(skipHydration) {
   const items = appProductCartItems();
   const renderVersion = ++appCartRenderVersion;
   const qty = items.reduce(function(sum, item) { return sum + Math.max(1, Number(item.qty) || 1); }, 0);
+  const stepper = document.querySelector('.app-checkout-steps');
+  if (stepper) stepper.hidden = !items.length;
   const count = document.getElementById('app-cart-header-count');
   if (count) count.textContent = qty + (qty === 1 ? ' item' : ' items');
   appUpdateCartCount();
