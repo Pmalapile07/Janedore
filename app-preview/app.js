@@ -1304,7 +1304,7 @@ function appRenderCart(skipHydration) {
             ? 'SALE'
             : (product.badge && !['new','sale','sold out','sold','free delivery'].includes(String(product.badge).toLowerCase())
               ? String(product.badge).toUpperCase()
-              : 'NEW')))))
+              : 'NEW'))))
       : '';
     const quantityLeading = quantity <= 1
       ? '<button type="button" class="app-cart-qty-action" data-cart-action="remove" data-index="' + index + '" aria-label="Remove ' + appProductEscape(item.name || 'product') + '"><i class="ph ph-trash" aria-hidden="true"></i></button>'
