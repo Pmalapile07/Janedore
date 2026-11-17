@@ -282,11 +282,14 @@ body.app-product-open{overflow-x:hidden}
 .app-cart-item-info{min-width:0}
 .app-cart-item-brand{margin:1px 0 5px;font:500 10px Inter,Arial,sans-serif;letter-spacing:.07em;text-transform:uppercase;color:#555}
 .app-cart-item-info h2{margin:0;font:500 13px/1.4 Inter,Arial,sans-serif;color:#111}
-.app-cart-item-variant{margin:5px 0 13px;color:#777;font:400 11px Inter,Arial,sans-serif}
-.app-cart-item-controls{display:flex;align-items:center;gap:10px;font:400 12px Inter,Arial,sans-serif}
-.app-cart-item-controls button{width:25px;height:26px;border:1px solid #ddd;background:#fff;color:#111;font-size:16px}
-.app-cart-item-controls button:disabled{color:#bbb}
-.app-cart-item-controls .app-cart-remove{width:auto;height:auto;border:0;margin-left:4px;padding:4px 0;color:#777;font:400 10px Inter,Arial,sans-serif;text-decoration:underline}
+.app-cart-item-variant{margin:5px 0 10px;color:#777;font:400 11px Inter,Arial,sans-serif}
+.app-cart-item-quantity-wrap{display:flex;flex-direction:column;align-items:flex-start;gap:7px}
+.app-cart-item-controls{display:inline-flex;align-items:center;justify-content:space-between;gap:0;min-width:94px;height:32px;padding:0 5px;border-radius:999px;background:#F4F4F4;font:500 12px Inter,Arial,sans-serif}
+.app-cart-item-controls>span{min-width:22px;text-align:center;font:500 12px/1 Inter,Arial,sans-serif;font-variant-numeric:tabular-nums}
+.app-cart-item-controls .app-cart-qty-action{display:flex;align-items:center;justify-content:center;width:26px;height:26px;padding:0;border:0;border-radius:50%;background:transparent;color:#111;cursor:pointer}
+.app-cart-item-controls .app-cart-qty-action i{font-size:15px;line-height:1}
+.app-cart-item-badge{display:inline-flex;align-items:center;min-height:17px;padding:2px 6px;background:#f4f4f4;color:#111;font:500 8px/1 Inter,Arial,sans-serif;letter-spacing:.04em;text-transform:uppercase}
+.app-cart-item-badge.is-sale{background:#111;color:#fff}
 .app-cart-item-price{white-space:nowrap;font:500 12px Inter,Arial,sans-serif}
 .app-cart-summary{margin-top:22px;padding:18px 0;border-top:0}
 .app-cart-summary>div{display:flex;justify-content:space-between;align-items:center;font:400 13px Inter,Arial,sans-serif}
