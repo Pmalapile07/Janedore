@@ -891,9 +891,9 @@ function renderCartPage() {
 
     html += `<div class="cart-card cart-item${soldOut ? ' sold-out' : ''}">
       <div class="cart-item-top">
-        <div class="cart-item-img" style="background-image:url('${thumbnail}');" onclick="goToProduct('${productId}')">${cartBadgesHtml(item)}</div>
+        <button type="button" class="cart-item-img" style="background-image:url('${thumbnail}');" onclick="goToProduct('${productId}')" aria-label="View ${itemName}">${cartBadgesHtml(item)}</button>
         <div class="cart-item-info">
-          <div class="cart-item-name" onclick="goToProduct('${productId}')">${itemName}</div>
+          <button type="button" class="cart-item-name" onclick="goToProduct('${productId}')">${itemName}</button>
           <div class="cart-item-brand">${itemBrand}${itemColor && itemColor !== 'Default' ? ' · ' + itemColor : ''}</div>
           ${cartPreorderHtml(item)}${cartFreeDeliveryHtml(item, mixed)}
         </div>
