@@ -134,7 +134,7 @@ function appRestoreTab(tabName, activeButton) {
   appProductView.hidden = true;
   document.body.classList.remove('app-product-open');
   const header = document.querySelector('.app-header');
-  if (header) header.hidden = false;
+  if (header) header.hidden = tabName === 'Shop';
   const purchaseRow = document.getElementById('app-product-sticky-bar');
   if (purchaseRow) purchaseRow.hidden = true;
   tabViews.forEach(view => { view.hidden = view.dataset.view !== tabName; });
@@ -207,7 +207,16 @@ fetch('/api/app-homepage', { headers: { Accept: 'application/json' } })
         page: value ? '/pages/' + encodeURIComponent(value) : '/',
         url: /^https:\/\//i.test(value) ? value : '/shop'
       };
-      heroButton.href = destinations[link.type] || '/shop';
+      if (link.type === 'products') {
+        heroButton.href = '#shop';
+        heroButton.addEventListener('click', function(event) {
+          event.preventDefault();
+          const shopButton = navItems.find(item => item.dataset.tab === 'Shop');
+          if (shopButton) activateTab('Shop', shopButton);
+        });
+      } else {
+        heroButton.href = destinations[link.type] || '/shop';
+      }
       if (link.type === 'url' && /^https:\/\//i.test(value)) {
         heroButton.target = '_blank';
         heroButton.rel = 'noopener';
@@ -502,6 +511,129 @@ const appProductView = document.getElementById('app-product-view');
 const appProductDb = firebase.firestore();
 const appProductCache = new Map();
 const appProductLoads = new Map();
+
+const appShopProducts = [];
+let appShopSort = 'featured';
+let appShopBrand = 'all';
+let appShopCategory = 'all';
+let appShopLoaded = false;
+let appShopLoading = null;
+
+function appShopDate(product) {
+  const value = product && product.createdAt;
+  if (value && typeof value.toMillis === 'function') return value.toMillis();
+  if (value && typeof value.toDate === 'function') return value.toDate().getTime();
+  const parsed = Date.parse(value || product.created_at || '');
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+function appShopRenderProducts() {
+  const grid = document.getElementById('app-shop-product-grid');
+  const count = document.getElementById('app-shop-product-count');
+  if (!grid || !count) return;
+  let products = appShopProducts.filter(product => {
+    const brand = String(product.brand || product.vendorName || '').trim();
+    const category = String(product.category || product.department || '').trim();
+    return (appShopBrand === 'all' || brand === appShopBrand) &&
+      (appShopCategory === 'all' || category.toLowerCase() === appShopCategory.toLowerCase());
+  });
+  if (appShopSort === 'newest') products.sort((a,b) => appShopDate(b)-appShopDate(a));
+  if (appShopSort === 'price-low') products.sort((a,b) => (Number(a.salePrice || a.price)||0)-(Number(b.salePrice || b.price)||0));
+  if (appShopSort === 'price-high') products.sort((a,b) => (Number(b.salePrice || b.price)||0)-(Number(a.salePrice || a.price)||0));
+  count.textContent = products.length + (products.length === 1 ? ' product' : ' products');
+  if (!products.length) {
+    grid.innerHTML = '<p class="app-new-in-empty">No products match these filters.</p>';
+    return;
+  }
+  grid.innerHTML = products.map(product => {
+    const regular = Number(product.price) || 0;
+    const salePrice = Number(product.salePrice);
+    const sale = Number.isFinite(salePrice) && salePrice > 0 && salePrice < regular;
+    const badge = Number(product.stock) <= 0 ? 'SOLD OUT' : (sale ? 'SALE' : '');
+    const image = appProductImages(product)[0] || product.imageUrl || '';
+    const price = sale
+      ? '<span class="app-new-in-old-price">R' + regular.toFixed(2) + '</span><span class="app-new-in-sale-price">R' + salePrice.toFixed(2) + '</span>'
+      : '<span>R' + regular.toFixed(2) + '</span>';
+    return '<article class="app-new-in-card' + (Number(product.stock) <= 0 ? ' is-sold-out' : '') + '" data-product-id="' + appProductEscape(product.id) + '" role="button" tabindex="0" aria-label="View ' + appProductEscape(product.name || product.title || 'Product') + '">' +
+      '<div class="app-new-in-image">' + (badge ? '<span class="app-new-in-badge' + (badge === 'SALE' ? ' is-sale' : '') + '">' + badge + '</span>' : '') + (image ? '<img src="' + appProductEscape(image) + '" alt="' + appProductEscape(product.name || product.title || 'Product') + '" loading="lazy">' : '') + '<button class="app-new-in-wishlist" type="button" aria-label="Add to wishlist" aria-pressed="false"><i class="ph ph-heart-straight" aria-hidden="true"></i></button></div>' +
+      '<div class="app-new-in-brand">' + appProductEscape(product.brand || product.vendorName || '') + '</div>' +
+      '<div class="app-new-in-name">' + appProductEscape(product.name || product.title || 'Product') + '</div>' +
+      '<div class="app-new-in-price">' + price + '</div></article>';
+  }).join('');
+}
+async function appShopLoadProducts() {
+  if (appShopLoaded) { appShopRenderProducts(); return; }
+  if (appShopLoading) return appShopLoading;
+  const grid = document.getElementById('app-shop-product-grid');
+  const count = document.getElementById('app-shop-product-count');
+  appShopLoading = appProductDb.collection('products').where('status', '==', 'active').get()
+    .then(snapshot => {
+      appShopProducts.splice(0, appShopProducts.length, ...snapshot.docs.map(doc => Object.assign({id:doc.id}, doc.data())));
+      appShopProducts.forEach(product => appProductCache.set(String(product.id), product));
+      const brands = [...new Set(appShopProducts.map(p => String(p.brand || p.vendorName || '').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+      const categories = [...new Set(appShopProducts.map(p => String(p.category || p.department || '').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+      const brandSelect = document.getElementById('app-shop-brand-filter');
+      const categorySelect = document.getElementById('app-shop-category-filter');
+      if (brandSelect) brandSelect.innerHTML = '<option value="all">All brands</option>' + brands.map(v=>'<option value="' + appProductEscape(v) + '">' + appProductEscape(v) + '</option>').join('');
+      if (categorySelect) categorySelect.innerHTML = '<option value="all">All categories</option>' + categories.map(v=>'<option value="' + appProductEscape(v) + '">' + appProductEscape(v) + '</option>').join('');
+      appShopLoaded = true;
+      appShopRenderProducts();
+    })
+    .catch(error => {
+      if (grid) grid.innerHTML = '<p class="app-new-in-empty">Products are temporarily unavailable.</p>';
+      if (count) count.textContent = '';
+      console.warn('[APP SHOP] Could not load products:', error.message);
+    })
+    .finally(() => { appShopLoading = null; });
+  return appShopLoading;
+}
+const appShopBack = document.getElementById('app-shop-back');
+if (appShopBack) appShopBack.addEventListener('click', () => {
+  const homeButton = navItems.find(item => item.dataset.tab === 'Home');
+  if (homeButton) activateTab('Home', homeButton);
+});
+const appShopSortToggle = document.getElementById('app-shop-sort-toggle');
+const appShopFilterToggle = document.getElementById('app-shop-filter-toggle');
+const appShopSortPanel = document.getElementById('app-shop-sort-panel');
+const appShopFilterPanel = document.getElementById('app-shop-filter-panel');
+if (appShopSortToggle) appShopSortToggle.addEventListener('click', () => {
+  const open = appShopSortPanel.hidden;
+  appShopSortPanel.hidden = !open;
+  appShopFilterPanel.hidden = true;
+  appShopSortToggle.setAttribute('aria-expanded', String(open));
+  appShopFilterToggle.setAttribute('aria-expanded', 'false');
+});
+if (appShopFilterToggle) appShopFilterToggle.addEventListener('click', () => {
+  const open = appShopFilterPanel.hidden;
+  appShopFilterPanel.hidden = !open;
+  appShopSortPanel.hidden = true;
+  appShopFilterToggle.setAttribute('aria-expanded', String(open));
+  appShopSortToggle.setAttribute('aria-expanded', 'false');
+});
+if (appShopSortPanel) appShopSortPanel.addEventListener('click', event => {
+  const option = event.target.closest('[data-shop-sort]');
+  if (!option) return;
+  appShopSort = option.dataset.shopSort;
+  appShopSortPanel.querySelectorAll('[data-shop-sort]').forEach(button => button.classList.toggle('selected', button === option));
+  appShopSortPanel.hidden = true;
+  appShopSortToggle.setAttribute('aria-expanded', 'false');
+  appShopRenderProducts();
+});
+['app-shop-brand-filter','app-shop-category-filter'].forEach(id => {
+  const select = document.getElementById(id);
+  if (select) select.addEventListener('change', () => {
+    appShopBrand = document.getElementById('app-shop-brand-filter').value;
+    appShopCategory = document.getElementById('app-shop-category-filter').value;
+    appShopRenderProducts();
+  });
+});
+const appShopClearFilters = document.getElementById('app-shop-clear-filters');
+if (appShopClearFilters) appShopClearFilters.addEventListener('click', () => {
+  appShopBrand = 'all'; appShopCategory = 'all';
+  document.getElementById('app-shop-brand-filter').value = 'all';
+  document.getElementById('app-shop-category-filter').value = 'all';
+  appShopRenderProducts();
+});
+
 const appProductReviewsCache = new Map();
 let appRenderedProductId = '';
 let appCurrentProduct = null;
