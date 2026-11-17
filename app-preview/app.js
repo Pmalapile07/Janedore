@@ -1747,5 +1747,9 @@ window.addEventListener('popstate', () => {
   if (location.hash.startsWith('#product/')) appOpenProduct(decodeURIComponent(location.hash.slice(9)),false);
   else if (appProductView && !appProductView.hidden) appProductClose();
 });
+// Warm the full All Products catalogue as soon as the app script starts.
+// This runs behind the welcome screen and shares the same in-flight request
+// when the customer opens Shop Now, so the collection is ready on arrival.
+appShopLoadProducts();
 appUpdateCartIndicator();
 if (location.hash.startsWith('#product/')) appOpenProduct(decodeURIComponent(location.hash.slice(9)),false);
