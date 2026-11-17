@@ -674,10 +674,12 @@ function appHideAddedToast() {
   const toast = document.getElementById('app-added-toast');
   if (toast) toast.classList.remove('show');
 }
-function appUpdateCartCount() {
-  const count = appProductCartItems().reduce((sum, item) => sum + (Number(item.qty) || 0), 0);
-  const badge = document.getElementById('app-product-cart-count');
-  if (badge) { badge.textContent = '(' + (count > 9 ? '9+' : String(count)) + ')'; badge.hidden = count < 1; }
+function appUpdateCartIndicator() {
+  const hasItems = appProductCartItems().length > 0;
+  const dot = document.querySelector('.nav-cart-dot');
+  if (dot) dot.hidden = !hasItems;
+  const cartButton = document.querySelector('.nav-item[data-tab="Cart"]');
+  if (cartButton) cartButton.setAttribute('aria-label', hasItems ? 'Shopping bag, has items' : 'Shopping bag');
 }
 let appProductReturnToCart = false;
 function appShowProductView() {
@@ -881,7 +883,7 @@ async function appOpenProduct(productId, pushHistory = true) {
     relatedSection.hidden = true;
     relatedTrack.innerHTML = '';
   }
-  appUpdateCartCount();
+  appUpdateCartIndicator();
   appUpdateProductStickyState();
   const reviewBox = document.getElementById('app-product-reviews');
   if (appProductReviewsCache.has(id)) {
@@ -1272,12 +1274,9 @@ function appRenderCart(skipHydration) {
   if (!appCartContent) return;
   const items = appProductCartItems();
   const renderVersion = ++appCartRenderVersion;
-  const qty = items.reduce(function(sum, item) { return sum + Math.max(1, Number(item.qty) || 1); }, 0);
   const stepper = document.querySelector('.app-checkout-steps');
   if (stepper) stepper.hidden = !items.length;
-  const count = document.getElementById('app-cart-header-count');
-  if (count) count.textContent = qty + (qty === 1 ? ' item' : ' items');
-  appUpdateCartCount();
+  appUpdateCartIndicator();
   const recentSection = '<section class="app-cart-recent" id="app-cart-recent" hidden><h2>Recently viewed</h2><div class="app-new-in-track app-cart-recent-track" id="app-cart-recent-track"></div></section>';
   if (!items.length) {
     appCartContent.innerHTML = '<div class="app-cart-empty"><i class="ph ph-tote-simple" aria-hidden="true"></i><h2>Your bag is empty</h2><p>Find something you love.</p><button type="button" id="app-cart-shop">Continue shopping</button></div>' + recentSection;
@@ -1394,7 +1393,7 @@ function appAddCurrentProductToBag() {
     });
   }
   localStorage.setItem('janedore_cart',JSON.stringify(items));
-  appUpdateCartCount();
+  appUpdateCartIndicator();
   appShowAddedToast('Added to bag', 'ph-check-circle', 'cart');
   
   const button = document.getElementById('app-product-sticky-add');
@@ -1411,5 +1410,5 @@ window.addEventListener('popstate', () => {
   if (location.hash.startsWith('#product/')) appOpenProduct(decodeURIComponent(location.hash.slice(9)),false);
   else if (appProductView && !appProductView.hidden) appProductClose();
 });
-appUpdateCartCount();
+appUpdateCartIndicator();
 if (location.hash.startsWith('#product/')) appOpenProduct(decodeURIComponent(location.hash.slice(9)),false);
