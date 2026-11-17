@@ -1459,6 +1459,8 @@ function appCartOpen() {
   const sticky = document.getElementById('app-product-sticky-bar');
   if (sticky) sticky.hidden = true;
   document.querySelectorAll('.app-tab-content').forEach(function(view) { view.hidden = true; });
+  const collectionPage = document.getElementById('app-shop-page');
+  if (collectionPage) collectionPage.hidden = true;
   const header = document.querySelector('.app-header');
   const bottom = document.querySelector('.bottom-nav');
   if (header) header.hidden = true;
@@ -1590,7 +1592,10 @@ if (appCartContent) {
       return;
     }
     if (event.target.closest('#app-cart-checkout')) window.location.href = '/checkout';
-    if (event.target.closest('#app-cart-shop')) appCartClose(false);
+    if (event.target.closest('#app-cart-shop')) {
+      appCartClose(false);
+      appOpenHomeCollection();
+    }
     if (event.target.closest('#app-cart-promo-apply')) appCartApplyPromoCode();
     if (event.target.closest('#app-cart-promo-remove')) appCartRemovePromoCode();
   });
