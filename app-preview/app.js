@@ -60,20 +60,99 @@ const homeNavItem = navItems.find(item => item.dataset.tab === 'Home');
 const navIndicator = document.querySelector('.nav-indicator');
 let rotatingNavItems = navItems.filter(item => item !== homeNavItem);
 
-function renderNavigationWindow() {
+let navAnimationTimer = null;
+
+function renderNavigationWindow(animate = false) {
   if (!nav || !homeNavItem || !navIndicator) return;
-  // Home is fixed. The other seven destinations form a circular queue;
-  // only the next four in that queue are visible at any one time.
+  const previousVisible = new Set(navItems.filter(item => !item.hidden));
+  const previousRects = new Map([...previousVisible].map(item => [item, item.getBoundingClientRect()]));
+  const visibleItems = [homeNavItem, ...rotatingNavItems.slice(0, 4)];
+  const visible = new Set(visibleItems);
+
   nav.insertBefore(homeNavItem, navIndicator);
   rotatingNavItems.forEach(item => nav.insertBefore(item, navIndicator));
-  const visible = new Set([homeNavItem, ...rotatingNavItems.slice(0, 4)]);
-  navItems.forEach(item => { item.hidden = !visible.has(item); });
+
+  // Hide items outside the five-slot window before measuring the new layout.
+  navItems.forEach(item => {
+    if (!visible.has(item)) item.hidden = true;
+  });
+  visibleItems.forEach(item => { item.hidden = false; });
+
+  if (!animate || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  const cellWidth = nav.clientWidth / 5;
+  const entering = visibleItems.filter(item => !previousVisible.has(item));
+  const retained = visibleItems.filter(item => previousVisible.has(item) && previousRects.has(item));
+  const exiting = [...previousVisible].filter(item => !visible.has(item) && previousRects.has(item));
+
+  // FLIP: retained icons start at their old screen positions, then glide into
+  // their new slots. Newly revealed icons enter from the right-hand edge.
+  retained.forEach(item => {
+    const oldRect = previousRects.get(item);
+    const newRect = item.getBoundingClientRect();
+    const deltaX = oldRect.left - newRect.left;
+    item.style.transition = 'none';
+    item.style.transform = `translate3d(${deltaX}px,0,0)`;
+    item.style.opacity = '1';
+  });
+  entering.forEach(item => {
+    item.style.transition = 'none';
+    item.style.transform = `translate3d(${cellWidth}px,0,0)`;
+    item.style.opacity = '0';
+  });
+
+  // A non-interactive visual ghost lets the icon leaving the window glide
+  // out to the left instead of vanishing when its real button is hidden.
+  const ghosts = exiting.map(item => {
+    const rect = previousRects.get(item);
+    const ghost = item.cloneNode(true);
+    ghost.removeAttribute('data-tab');
+    ghost.removeAttribute('aria-current');
+    ghost.setAttribute('aria-hidden', 'true');
+    ghost.disabled = true;
+    Object.assign(ghost.style, {
+      position:'fixed', left:`${rect.left}px`, top:`${rect.top}px`,
+      width:`${rect.width}px`, height:`${rect.height}px`,
+      margin:'0', zIndex:'30', pointerEvents:'none',
+      transition:'none', transform:'translate3d(0,0,0)', opacity:'1'
+    });
+    ghost.querySelector('.nav-count')?.remove();
+    document.body.appendChild(ghost);
+    return ghost;
+  });
+
+  // Commit the starting transforms, then animate all icons on the same curve.
+  void nav.offsetWidth;
+  const glide = 'transform 520ms cubic-bezier(.22,1,.36,1), opacity 360ms ease';
+  retained.forEach(item => {
+    item.style.transition = glide;
+    item.style.transform = 'translate3d(0,0,0)';
+  });
+  entering.forEach(item => {
+    item.style.transition = glide;
+    item.style.transform = 'translate3d(0,0,0)';
+    item.style.opacity = '1';
+  });
+  ghosts.forEach(ghost => {
+    ghost.style.transition = glide;
+    ghost.style.transform = `translate3d(-${cellWidth}px,0,0)`;
+    ghost.style.opacity = '0';
+  });
+
+  if (navAnimationTimer) window.clearTimeout(navAnimationTimer);
+  navAnimationTimer = window.setTimeout(() => {
+    [...retained, ...entering].forEach(item => {
+      item.style.transition = '';
+      item.style.transform = '';
+      item.style.opacity = '';
+    });
+    ghosts.forEach(ghost => ghost.remove());
+    navAnimationTimer = null;
+  }, 580);
 }
 
 function moveNavIndicator(item) {
   if (!nav || !item || !navIndicator || item.hidden) return;
-  // offsetLeft/offsetWidth ignore the button's visual transform, so the glass
-  // capsule is centred on the actual grid cell on every selection and resize.
   const x = item.offsetLeft + (item.offsetWidth - navIndicator.offsetWidth) / 2;
   nav.style.setProperty('--indicator-x', `${x}px`);
 }
@@ -86,7 +165,7 @@ function rotateNavigationTo(item) {
 
 function appSelectNavigationTab(tabName, activeButton) {
   rotateNavigationTo(activeButton);
-  renderNavigationWindow();
+  renderNavigationWindow(true);
   navItems.forEach(item => {
     const active = item === activeButton;
     item.classList.toggle('selected', active);
