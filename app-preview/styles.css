@@ -316,3 +316,8 @@ body.app-product-open .app-product-content{padding-bottom:120px}
 .app-new-in-track::after{flex-basis:16px}
 .app-product-image-actions{padding-left:16px;padding-right:16px}
 .app-product-related-track{scroll-padding-left:0}
+
+
+/* Toasts are action links; the close control remains independently clickable. */
+.app-added-toast{cursor:pointer}
+.app-added-toast-close{position:relative;z-index:2;cursor:pointer}
