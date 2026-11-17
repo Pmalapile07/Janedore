@@ -500,6 +500,117 @@ let appGalleryImages = [];
 function appProductEscape(value) {
   return String(value == null ? '' : value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 }
+
+let appReviewItems = [];
+let appReviewSort = 'newest';
+let appReviewProductId = '';
+
+function appReviewTime(review) {
+  return review && review.createdAt && typeof review.createdAt.toDate === 'function' ? review.createdAt.toDate().getTime() : 0;
+}
+function appReviewDate(timestamp) {
+  const days = Math.max(0, Math.floor((Date.now() - timestamp) / 86400000));
+  if (!days) return 'Today';
+  if (days === 1) return '1 day ago';
+  if (days < 7) return days + ' days ago';
+  if (days < 14) return '1 week ago';
+  if (days < 30) return Math.floor(days / 7) + ' weeks ago';
+  if (days < 60) return '1 month ago';
+  if (days < 365) return Math.floor(days / 30) + ' months ago';
+  if (days < 730) return '1 year ago';
+  return Math.floor(days / 365) + ' years ago';
+}
+function appReviewStars(rating) {
+  return Array.from({length:5},(_,i)=>'<i class="'+(i<Math.round(rating)?'ph-fill':'ph')+' ph-star" aria-hidden="true"></i>').join('');
+}
+function appReviewInteraction(id) {
+  try { return JSON.parse(localStorage.getItem('janedore_review_interactions') || '{}')[id] || {}; } catch (_) { return {}; }
+}
+function appReviewVisitorId() {
+  const key='janedore_review_visitor';
+  try {
+    let id=localStorage.getItem(key);
+    if(!id){id=window.crypto&&crypto.randomUUID?crypto.randomUUID():'jd-'+Date.now()+'-'+Math.random().toString(16).slice(2);localStorage.setItem(key,id);}
+    return id;
+  } catch (_) { return ''; }
+}
+function appRenderProductReviews(productId) {
+  const box=document.getElementById('app-product-reviews');
+  if(!box || appReviewProductId!==productId || !appCurrentProduct || appCurrentProduct.id!==productId) return;
+  const reviews=appReviewItems;
+  if(!reviews.length){box.innerHTML='<div class="product-reviews-empty"><p>There are no reviews for this product yet.</p></div>';return;}
+  const average=reviews.reduce((sum,r)=>sum+(Number(r.rating)||0),0)/reviews.length;
+  const ratings=reviews.map(r=>Math.max(1,Math.min(5,Math.round(Number(r.rating)||0))));
+  const breakdown=[5,4,3,2,1].map(star=>{
+    const amount=ratings.filter(r=>r===star).length;
+    const width=Math.round(amount/reviews.length*100);
+    return '<div class="product-review-breakdown-row"><span>'+star+' <i class="ph-fill ph-star" aria-hidden="true"></i></span><span class="product-review-breakdown-track"><span style="width:'+width+'%"></span></span><span>'+amount+'</span></div>';
+  }).join('');
+  const sorted=[...reviews].sort((a,b)=>{
+    if(appReviewSort==='highest') return (Number(b.rating)||0)-(Number(a.rating)||0)||appReviewTime(b)-appReviewTime(a);
+    if(appReviewSort==='lowest') return (Number(a.rating)||0)-(Number(b.rating)||0)||appReviewTime(b)-appReviewTime(a);
+    return appReviewTime(b)-appReviewTime(a);
+  });
+  box.innerHTML='<section class="product-reviews-summary" aria-label="Customer rating summary"><div class="product-reviews-average"><strong>'+average.toFixed(1)+'</strong><span class="product-review-stars" aria-label="'+average.toFixed(1)+' out of 5">'+appReviewStars(average)+'</span><p>'+reviews.length+' customer review'+(reviews.length===1?'':'s')+'</p></div><div class="product-review-breakdown">'+breakdown+'</div></section>'+
+    (reviews.length>1?'<div class="product-reviews-toolbar"><label for="app-product-review-sort">Sort by</label><select id="app-product-review-sort" onchange="appSortProductReviews(this.value)"><option value="newest">Most recent</option><option value="highest">Highest rating</option><option value="lowest">Lowest rating</option></select></div>':'')+
+    '<div class="product-review-list">'+sorted.map(review=>{
+      const date=appReviewTime(review)?appReviewDate(appReviewTime(review)):'';
+      const author=String(review.name||'Anonymous').trim().toLocaleLowerCase('en-ZA').replace(/(^|[\\s'-])([\\p{L}])/gu,(_,s,l)=>s+l.toLocaleUpperCase('en-ZA'));
+      const rating=Math.max(0,Math.min(5,Number(review.rating)||0));
+      const verified=review.verified===true?'<span class="product-review-verified"><i class="ph ph-check-circle" aria-hidden="true"></i> Verified purchase</span>':'';
+      const featured=review.featured===true?'<span class="product-review-featured">Featured</span>':'';
+      const photos=(Array.isArray(review.imageUrls)&&review.imageUrls.length?review.imageUrls:[review.imageUrl]).filter(u=>/^https:\\/\\/res\\.cloudinary\\.com\\//.test(u||''));
+      const photoHtml=photos.length?'<div class="product-review-photos">'+photos.map(u=>'<img class="product-review-photo" src="'+appProductEscape(u)+'" alt="Photo from '+appProductEscape(author)+'" loading="lazy">').join('')+'</div>':'';
+      const reply=review.vendorReply?'<div class="product-review-brand-reply"><span>Brand reply</span><p>'+appProductEscape(review.vendorReply)+'</p></div>':'';
+      const interaction=appReviewInteraction(review.id||'');
+      const vote=interaction.vote||'';
+      const flagged=interaction.flagged===true;
+      return '<article class="product-review-card"><div class="product-review-card-head"><div class="product-review-author-wrap"><div class="product-review-author-line"><p class="product-review-author">'+appProductEscape(author)+'</p>'+featured+'</div><div class="product-review-meta">'+(date?'<span class="product-review-date">'+date+'</span>':'')+verified+'</div></div></div>'+
+        '<p class="product-review-stars" aria-label="'+rating+' out of 5">'+appReviewStars(rating)+'</p>'+
+        (review.text?'<p class="product-review-text">'+appProductEscape(review.text)+'</p>':'')+
+        (review.rewarded?'<p class="product-review-reward">Received a thank-you voucher for this review</p>':'')+photoHtml+reply+
+        '<div class="product-review-actions"><span class="product-review-helpful-label">Was this helpful to you?</span><div class="product-review-votes">'+
+        '<button type="button" class="product-review-action'+(vote==='helpful'?' is-selected':'')+'" '+(vote?'disabled':'')+' onclick="appSubmitReviewFeedback(\''+appProductEscape(review.id||'')+'\',true,this)" aria-label="Yes, helpful"><i class="ph ph-thumbs-up"></i><span>'+(Number(review.helpfulCount)||0)+'</span></button>'+
+        '<button type="button" class="product-review-action'+(vote==='notHelpful'?' is-selected':'')+'" '+(vote?'disabled':'')+' onclick="appSubmitReviewFeedback(\''+appProductEscape(review.id||'')+'\',false,this)" aria-label="No, not helpful"><i class="ph ph-thumbs-down"></i><span>'+(Number(review.notHelpfulCount)||0)+'</span></button></div>'+
+        '<button type="button" class="product-review-flag'+(flagged?' is-selected':'')+'" '+(flagged?'disabled':'')+' onclick="appFlagProductReview(\''+appProductEscape(review.id||'')+'\',this)"><i class="ph-fill ph-flag"></i><span>'+(flagged?'Review flagged':'Flag review')+'</span></button></div></article>';
+    }).join('')+'</div>';
+  const select=document.getElementById('app-product-review-sort');
+  if(select) select.value=appReviewSort;
+}
+window.appSortProductReviews=function(value){if(!['newest','highest','lowest'].includes(value))return;appReviewSort=value;appRenderProductReviews(appReviewProductId);};
+window.appSubmitReviewFeedback=async function(reviewId,helpful,button){
+  const visitorId=appReviewVisitorId(); if(!visitorId)return alert('Please enable site storage to vote.');
+  button.disabled=true;
+  try{
+    const response=await fetch('/api/reviews/feedback',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({reviewId,helpful,visitorId})});
+    const result=await response.json(); if(!response.ok)throw new Error(result.error||'Could not save your vote.');
+    const saved=JSON.parse(localStorage.getItem('janedore_review_interactions')||'{}');saved[reviewId]=Object.assign({},saved[reviewId],{vote:helpful?'helpful':'notHelpful'});localStorage.setItem('janedore_review_interactions',JSON.stringify(saved));
+    const review=appReviewItems.find(r=>r.id===reviewId);if(review){const key=helpful?'helpfulCount':'notHelpfulCount';review[key]=(Number(review[key])||0)+1;}
+    appRenderProductReviews(appReviewProductId);
+  }catch(error){button.disabled=false;alert(error.message);}
+};
+window.appFlagProductReview=async function(reviewId,button){
+  const visitorId=appReviewVisitorId();if(!visitorId)return alert('Please enable site storage to report a review.');
+  button.disabled=true;
+  try{
+    const response=await fetch('/api/reviews/flag',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({reviewId,visitorId})});
+    const result=await response.json();if(!response.ok)throw new Error(result.error||'Could not report this review.');
+    const saved=JSON.parse(localStorage.getItem('janedore_review_interactions')||'{}');saved[reviewId]=Object.assign({},saved[reviewId],{flagged:true});localStorage.setItem('janedore_review_interactions',JSON.stringify(saved));
+    appRenderProductReviews(appReviewProductId);
+  }catch(error){button.disabled=false;alert(error.message);}
+};
+async function appLoadProductReviews(productId){
+  const box=document.getElementById('app-product-reviews');if(!box)return;
+  appReviewProductId=productId;appReviewSort='newest';appReviewItems=[];
+  box.innerHTML='<p>Loading reviews…</p>';
+  try{
+    const snap=await appProductDb.collection('reviews').where('productId','==',productId).limit(100).get();
+    if(!appCurrentProduct||appCurrentProduct.id!==productId||appReviewProductId!==productId)return;
+    appReviewItems=snap.docs.map(doc=>Object.assign({id:doc.id},doc.data())).sort((a,b)=>appReviewTime(b)-appReviewTime(a));
+    appRenderProductReviews(productId);
+  }catch(error){if(appCurrentProduct&&appCurrentProduct.id===productId)box.textContent='Customer reviews are unavailable right now.';}
+}
+
 function appProductMoney(value) {
   const amount = Number(value);
   return Number.isFinite(amount) ? 'R' + amount.toFixed(2) : '';
@@ -888,20 +999,7 @@ async function appOpenProduct(productId, pushHistory = true) {
   }
   appUpdateCartIndicator();
   appUpdateProductStickyState();
-  const reviewBox = document.getElementById('app-product-reviews');
-  if (appProductReviewsCache.has(id)) {
-    reviewBox.innerHTML = appProductReviewsCache.get(id);
-  } else {
-    try {
-      const reviewSnap = await appProductDb.collection('reviews').where('productId','==',id).limit(20).get();
-      const reviews = reviewSnap.docs.map(doc => doc.data());
-      const reviewHtml = reviews.length ? reviews.map(review => '<div class="app-product-review"><strong>' + appProductEscape(review.name || 'Customer') + '</strong><p>' + appProductEscape(review.text || '') + '</p></div>').join('') : 'There are no reviews for this product yet.';
-      appProductReviewsCache.set(id, reviewHtml);
-      if (appCurrentProduct && appCurrentProduct.id === id) reviewBox.innerHTML = reviewHtml;
-    } catch (_) {
-      if (appCurrentProduct && appCurrentProduct.id === id) reviewBox.textContent = 'Customer reviews are unavailable right now.';
-    }
-  }
+  await appLoadProductReviews(id);
 }
 document.addEventListener('click', event => {
   const card = event.target.closest('.app-new-in-card[data-product-id], .app-product-related-card[data-product-id]');
