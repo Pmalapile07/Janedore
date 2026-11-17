@@ -514,9 +514,6 @@ const appProductCache = new Map();
 const appProductLoads = new Map();
 
 const appShopProducts = [];
-let appShopSort = 'featured';
-let appShopBrand = 'all';
-let appShopCategory = 'all';
 let appShopLoaded = false;
 let appShopLoading = null;
 
@@ -529,18 +526,8 @@ function appShopDate(product) {
 }
 function appShopRenderProducts() {
   const grid = document.getElementById('app-shop-product-grid');
-  const count = document.getElementById('app-shop-product-count');
-  if (!grid || !count) return;
-  let products = appShopProducts.filter(product => {
-    const brand = String(product.brand || product.vendorName || '').trim();
-    const category = String(product.category || product.department || '').trim();
-    return (appShopBrand === 'all' || brand === appShopBrand) &&
-      (appShopCategory === 'all' || category.toLowerCase() === appShopCategory.toLowerCase());
-  });
-  if (appShopSort === 'newest') products.sort((a,b) => appShopDate(b)-appShopDate(a));
-  if (appShopSort === 'price-low') products.sort((a,b) => (Number(a.salePrice || a.price)||0)-(Number(b.salePrice || b.price)||0));
-  if (appShopSort === 'price-high') products.sort((a,b) => (Number(b.salePrice || b.price)||0)-(Number(a.salePrice || a.price)||0));
-  count.textContent = products.length + (products.length === 1 ? ' product' : ' products');
+  if (!grid) return;
+  const products = [...appShopProducts];
   if (!products.length) {
     grid.innerHTML = '<p class="app-new-in-empty">No products match these filters.</p>';
     return;
@@ -565,7 +552,6 @@ async function appShopLoadProducts() {
   if (appShopLoaded) { appShopRenderProducts(); return; }
   if (appShopLoading) return appShopLoading;
   const grid = document.getElementById('app-shop-product-grid');
-  const count = document.getElementById('app-shop-product-count');
   appShopLoading = appProductDb.collection('products').where('status', '==', 'active').get()
     .then(snapshot => {
       appShopProducts.splice(0, appShopProducts.length, ...snapshot.docs.map(doc => Object.assign({id:doc.id}, doc.data())));
@@ -581,7 +567,6 @@ async function appShopLoadProducts() {
     })
     .catch(error => {
       if (grid) grid.innerHTML = '<p class="app-new-in-empty">Products are temporarily unavailable.</p>';
-      if (count) count.textContent = '';
       console.warn('[APP SHOP] Could not load products:', error.message);
     })
     .finally(() => { appShopLoading = null; });
@@ -592,49 +577,6 @@ if (appShopBack) appShopBack.addEventListener('click', () => {
   const homeButton = navItems.find(item => item.dataset.tab === 'Home');
   if (homeButton) activateTab('Home', homeButton);
 });
-const appShopSortToggle = document.getElementById('app-shop-sort-toggle');
-const appShopFilterToggle = document.getElementById('app-shop-filter-toggle');
-const appShopSortPanel = document.getElementById('app-shop-sort-panel');
-const appShopFilterPanel = document.getElementById('app-shop-filter-panel');
-if (appShopSortToggle) appShopSortToggle.addEventListener('click', () => {
-  const open = appShopSortPanel.hidden;
-  appShopSortPanel.hidden = !open;
-  appShopFilterPanel.hidden = true;
-  appShopSortToggle.setAttribute('aria-expanded', String(open));
-  appShopFilterToggle.setAttribute('aria-expanded', 'false');
-});
-if (appShopFilterToggle) appShopFilterToggle.addEventListener('click', () => {
-  const open = appShopFilterPanel.hidden;
-  appShopFilterPanel.hidden = !open;
-  appShopSortPanel.hidden = true;
-  appShopFilterToggle.setAttribute('aria-expanded', String(open));
-  appShopSortToggle.setAttribute('aria-expanded', 'false');
-});
-if (appShopSortPanel) appShopSortPanel.addEventListener('click', event => {
-  const option = event.target.closest('[data-shop-sort]');
-  if (!option) return;
-  appShopSort = option.dataset.shopSort;
-  appShopSortPanel.querySelectorAll('[data-shop-sort]').forEach(button => button.classList.toggle('selected', button === option));
-  appShopSortPanel.hidden = true;
-  appShopSortToggle.setAttribute('aria-expanded', 'false');
-  appShopRenderProducts();
-});
-['app-shop-brand-filter','app-shop-category-filter'].forEach(id => {
-  const select = document.getElementById(id);
-  if (select) select.addEventListener('change', () => {
-    appShopBrand = document.getElementById('app-shop-brand-filter').value;
-    appShopCategory = document.getElementById('app-shop-category-filter').value;
-    appShopRenderProducts();
-  });
-});
-const appShopClearFilters = document.getElementById('app-shop-clear-filters');
-if (appShopClearFilters) appShopClearFilters.addEventListener('click', () => {
-  appShopBrand = 'all'; appShopCategory = 'all';
-  document.getElementById('app-shop-brand-filter').value = 'all';
-  document.getElementById('app-shop-category-filter').value = 'all';
-  appShopRenderProducts();
-});
-
 const appProductReviewsCache = new Map();
 let appRenderedProductId = '';
 let appCurrentProduct = null;
