@@ -78,7 +78,8 @@ const appScrollMemoryKey = 'janedore_app_scroll_history_v1';
 let appSavedScrollState = {};
 try { appSavedScrollState = JSON.parse(localStorage.getItem(appScrollMemoryKey) || '{}') || {}; } catch (_) {}
 const appTabMemories = new Map(Object.entries(appSavedScrollState.tabs || {}));
-let appCollectionMemory = appSavedScrollState.collection || {scrollY:0};
+let appCollectionMemory = appSavedScrollState.collection || {type:'all-products',scrollY:0};
+if (!appCollectionMemory.type) appCollectionMemory.type = 'all-products';
 if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
 let appScrollRestoreToken = 0;
 
@@ -125,18 +126,22 @@ function appSaveCurrentTabMemory() {
     // while the customer visits another bottom tab. It remains a temporary
     // detail screen: Back still returns to the collection, not to Home's hero.
     if (appProductReturnToCollection) {
-      memory.scrollY = appCollectionMemory.scrollY || 0;
+      // Keep Home's own scroll position untouched. The collection has its
+      // own independent scroll memory and is restored after this product.
       memory.productId = appCurrentProduct && appCurrentProduct.id
         ? String(appCurrentProduct.id)
         : (appRenderedProductId || null);
+      memory.productSourceCollection = appCollectionMemory.type || 'all-products';
       memory.productScrollY = window.scrollY;
     } else {
       memory.productId = null;
+      memory.productSourceCollection = null;
       memory.productScrollY = 0;
     }
   } else {
     memory.scrollY = window.scrollY;
     memory.productId = null;
+    memory.productSourceCollection = null;
     memory.productScrollY = 0;
   }
   appTabMemories.set(appActiveTab, memory);
@@ -684,6 +689,8 @@ function appOpenHomeCollection() {
   collectionPage.hidden = false;
   const appHeader = document.querySelector('.app-header');
   if (appHeader) appHeader.hidden = true;
+  appCollectionMemory.type = 'all-products';
+  appPersistScrollMemories();
   appShopLoadProducts();
   appRestoreScrollPosition(appCollectionMemory.scrollY || 0);
 }
@@ -1059,6 +1066,7 @@ function appProductClose() {
     appProductReturnToCollection = false;
     const tabMemory = appTabMemories.get(appActiveTab) || {scrollY:0,productId:null,productScrollY:0};
     tabMemory.productId = null;
+    tabMemory.productSourceCollection = null;
     tabMemory.productScrollY = 0;
     appTabMemories.set(appActiveTab, tabMemory);
     appPersistScrollMemories();
