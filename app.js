@@ -322,9 +322,11 @@ async function init() {
       navigateToVendor(pathRoute.slug, true, pathRoute.view);
     } else if (pathRoute.page === 'login') {
       await window.authReady;
+      if (popNav !== pageNavGeneration) return;
       navigateToLogin(true);
     } else if (pathRoute.page === 'account') {
       await window.authReady;
+      if (popNav !== pageNavGeneration) return;
       navigateToAccount(true);
     } else if (['cart','wishlist','checkout','products','campaign','editorial','brands','categories','giftcards'].includes(pathRoute.page)) {
       navigateTo(pathRoute.page, true);
@@ -339,8 +341,8 @@ async function init() {
     else if (route.page === 'category') {
       navigateToCollection(route.cat, true);
     }
-    else if (route.page === 'login') { await window.authReady; navigateToLogin(true); }
-    else if (route.page === 'account') { await window.authReady; navigateToAccount(true); }
+    else if (route.page === 'login') { await window.authReady; if (popNav !== pageNavGeneration) return; navigateToLogin(true); }
+    else if (route.page === 'account') { await window.authReady; if (popNav !== pageNavGeneration) return; navigateToAccount(true); }
     else if (['cart','wishlist','checkout','products','campaign','editorial','brands','categories','giftcards'].includes(route.page)) {
       navigateTo(route.page, true);
     }
@@ -420,8 +422,8 @@ window.addEventListener('popstate', async () => {
   // targets, not routes; never treat them as a page change.
   if (/^#brands-letter-/.test(window.location.hash)) return;
   // A browser back/forward action is a new navigation too. Invalidate
-  // any collection lookup that is still waiting to resolve.
-  ++pageNavGeneration;
+  // any older page lookup and keep this route current across auth waits.
+  const popNav = ++pageNavGeneration;
   closeFilterPanel();
   const pathRoute = getRouteFromPath();
   if (pathRoute) {
