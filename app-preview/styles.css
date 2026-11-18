@@ -271,7 +271,7 @@ body.app-product-open{overflow-x:hidden}
 .app-cart-content{padding:16px 12px 28px}
 .app-cart-content:has(.app-cart-empty){min-height:calc(100dvh - 132px - env(safe-area-inset-bottom,0px));display:flex;align-items:center;justify-content:center;padding:0 12px}
 .app-cart-empty{width:100%;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 16px}
-.app-cart-empty>svg{display:block;align-self:center;width:170px;height:auto;margin:0 auto 18px;overflow:visible}.app-cart-empty>i{font-size:34px;color:#222;margin-bottom:18px}
+.app-cart-empty>svg{display:block;align-self:center;width:168px;height:auto;margin:0 auto 18px;overflow:visible}.app-cart-empty>i{font-size:34px;color:#222;margin-bottom:18px}
 .app-cart-empty h2{margin:0 0 8px;font:500 18px Inter,Arial,sans-serif}
 .app-cart-empty p{margin:0 0 22px;color:#777;font:400 13px Inter,Arial,sans-serif}
 .app-cart-empty #app-cart-shop{align-self:center;background:#111;color:#fff;appearance:none;-webkit-appearance:none;cursor:pointer}
