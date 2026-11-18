@@ -94,12 +94,22 @@ function appPersistScrollMemories() {
 function appRestoreScrollPosition(scrollY) {
   const targetY = Math.max(0, Number(scrollY) || 0);
   const token = ++appScrollRestoreToken;
-  requestAnimationFrame(() => {
+
+  // Apply the destination before the browser paints the newly revealed page.
+  // Waiting two animation frames exposed the previous page's scroll position
+  // on first visits, making the new page appear to open near its bottom.
+  window.scrollTo({top:targetY,behavior:'instant'});
+
+  // Re-apply saved positions after layout settles when returning to a page
+  // that was previously scrolled.
+  if (targetY > 0) {
     requestAnimationFrame(() => {
-      if (token !== appScrollRestoreToken) return;
-      window.scrollTo({top:targetY,behavior:'instant'});
+      requestAnimationFrame(() => {
+        if (token !== appScrollRestoreToken) return;
+        window.scrollTo({top:targetY,behavior:'instant'});
+      });
     });
-  });
+  }
 }
 
 function appSaveCurrentTabMemory() {
