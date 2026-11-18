@@ -80,6 +80,8 @@ try { appSavedScrollState = JSON.parse(localStorage.getItem(appScrollMemoryKey) 
 const appTabMemories = new Map(Object.entries(appSavedScrollState.tabs || {}));
 let appCollectionMemory = appSavedScrollState.collection || {type:'all-products',scrollY:0};
 if (!appCollectionMemory.type) appCollectionMemory.type = 'all-products';
+// Remember which Home-owned screen was last open independently of its scroll position.
+let appHomeScreen = appSavedScrollState.homeScreen === 'collection' ? 'collection' : 'home';
 if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
 let appScrollRestoreToken = 0;
 
@@ -87,7 +89,8 @@ function appPersistScrollMemories() {
   try {
     localStorage.setItem(appScrollMemoryKey, JSON.stringify({
       tabs:Object.fromEntries(appTabMemories),
-      collection:appCollectionMemory
+      collection:appCollectionMemory,
+      homeScreen:appHomeScreen
     }));
   } catch (_) {}
 }
@@ -117,6 +120,7 @@ function appSaveCurrentTabMemory() {
   const collectionPage = document.getElementById('app-shop-page');
   if (collectionPage && !collectionPage.hidden && (!appProductView || appProductView.hidden)) {
     appCollectionMemory.scrollY = window.scrollY;
+    if (appActiveTab === 'Home') appHomeScreen = 'collection';
     appPersistScrollMemories();
     return;
   }
@@ -222,6 +226,15 @@ function appShowTabPage(tabName) {
   // If this tab was left while viewing a product opened from its collection,
   // restore that exact product. appOpenProduct runs synchronously up to its
   // first await, so set the return destination immediately afterwards.
+  // Home can own either its homepage or the separate All Products collection.
+  // Restore the remembered screen itself, not just Home's tab-level scroll state.
+  if (tabName === 'Home' && appHomeScreen === 'collection' && collectionPage) {
+    collectionPage.hidden = false;
+    if (header) header.hidden = true;
+    appRestoreScrollPosition(appCollectionMemory.scrollY || 0);
+    return;
+  }
+
   if (memory.productId) {
     const productId = String(memory.productId);
     const productScrollY = memory.productScrollY || 0;
@@ -705,6 +718,7 @@ function appOpenHomeCollection() {
   const appHeader = document.querySelector('.app-header');
   if (appHeader) appHeader.hidden = true;
   appCollectionMemory.type = 'all-products';
+  appHomeScreen = 'collection';
   appPersistScrollMemories();
   appShopLoadProducts();
   appRestoreScrollPosition(appCollectionMemory.scrollY || 0);
@@ -712,7 +726,7 @@ function appOpenHomeCollection() {
 const appShopBack = document.getElementById('app-shop-back');
 if (appShopBack) appShopBack.addEventListener('click', () => {
   const collectionPage = document.getElementById('app-shop-page');
-  if (collectionPage) { appCollectionMemory.scrollY = window.scrollY; collectionPage.hidden = true; appPersistScrollMemories(); }
+  if (collectionPage) { appCollectionMemory.scrollY = window.scrollY; collectionPage.hidden = true; appHomeScreen = 'home'; appPersistScrollMemories(); }
   const homeButton = navItems.find(item => item.dataset.tab === 'Home');
   if (homeButton) {
     appSelectNavigationTab('Home', homeButton);
