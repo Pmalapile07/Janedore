@@ -369,7 +369,10 @@ body:has(#page-checkout.active) #main-nav .search-bar-row {
      Recently Viewed slider. */
   min-height: 62vh;
   min-height: 62svh;
-  padding: 40px 16px;
+  /* Keep the empty-bag message lower in the viewport so it has more
+     breathing room below the navigation/status area. The asymmetric
+     padding shifts the centred group down without changing section height. */
+  padding: 64px 16px 16px;
 }
 .cart-empty-icon { font-size: 20px; color: #111; } /* same as the header bag icon */
 .cart-empty-title { font-size: 17px; font-weight: 600; margin-top: 10px; }
