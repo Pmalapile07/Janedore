@@ -148,19 +148,15 @@
 .brand-logo-tile span { padding: 0 8px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; text-align: center; line-height: 1.3; }
 
 
-/* Product image gallery: one continuous progress line, not segmented dots/bars. */
-#product-image-bars.product-image-progress {
-  display: block;
-  width: 100%;
-  height: 1.5px;
-  margin-top: 14px;
-  overflow: hidden;
-  background: #d8d8d8;
+/* Product gallery indicators are distinct thin lines, one per image. */
+#product-image-bars {
+  justify-content: center;
+  gap: 6px;
 }
 
-#product-image-bars .product-image-progress-fill {
-  display: block;
-  height: 100%;
-  background: #111;
-  transition: width 0.25s ease;
+#product-image-bars .swipe-bar {
+  flex: 0 0 28px;
+  width: 28px;
+  height: 1.5px;
+  border-radius: 0;
 }
