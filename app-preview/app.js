@@ -218,7 +218,14 @@ function appRestoreTab(tabName, activeButton) {
 }
 
 function activateTab(tabName, activeButton) {
-  if (tabName === 'Cart') { appCartOpen(); return; }
+  if (tabName === 'Cart') {
+    // Save the current Home → collection → product journey before Cart
+    // temporarily takes over the screen. Returning to Home can then restore
+    // the same product, its source collection, and both scroll positions.
+    if (appCartView && appCartView.hidden) appSaveCurrentTabMemory();
+    appCartOpen();
+    return;
+  }
   const cartView = document.getElementById('app-cart-view');
   if (cartView && !cartView.hidden) {
     appRestoreTab(tabName, activeButton);
