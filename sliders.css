@@ -115,19 +115,6 @@
   border-color: #111;
 }
 
-#product-image-bars {
-  justify-content: center;
-  gap: 6px;
-}
-
-/* Product gallery indicators are distinct thin lines, one per image. */
-#product-image-bars .swipe-bar {
-  flex: 0 0 28px;
-  width: 28px;
-  height: 1.5px;
-  border-radius: 0;
-}
-
 /* Product page and bag section headings use the Track Your Order heading
    style (track-order.css): Inter, semibold, no capitals. The home page
    keeps its own uppercase headings. */
