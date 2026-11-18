@@ -230,6 +230,8 @@ function appShowTabPage(tabName) {
   // Home can own either its homepage or the separate All Products collection.
   // Restore the remembered screen itself, not just Home's tab-level scroll state.
   if (tabName === 'Home' && appHomeScreen === 'collection' && collectionPage) {
+    // The collection is a separate screen: hide Home and every other tab before revealing it.
+    tabViews.forEach(view => { view.hidden = true; });
     collectionPage.hidden = false;
     if (header) header.hidden = true;
     appRestoreScrollPosition(appCollectionMemory.scrollY || 0);
