@@ -1278,20 +1278,41 @@ async function appOpenProduct(productId, pushHistory = true) {
   document.getElementById('app-product-shipping').textContent = product.shippingReturns || 'Please see the delivery and returns information at checkout.';
   appRenderProductStickyBar(product, regular, sale);
 
-  const related = [...appProductCache.values()].filter(item => item.id !== id && item.category && item.category === product.category).slice(0,6);
-  const relatedSection = document.getElementById('app-product-related');
-  const relatedTrack = document.getElementById('app-product-related-track');
-  if (related.length) {
-    relatedTrack.innerHTML = related.map(item => {
-      const image = appProductImages(item)[0] || '';
+  // Load the complete active catalogue before choosing suggestions. The
+  // initial Home feed only caches a small New In subset.
+  await appShopLoadProducts();
+  const activeProducts = appShopProducts.filter(item =>
+    item && String(item.id) !== id && item.status === 'active'
+  );
+  const inStockProducts = activeProducts.filter(item => {
+    const stockMap = item.stockByVariant;
+    if (stockMap && typeof stockMap === 'object') {
+      const quantities = Object.values(stockMap).flatMap(value =>
+        value && typeof value === 'object' ? Object.values(value) : [value]
+      );
+      if (quantities.length) return quantities.some(quantity => Number(quantity) > 0);
+    }
+    return Number(item.stock) > 0;
+  });
+  const suggestionPool = inStockProducts.length ? inStockProducts : activeProducts;
+  const currentBrand = String(product.brand || product.vendorName || '').trim();
+  const sameBrand = suggestionPool.filter(item => String(item.brand || item.vendorName || '').trim() === currentBrand && currentBrand);
+  const featured = suggestionPool.filter(item => item.featured && String(item.brand || item.vendorName || '').trim() !== currentBrand);
+  const remaining = suggestionPool.filter(item => !item.featured && String(item.brand || item.vendorName || '').trim() !== currentBrand);
+  const suggested = [...sameBrand, ...featured, ...remaining].slice(0,4);
+  const suggestedSection = document.getElementById('app-product-related');
+  const suggestedTrack = document.getElementById('app-product-related-track');
+  if (suggested.length) {
+    suggestedTrack.innerHTML = suggested.map(item => {
+      const image = appProductImages(item)[0] || item.imageUrl || '';
       return '<a href="#product/' + encodeURIComponent(item.id) + '" class="app-product-related-card" data-product-id="' + appProductEscape(item.id) + '">' +
-        (image ? '<img src="' + appProductEscape(image) + '" alt="' + appProductEscape(item.name || '') + '" loading="lazy">' : '<div class="app-product-related-image"></div>') +
-        '<strong>' + appProductEscape(item.brand || '') + '</strong>' + appProductEscape(item.name || '') + '<span>' + appProductMoney(item.price) + '</span></a>';
+        (image ? '<img src="' + appProductEscape(image) + '" alt="' + appProductEscape(item.name || item.title || '') + '" loading="lazy">' : '<div class="app-product-related-image"></div>') +
+        '<strong>' + appProductEscape(item.brand || item.vendorName || '') + '</strong>' + appProductEscape(item.name || item.title || '') + '<span>' + appProductMoney(item.price) + '</span></a>';
     }).join('');
-    relatedSection.hidden = false;
+    suggestedSection.hidden = false;
   } else {
-    relatedSection.hidden = true;
-    relatedTrack.innerHTML = '';
+    suggestedSection.hidden = true;
+    suggestedTrack.innerHTML = '';
   }
   appUpdateCartIndicator();
   appUpdateProductStickyState();
