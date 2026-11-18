@@ -1304,10 +1304,29 @@ async function appOpenProduct(productId, pushHistory = true) {
   const suggestedTrack = document.getElementById('app-product-related-track');
   if (suggested.length) {
     suggestedTrack.innerHTML = suggested.map(item => {
+      const regularPrice = Number(item.price) || 0;
+      const salePrice = item.salePrice == null || item.salePrice === '' ? NaN : Number(item.salePrice);
+      const sale = Number.isFinite(salePrice) && salePrice > 0 && salePrice < regularPrice;
+      const stock = Number(item.stock);
+      const badge = stock <= 0
+        ? 'SOLD OUT'
+        : (String(item.badge || '').trim().toLowerCase() === 'pre-order'
+          ? 'PRE-ORDER'
+          : sale
+            ? 'SALE'
+            : (item.badge && !['new','sale','sold out','sold','free delivery'].includes(String(item.badge).toLowerCase())
+              ? String(item.badge).toUpperCase()
+              : 'NEW'));
+      const price = sale
+        ? '<span class="app-new-in-old-price">R' + appProductEscape(regularPrice.toFixed(2)) + '</span><span class="app-new-in-sale-price">R' + appProductEscape(salePrice.toFixed(2)) + '</span>'
+        : '<span>R' + appProductEscape(regularPrice.toFixed(2)) + '</span>';
       const image = appProductImages(item)[0] || item.imageUrl || '';
-      return '<a href="#product/' + encodeURIComponent(item.id) + '" class="app-product-related-card" data-product-id="' + appProductEscape(item.id) + '">' +
-        (image ? '<img src="' + appProductEscape(image) + '" alt="' + appProductEscape(item.name || item.title || '') + '" loading="lazy">' : '<div class="app-product-related-image"></div>') +
-        '<strong>' + appProductEscape(item.brand || item.vendorName || '') + '</strong>' + appProductEscape(item.name || item.title || '') + '<span>' + appProductMoney(item.price) + '</span></a>';
+      return '<article class="app-new-in-card' + (stock <= 0 ? ' is-sold-out' : '') + '" data-product-id="' + appProductEscape(item.id) + '" role="button" tabindex="0" aria-label="View ' + appProductEscape(item.name || item.title || 'Product') + '">' +
+        '<div class="app-new-in-image">' + (badge ? '<span class="app-new-in-badge' + (badge === 'SALE' ? ' is-sale' : '') + '">' + appProductEscape(badge) + '</span>' : '') + (image ? '<img src="' + appProductEscape(image) + '" alt="' + appProductEscape(item.name || item.title || 'Product') + '" loading="lazy">' : '') + '<button class="app-new-in-wishlist" type="button" aria-label="Add to wishlist" aria-pressed="false"><i class="ph ph-heart-straight" aria-hidden="true"></i></button></div>' +
+        '<div class="app-new-in-brand">' + appProductEscape(item.brand || item.vendorName || '') + '</div>' +
+        '<div class="app-new-in-name">' + appProductEscape(item.name || item.title || 'Product') + '</div>' +
+        '<div class="app-new-in-price">' + price + '</div>' +
+      '</article>';
     }).join('');
     suggestedSection.hidden = false;
   } else {
