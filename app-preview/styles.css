@@ -237,8 +237,8 @@ body.app-product-open{overflow-x:hidden}
 .app-product-review p{margin:5px 0 0}
 .app-product-related{padding-top:26px}
 .app-product-related h2{margin:0 0 12px;font:600 16px Inter,Arial,sans-serif}
-.app-product-related-track{display:flex;gap:10px;overflow-x:auto}
-.app-product-related-card{flex:0 0 42%;color:#111;text-decoration:none;font:400 11px/1.4 Inter,Arial,sans-serif}
+.app-product-related-track{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding-bottom:4px}
+.app-product-related-card{flex:0 0 42%;scroll-snap-align:start;color:#111;text-decoration:none;font:400 11px/1.4 Inter,Arial,sans-serif}
 .app-product-related-card img{width:100%;aspect-ratio:3/4;object-fit:cover;background:#f4f4f4;display:block;margin-bottom:7px}
 .app-product-related-card strong{display:block;font-weight:500}
 .app-product-related-card span{display:block;margin-top:3px}
