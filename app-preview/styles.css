@@ -481,7 +481,7 @@ body.app-cart-open .bottom-nav{display:grid!important;grid-template-columns:repe
 .app-shop-toolbar{display:grid;grid-template-columns:1fr 1fr;align-items:stretch;margin:8px 0 0;padding:0;border-top:1px solid #eee;border-bottom:1px solid #eee}
 .app-shop-toolbar button{display:flex;align-items:center;justify-content:center;min-height:44px;padding:3px 0;border:0;background:transparent;color:#111;font:500 11px Inter,Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase}
 .app-shop-toolbar button+button{border-left:1px solid #eee}
-.app-shop-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:4px;row-gap:22px}
+.app-shop-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;padding:0 8px}
 .app-shop-grid .app-new-in-card{min-width:0;max-width:none;flex:none;width:auto}
 .app-shop-grid .app-new-in-image{aspect-ratio:25/33}
 .app-shop-grid .app-new-in-brand,.app-shop-grid .app-new-in-name,.app-shop-grid .app-new-in-price{margin-left:12px;margin-right:12px}
