@@ -344,17 +344,26 @@ fetch('/api/app-homepage', { headers: { Accept: 'application/json' } })
 
     const strip = document.querySelector('.app-category-list');
     if (!strip) return;
-    const placeholders = [
+    const categoryOrder = [
+      { name: 'All', slug: 'all' },
       { name: 'Clothing', slug: 'clothing' },
       { name: 'Accessories', slug: 'accessories' },
       { name: 'Beauty', slug: 'beauty' },
       { name: 'Fragrance', slug: 'fragrance' },
       { name: 'Kids', slug: 'kids' },
-      { name: 'Homeware', slug: 'homeware' }
+      { name: 'Brands', slug: 'brands' },
+      { name: 'Designers', slug: 'designers' },
+      { name: 'Sale', slug: 'sale' },
+      { name: 'Homeware', slug: 'homeware' },
+      { name: 'Discount', slug: 'discount' }
     ];
-    const categories = Array.isArray(content.categories) && content.categories.length
-      ? content.categories
-      : placeholders;
+    const configuredCategories = Array.isArray(content.categories) ? content.categories : [];
+    const categories = categoryOrder.map(category => {
+      const configured = configuredCategories.find(item =>
+        String(item.name || '').trim().toLowerCase() === category.name.toLowerCase()
+      );
+      return configured ? { ...category, ...configured } : category;
+    });
 
     strip.replaceChildren();
     categories.forEach(category => {
