@@ -1062,7 +1062,7 @@ function appUpdateCartIndicator() {
     badge.hidden = count < 1;
   }
   const cartButton = document.querySelector('.nav-item[data-tab="Cart"]');
-  if (cartButton) cartButton.setAttribute('aria-label', count ? 'Shopping bag, ' + count + (count === 1 ? ' item' : ' items') : 'Shopping bag');
+  if (cartButton) cartButton.setAttribute('aria-label', count ? 'Shopping cart, ' + count + (count === 1 ? ' item' : ' items') : 'Shopping cart');
 }
 let appProductReturnToCart = false;
 let appProductReturnToCollection = false;
