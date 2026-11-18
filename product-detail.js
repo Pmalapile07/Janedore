@@ -634,7 +634,7 @@ async function renderProductPage(product) {
   // whatever's left — works for every category, unlike the old
   // category-by-category rules. Excludes whatever You may also like
   // (above) already shows, so the two sections don't repeat products.
-  const suggested=getSuggestedProducts(product,related.map(p=>p.id)); const suggestedSection=suggested.length?buildProductGridSection('Suggested products',suggested,`suggested-${product.id}`):'';
+  const suggested=getSuggestedProducts(product,related.map(p=>p.id)); const suggestedSection=suggested.length?buildSwipeSection('Suggested products',suggested,`suggested-${product.id}`):'';
   const productVendor=findVendorForProduct(product);
   // Shows every brand, including the one this product is from — the
   // shopper is already looking at that brand's product, so there's no
