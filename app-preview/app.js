@@ -351,11 +351,10 @@ fetch('/api/app-homepage', { headers: { Accept: 'application/json' } })
       { name: 'Beauty', slug: 'beauty' },
       { name: 'Fragrance', slug: 'fragrance' },
       { name: 'Kids', slug: 'kids' },
+      { name: 'Homeware', slug: 'homeware' },
       { name: 'Brands', slug: 'brands' },
       { name: 'Designers', slug: 'designers' },
-      { name: 'Sale', slug: 'sale' },
-      { name: 'Homeware', slug: 'homeware' },
-      { name: 'Discount', slug: 'discount' }
+      { name: 'Sale', slug: 'sale' }
     ];
     const configuredCategories = Array.isArray(content.categories) ? content.categories : [];
     const categories = categoryOrder.map(category => {
