@@ -486,3 +486,10 @@ body.app-cart-open .bottom-nav{display:grid!important;grid-template-columns:repe
 .app-shop-grid .app-new-in-image{aspect-ratio:25/33}
 .app-shop-grid .app-new-in-brand,.app-shop-grid .app-new-in-name,.app-shop-grid .app-new-in-price{margin-left:12px;margin-right:12px}
 @media(min-width:600px){.app-shop-page{max-width:430px;margin:0 auto}.app-shop-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Cart content placeholders keep delivery and recently viewed areas present while data hydrates. */
+.app-cart-delivery-placeholder{display:flex;align-items:center;gap:12px;min-height:54px;margin:0 0 14px;padding:12px;background:#f6f6f6}
+.app-cart-delivery-placeholder:before{content:"";width:22px;height:22px;flex:0 0 22px;border-radius:50%;background:#e7e7e7}
+.app-cart-delivery-placeholder span{display:block;height:7px;border-radius:8px;background:#e7e7e7}
+.app-cart-delivery-placeholder span:first-child{width:58%}.app-cart-delivery-placeholder span:last-child{width:28%}
+.app-cart-recent-placeholder{flex:0 0 calc((100% - 8px)/2);aspect-ratio:3/4;background:#f3f3f3}
