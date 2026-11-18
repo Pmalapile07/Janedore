@@ -368,12 +368,28 @@ const SHIPPING_FEE = 0; // Bob Go rates are calculated at checkout; no fixed R15
 // priceOrder(), which is what actually gets charged.
 const HOUSE_VENDOR_ID = 'vendor-janedore';
 function isHouseProduct(p) {
-  return !!p && (!p.vendorId || p.vendorId === HOUSE_VENDOR_ID || String(p.brand || '').trim().toUpperCase() === 'JANEDORE');
+  if (!p) return false;
+  const brand = String(p.brand || '').trim().toUpperCase();
+  // A missing vendorId does not make a guest brand a JANEDORE product.
+  // Only an explicitly named JANEDORE product (or a blank-brand legacy
+  // product with the house vendor ID) belongs to the house.
+  return brand ? brand === 'JANEDORE' : p.vendorId === HOUSE_VENDOR_ID;
 }
 function productVendor(p) {
   if (!p) return null;
+  const vendors = S.vendors || [];
+  const brand = String(p.brand || '').trim().toLowerCase();
+  // Brand text is authoritative: vendorId can be stale or missing when a
+  // product's Brand selection has changed.
+  if (brand) {
+    const byBrand = vendors.find(v =>
+      String(v.name || v.brandName || v.brand || '').trim().toLowerCase() === brand
+    );
+    if (byBrand) return byBrand;
+    if (brand !== 'janedore') return null;
+  }
   const vid = isHouseProduct(p) ? HOUSE_VENDOR_ID : p.vendorId;
-  return (S.vendors || []).find(v => v.id === vid) || null;
+  return vid ? vendors.find(v => v.id === vid) || null : null;
 }
 // { minimum }, or null.
 function freeDeliveryOffer(p) {
@@ -421,10 +437,12 @@ function setCollectChoice(vendorId, collect) {
 // together, so they're one package with one fee. Mirrors server.js
 // shippingPackageKey().
 function shippingPackageKey(product, item) {
-  const house = isHouseProduct(product || item);
-  const vid = house ? HOUSE_VENDOR_ID : ((product && product.vendorId) || 'unknown');
-  const vendor = (S.vendors || []).find(v => v.id === vid);
-  const warehouse = vendor && String(vendor.warehouse || '').trim().toLowerCase();
+  const source = product || item;
+  const vendor = productVendor(source);
+  const house = isHouseProduct(source) || (vendor && vendor.id === HOUSE_VENDOR_ID);
+  const vid = house ? HOUSE_VENDOR_ID : ((vendor && vendor.id) || (source && source.vendorId) || 'unknown');
+  const vendorRecord = vendor || (S.vendors || []).find(v => v.id === vid);
+  const warehouse = vendorRecord && String(vendorRecord.warehouse || '').trim().toLowerCase();
   return warehouse ? 'warehouse:' + warehouse : vid;
 }
 
@@ -439,7 +457,11 @@ function getCartShipments() {
     if (!groups.has(key)) groups.set(key, { key, brand, brands: [], vendorIds: [], warehouse: key.startsWith('warehouse:'), subtotal: 0, eligible: true, minimum: 0, collectOffer: null });
     const g = groups.get(key);
     if (!g.brands.includes(brand)) g.brands.push(brand);
-    const vid = isHouseProduct(product || item) ? HOUSE_VENDOR_ID : ((product && product.vendorId) || 'unknown');
+    const source = product || item;
+    const vendor = productVendor(source);
+    const vid = (isHouseProduct(source) || (vendor && vendor.id === HOUSE_VENDOR_ID))
+      ? HOUSE_VENDOR_ID
+      : ((vendor && vendor.id) || (source && source.vendorId) || 'unknown');
     if (!g.vendorIds.includes(vid)) g.vendorIds.push(vid);
     g.collectOffer = collectionOffer(product);
     g.subtotal += getCartItemLineTotal(item);
