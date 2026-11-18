@@ -1615,7 +1615,8 @@ function appRenderCart(skipHydration) {
   const stepper = document.querySelector('.app-checkout-steps');
   if (stepper) stepper.hidden = !items.length;
   appUpdateCartIndicator();
-  const recentSection = '<section class="app-cart-recent" id="app-cart-recent" hidden><h2>Recently viewed</h2><div class="app-new-in-track app-cart-recent-track" id="app-cart-recent-track"></div></section>';
+  const recentIds = (() => { try { const saved = JSON.parse(localStorage.getItem('janedore_recently_viewed') || '[]'); return Array.isArray(saved) ? saved : []; } catch (_) { return []; } })();
+  const recentSection = '<section class="app-cart-recent" id="app-cart-recent"' + (recentIds.length ? '' : ' hidden') + '><h2>Recently viewed</h2><div class="app-new-in-track app-cart-recent-track" id="app-cart-recent-track">' + (recentIds.length ? '<div class="app-cart-recent-placeholder" aria-hidden="true"></div><div class="app-cart-recent-placeholder" aria-hidden="true"></div>' : '') + '</div></section>';
   if (!items.length) {
     appCartContent.innerHTML = '<div class="app-cart-empty"><i class="ph ph-tote-simple" aria-hidden="true"></i><h2>Your bag is empty</h2><p>Find something you love.</p><button type="button" id="app-cart-shop">Continue shopping</button></div>' + recentSection;
     appCartRenderRecentlyViewed(renderVersion);
@@ -1655,7 +1656,7 @@ function appRenderCart(skipHydration) {
   const discountRow = appAppliedDiscount
     ? '<div class="app-cart-total-row discount"><span>Discount (' + appProductEscape(appAppliedDiscount.code || '') + ')</span><span>-' + appCartFormat(discountAmount) + '</span></div>'
     : '';
-  appCartContent.innerHTML = appCartDeliveryBanner(items) +
+  appCartContent.innerHTML = '<div class="app-cart-delivery-slot" id="app-cart-delivery-slot">' + (appCartDeliveryBanner(items) || '<div class="app-cart-delivery-placeholder" aria-hidden="true"><span></span><span></span></div>') + '</div>' +
     '<div class="app-cart-items">' + cards + '</div>' +
     appCartPromoHtml() +
     '<div class="app-cart-summary">' +
