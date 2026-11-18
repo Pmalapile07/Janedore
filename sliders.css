@@ -147,16 +147,3 @@
 .brand-logo-tile img { width: calc(70% + 2px); height: calc(70% + 2px); object-fit: contain; }
 .brand-logo-tile span { padding: 0 8px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; text-align: center; line-height: 1.3; }
 
-
-/* Product gallery indicators are distinct thin lines, one per image. */
-#product-image-bars {
-  justify-content: center;
-  gap: 6px;
-}
-
-#product-image-bars .swipe-bar {
-  flex: 0 0 28px;
-  width: 28px;
-  height: 1.5px;
-  border-radius: 0;
-}
