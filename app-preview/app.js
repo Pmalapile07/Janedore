@@ -121,12 +121,19 @@ function appSaveCurrentTabMemory() {
   }
   const memory = appTabMemories.get(appActiveTab) || {scrollY:0, productId:null, productScrollY:0};
   if (appProductView && !appProductView.hidden) {
-    // A product is a temporary detail screen, never a saved destination
-    // for a bottom-navigation tab. Preserve the underlying page's scroll
-    // position, but do not associate this product with Home/Discover/etc.
-    if (appProductReturnToCollection) memory.scrollY = appCollectionMemory.scrollY || 0;
-    memory.productId = null;
-    memory.productScrollY = 0;
+    // Preserve a product opened from the Home hero's All Products collection
+    // while the customer visits another bottom tab. It remains a temporary
+    // detail screen: Back still returns to the collection, not to Home's hero.
+    if (appProductReturnToCollection) {
+      memory.scrollY = appCollectionMemory.scrollY || 0;
+      memory.productId = appCurrentProduct && appCurrentProduct.id
+        ? String(appCurrentProduct.id)
+        : (appRenderedProductId || null);
+      memory.productScrollY = window.scrollY;
+    } else {
+      memory.productId = null;
+      memory.productScrollY = 0;
+    }
   } else {
     memory.scrollY = window.scrollY;
     memory.productId = null;
@@ -186,10 +193,6 @@ function appRestoreTab(tabName, activeButton) {
   if (location.hash.startsWith('#product/') || location.hash === '#bag') {
     history.replaceState(null, '', location.pathname + location.search);
   }
-  // Product detail screens are transient. Restoring a tab always restores
-  // that tab's own content, never the last product viewed from it.
-  memory.productId = null;
-  memory.productScrollY = 0;
   appTabMemories.set(tabName, memory);
   appProductView.hidden = true;
   document.body.classList.remove('app-product-open');
@@ -199,6 +202,18 @@ function appRestoreTab(tabName, activeButton) {
   if (purchaseRow) purchaseRow.hidden = true;
   tabViews.forEach(view => { view.hidden = view.dataset.view !== tabName; });
   if (tabName === 'Shop') appShopLoadProducts();
+
+  // If this tab was left while viewing a product opened from its collection,
+  // restore that exact product. appOpenProduct runs synchronously up to its
+  // first await, so set the return destination immediately afterwards.
+  if (memory.productId) {
+    const productId = String(memory.productId);
+    const productScrollY = memory.productScrollY || 0;
+    appOpenProduct(productId, false);
+    appProductReturnToCollection = true;
+    appRestoreScrollPosition(productScrollY);
+    return;
+  }
   appRestoreScrollPosition(memory.scrollY);
 }
 
