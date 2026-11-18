@@ -81,7 +81,8 @@ const appTabMemories = new Map(Object.entries(appSavedScrollState.tabs || {}));
 let appCollectionMemory = appSavedScrollState.collection || {type:'all-products',scrollY:0};
 if (!appCollectionMemory.type) appCollectionMemory.type = 'all-products';
 // Remember which Home-owned screen was last open independently of its scroll position.
-let appHomeScreen = appSavedScrollState.homeScreen === 'collection' ? 'collection' : 'home';
+// Start each fresh app load on the normal Home screen; keep collection restoration in-session only.
+let appHomeScreen = 'home';
 if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
 let appScrollRestoreToken = 0;
 
