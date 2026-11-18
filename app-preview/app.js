@@ -178,6 +178,16 @@ function appSelectNavigationTab(tabName, activeButton) {
     item.classList.toggle('selected', active);
     if (active) item.setAttribute('aria-current', 'page');
     else item.removeAttribute('aria-current');
+
+    // Use filled Phosphor icons for selected tabs, while keeping the custom
+    // Home mark unchanged.
+    if (item.dataset.tab !== 'Home') {
+      const icon = item.querySelector('i[class*="ph-"]');
+      if (icon) {
+        icon.classList.toggle('ph-fill', active);
+        icon.classList.toggle('ph', !active);
+      }
+    }
   });
   moveNavIndicator(activeButton);
 }
