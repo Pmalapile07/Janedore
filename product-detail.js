@@ -494,12 +494,9 @@ function showProductImage(index) {
   currentImageIndex = index;
   const mainImage = document.getElementById('product-main-image');
   if (mainImage) mainImage.style.backgroundImage = `url('${productImages[index]}')`;
-  const imageProgress = document.getElementById('product-image-bars');
-  if (imageProgress) {
-    const fill = imageProgress.querySelector('.product-image-progress-fill');
-    if (fill) fill.style.width = ((index + 1) / productImages.length * 100) + '%';
-    imageProgress.setAttribute('aria-valuenow', String(index + 1));
-  }
+  document.querySelectorAll('#product-image-bars .swipe-bar').forEach((bar, i) => {
+    bar.classList.toggle('active', i === index);
+  });
   const pid = S.currentReviewProductId;
   const owner = productImageOwners[index];
   if (pid && owner !== undefined && owner !== (S.productVariantSelections[pid] ?? 0)) selectVariant(pid, owner);
@@ -647,11 +644,8 @@ async function renderProductPage(product) {
   const shopByBrandVendors=getFeaturedBrands(S.vendors||[]);
   const shopByBrandSection=shopByBrandVendors.length?`<div class="swipe-section"><div class="swipe-section-title">Shop by brand</div>${brandLogoTilesHtml(shopByBrandVendors)}</div>`:'';
 
-  // Progress bars for the main image slider, mirroring the swipe-bar
-  // dots used in Recently viewed / You may also like / Complete the look.
-  // Always rendered — a single image still shows one bar — replacing the
-  // old thumbnail strip entirely.
-  const imageBarsHtml = `<div class="product-image-progress" id="product-image-bars" role="progressbar" aria-label="Product images" aria-valuemin="1" aria-valuemax="${images.length}" aria-valuenow="${imageStart + 1}"><div class="product-image-progress-fill" style="width:${((imageStart + 1) / images.length) * 100}%"></div></div>`;
+  // One separate thin line per product image; the active image line is dark.
+  const imageBarsHtml = `<div class="swipe-bars" id="product-image-bars" aria-label="Product images">${images.map((u, i) => `<div class="swipe-bar${i === imageStart ? ' active' : ''}" onclick="switchMainImage(${i})"></div>`).join('')}</div>`;
 
   const titleCaseBreadcrumb = value => String(value || '').replace(/[-_]+/g, ' ').trim().toLowerCase().replace(/(^|\\s)\\S/g, letter => letter.toUpperCase());
   const productCollectionValues = (Array.isArray(product.collections) ? product.collections : String(product.collections || '').split(','))
