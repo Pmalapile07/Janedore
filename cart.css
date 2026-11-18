@@ -421,30 +421,3 @@ body:has(#page-checkout.active) .checkout-steps { display: flex; }
 .cart-item-free { display: inline-block; white-space: nowrap; margin-top: 6px; padding: 3px 8px; background: #E0EBFF; color: #111; font-size: 11px; font-weight: 600; }
 .cart-item-preorder + .cart-item-free { margin-left: 6px; }
 
-/* Cart slider: use a real leading flex spacer for the left gutter.
-   This remains visible even when scroll-snap aligns the first product. */
-#cart-slider-grid {
-  padding-left: 0 !important;
-  scroll-padding-left: 8px !important;
-}
-#cart-slider-grid::before {
-  content: '';
-  display: block;
-  flex: 0 0 8px;
-}
-@media (min-width: 640px) {
-  #cart-slider-grid {
-    scroll-padding-left: 10px !important;
-  }
-  #cart-slider-grid::before {
-    flex-basis: 10px;
-  }
-}
-@media (min-width: 1024px) {
-  #cart-slider-grid {
-    scroll-padding-left: 12px !important;
-  }
-  #cart-slider-grid::before {
-    flex-basis: 12px;
-  }
-}
