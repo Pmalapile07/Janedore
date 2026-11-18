@@ -419,6 +419,9 @@ window.addEventListener('popstate', async () => {
   // In-page anchors (e.g. an old #brands-letter-A link) are scroll
   // targets, not routes; never treat them as a page change.
   if (/^#brands-letter-/.test(window.location.hash)) return;
+  // A browser back/forward action is a new navigation too. Invalidate
+  // any collection lookup that is still waiting to resolve.
+  ++pageNavGeneration;
   closeFilterPanel();
   const pathRoute = getRouteFromPath();
   if (pathRoute) {
@@ -577,27 +580,64 @@ function shopGenderPage(g, group) {
 }
 
 async function navigateToCollection(handle, replaceUrl) {
-  if (typeof window._loadPublishedCollections !== 'function') { navigateToCategory(handle, replaceUrl); return; }
+  // Claim this navigation BEFORE starting the async collection lookup.
+  // Any later tap (product, home, another collection, etc.) invalidates it.
+  const myNav = ++pageNavGeneration;
+  const requestedShopGroup = S.nextShopGroup || null;
+  S.nextShopGroup = null;
+  closeFilterPanel();
+  closeSearch();
+
+  if (typeof window._loadPublishedCollections !== 'function') {
+    if (myNav === pageNavGeneration) navigateToCategory(handle, replaceUrl);
+    return;
+  }
+
   try {
     const items = await window._loadPublishedCollections();
-    const collection = (items || []).find(function (item) { return String(item.handle || item.slug || item.id) === String(handle); }) || BUILTIN_COLLECTIONS[handle];
-    if (!collection) { navigateToCategory(handle, replaceUrl); return; }
-    ++pageNavGeneration; closeFilterPanel(); closeSearch();
+    // Never let an older collection request take over a page the user has
+    // navigated to while the collection list was loading.
+    if (myNav !== pageNavGeneration) return;
+
+    const collection = (items || []).find(function (item) {
+      return String(item.handle || item.slug || item.id) === String(handle);
+    }) || BUILTIN_COLLECTIONS[handle];
+
+    if (!collection) {
+      navigateToCategory(handle, replaceUrl);
+      return;
+    }
+
     S.saleMode = false; S.newInMode = false;
     S.catFilter = {cat:[], size:'all', vendor:[], onSale:false, inStock:false};
     S.currentCollectionHandle = String(collection.handle || collection.slug || collection.id);
-    S.currentCollectionData = collection; S.currentCategoryPage = S.currentCollectionHandle;
-    S.shopGroup = S.nextShopGroup || null; S.nextShopGroup = null;
-    S.currentPage = 'category'; S.previousCollectionPage = S.currentCollectionHandle;
+    S.currentCollectionData = collection;
+    S.currentCategoryPage = S.currentCollectionHandle;
+    S.shopGroup = requestedShopGroup;
+    S.currentPage = 'category';
+    S.previousCollectionPage = S.currentCollectionHandle;
     updateCollectionUrl(S.currentCollectionHandle, replaceUrl);
+
     document.querySelectorAll('.page').forEach(function (page) { page.classList.remove('active'); });
-    document.getElementById('page-category').classList.add('active'); removeStickyBar();
-    if (DOM.mainNav) { DOM.mainNav.classList.remove('product-page'); DOM.mainNav.classList.add('collection-page'); }
-    setNavForPage('category'); S.activeSortTab = S.currentCollectionHandle;
+    document.getElementById('page-category').classList.add('active');
+    removeStickyBar();
+    if (DOM.mainNav) {
+      DOM.mainNav.classList.remove('product-page');
+      DOM.mainNav.classList.add('collection-page');
+    }
+    setNavForPage('category');
+    S.activeSortTab = S.currentCollectionHandle;
     if (DOM.categoryNameTag) DOM.categoryNameTag.textContent = '';
-    renderCollectionSortingTabs(); renderCategoryProducts();
-    resetScrollToTop(); ensureNavScrolled(); updateChatVisibility();
-  } catch (error) { console.error('[COLLECTIONS] Could not resolve collection route:', error); navigateToCategory(handle, replaceUrl); }
+    renderCollectionSortingTabs();
+    renderCategoryProducts();
+    resetScrollToTop();
+    ensureNavScrolled();
+    updateChatVisibility();
+  } catch (error) {
+    if (myNav !== pageNavGeneration) return;
+    console.error('[COLLECTIONS] Could not resolve collection route:', error);
+    navigateToCategory(handle, replaceUrl);
+  }
 }
 
 function goToProduct(productId, replaceUrl) {
@@ -631,9 +671,15 @@ function navigateToSale() {
     navigateToSaleLegacy(); return;
   }
   if (typeof window._loadPublishedCollections === 'function') {
+    const myNav = ++pageNavGeneration;
     window._loadPublishedCollections().then(function (items) {
+      if (myNav !== pageNavGeneration) return;
       if ((items || []).some(function (item) { return String(item.handle || item.slug || item.id) === 'sale'; })) navigateToCollection('sale');
       else navigateToSaleLegacy();
+    }).catch(function (error) {
+      if (myNav !== pageNavGeneration) return;
+      console.error('[COLLECTIONS] Could not resolve Sale collection:', error);
+      navigateToSaleLegacy();
     });
     return;
   }
@@ -657,9 +703,15 @@ function navigateToNewIn() {
     navigateToNewInLegacy(); return;
   }
   if (typeof window._loadPublishedCollections === 'function') {
+    const myNav = ++pageNavGeneration;
     window._loadPublishedCollections().then(function (items) {
+      if (myNav !== pageNavGeneration) return;
       if ((items || []).some(function (item) { return String(item.handle || item.slug || item.id) === 'newin'; })) navigateToCollection('newin');
       else navigateToNewInLegacy();
+    }).catch(function (error) {
+      if (myNav !== pageNavGeneration) return;
+      console.error('[COLLECTIONS] Could not resolve New In collection:', error);
+      navigateToNewInLegacy();
     });
     return;
   }
