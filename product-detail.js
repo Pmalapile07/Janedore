@@ -494,9 +494,7 @@ function showProductImage(index) {
   currentImageIndex = index;
   const mainImage = document.getElementById('product-main-image');
   if (mainImage) mainImage.style.backgroundImage = `url('${productImages[index]}')`;
-  document.querySelectorAll('#product-image-bars .swipe-bar').forEach((bar, i) => {
-    bar.classList.toggle('active', i === index);
-  });
+  document.querySelectorAll('#product-image-bars .swipe-bar').forEach((b, i) => b.classList.toggle('active', i === index));
   const pid = S.currentReviewProductId;
   const owner = productImageOwners[index];
   if (pid && owner !== undefined && owner !== (S.productVariantSelections[pid] ?? 0)) selectVariant(pid, owner);
@@ -644,8 +642,11 @@ async function renderProductPage(product) {
   const shopByBrandVendors=getFeaturedBrands(S.vendors||[]);
   const shopByBrandSection=shopByBrandVendors.length?`<div class="swipe-section"><div class="swipe-section-title">Shop by brand</div>${brandLogoTilesHtml(shopByBrandVendors)}</div>`:'';
 
-  // One separate thin line per product image; the active image line is dark.
-  const imageBarsHtml = `<div class="swipe-bars" id="product-image-bars" aria-label="Product images">${images.map((u, i) => `<div class="swipe-bar${i === imageStart ? ' active' : ''}" onclick="switchMainImage(${i})"></div>`).join('')}</div>`;
+  // Progress bars for the main image slider, mirroring the swipe-bar
+  // dots used in Recently viewed / You may also like / Complete the look.
+  // Always rendered — a single image still shows one bar — replacing the
+  // old thumbnail strip entirely.
+  const imageBarsHtml = `<div class="swipe-bars" id="product-image-bars">${images.map((u,i)=>`<div class="swipe-bar${i===imageStart?' active':''}" onclick="switchMainImage(${i})"></div>`).join('')}</div>`;
 
   const titleCaseBreadcrumb = value => String(value || '').replace(/[-_]+/g, ' ').trim().toLowerCase().replace(/(^|\\s)\\S/g, letter => letter.toUpperCase());
   const productCollectionValues = (Array.isArray(product.collections) ? product.collections : String(product.collections || '').split(','))
