@@ -47,14 +47,38 @@
   // its top hidden under the sticky header. Briefly switching the page's
   // overflow off cancels the glide; the reset is then repeated on the
   // next frame in case anything else nudged it while the page rendered.
+  // This storefront owns page scroll positions. Browser-managed scroll
+  // restoration can otherwise reapply the previous page's offset after
+  // our route has already reset the new page to the top.
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+
   window.resetScrollToTop = function () {
     var root = document.documentElement;
-    var prev = root.style.overflow;
+    var previousOverflow = root.style.overflow;
+    var previousBehavior = root.style.scrollBehavior;
+
+    function forceTop() {
+      window.scrollTo(0, 0);
+      root.scrollTop = 0;
+      if (document.body) document.body.scrollTop = 0;
+    }
+
+    // Temporarily disable smooth scrolling and overflow momentum so an
+    // old swipe cannot carry into the newly activated page.
+    root.style.scrollBehavior = 'auto';
     root.style.overflow = 'hidden';
-    window.scrollTo(0, 0);
-    root.style.overflow = prev;
-    window.scrollTo(0, 0);
-    requestAnimationFrame(function () { if (window.scrollY !== 0) window.scrollTo(0, 0); });
+    forceTop();
+    root.style.overflow = previousOverflow;
+    root.style.scrollBehavior = previousBehavior;
+    forceTop();
+
+    // Recheck after layout has settled. The second frame catches late
+    // browser/layout scroll restoration without a visible jump.
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        if (window.scrollY !== 0) forceTop();
+      });
+    });
   };
   </script>
   <script>
