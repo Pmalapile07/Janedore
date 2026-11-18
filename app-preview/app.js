@@ -1764,7 +1764,18 @@ if (appCartContent) {
     if (event.target.closest('#app-cart-checkout')) window.location.href = '/checkout';
     if (event.target.closest('#app-cart-shop')) {
       appCartClose(false);
-      appOpenHomeCollection();
+      appHomeScreen = 'home';
+      const homeMemory = appTabMemories.get('Home') || {scrollY:0, productId:null, productScrollY:0};
+      homeMemory.scrollY = 0;
+      homeMemory.productId = null;
+      homeMemory.productScrollY = 0;
+      appTabMemories.set('Home', homeMemory);
+      appCollectionMemory.scrollY = 0;
+      appPersistScrollMemories();
+      const homeButton = navItems.find(item => item.dataset.tab === 'Home');
+      if (homeButton) appSelectNavigationTab('Home', homeButton);
+      appShowTabPage('Home');
+      window.scrollTo({top:0,behavior:'instant'});
     }
     if (event.target.closest('#app-cart-promo-apply')) appCartApplyPromoCode();
     if (event.target.closest('#app-cart-promo-remove')) appCartRemovePromoCode();
