@@ -182,7 +182,9 @@ function appSelectNavigationTab(tabName, activeButton) {
   moveNavIndicator(activeButton);
 }
 
-function appRestoreTab(tabName, activeButton) {
+// Page-navigation layer: show a tab's remembered page. This does not own
+// the bottom navigation's selected state.
+function appShowTabPage(tabName) {
   appProductReturnToCart = false;
   appProductReturnToCollection = false;
   const cartView = document.getElementById('app-cart-view');
@@ -194,7 +196,6 @@ function appRestoreTab(tabName, activeButton) {
   if (collectionPage) collectionPage.hidden = true;
   appActiveTab = tabName;
   const memory = appTabMemories.get(tabName) || {scrollY:0, productId:null, productScrollY:0};
-  appSelectNavigationTab(tabName, activeButton);
   if (location.hash.startsWith('#product/') || location.hash === '#bag') {
     history.replaceState(null, '', location.pathname + location.search);
   }
@@ -222,7 +223,10 @@ function appRestoreTab(tabName, activeButton) {
   appRestoreScrollPosition(memory.scrollY);
 }
 
-function activateTab(tabName, activeButton) {
+// Page-navigation layer: coordinates page transitions and asks the state
+// manager to save/restore page state. The bottom-nav click handler does not
+// contain any of this routing logic.
+function appNavigateToTab(tabName, activeButton) {
   if (tabName === 'Cart') {
     // Save the current Home → collection → product journey before Cart
     // temporarily takes over the screen. Returning to Home can then restore
@@ -233,18 +237,19 @@ function activateTab(tabName, activeButton) {
   }
   const cartView = document.getElementById('app-cart-view');
   if (cartView && !cartView.hidden) {
-    appRestoreTab(tabName, activeButton);
+    appShowTabPage(tabName);
     return;
   }
   const collectionPage = document.getElementById('app-shop-page');
   if (tabName === appActiveTab && (!appProductView || appProductView.hidden) && (!collectionPage || collectionPage.hidden)) return;
   appSaveCurrentTabMemory();
-  appRestoreTab(tabName, activeButton);
+  appShowTabPage(tabName);
 }
 
 navItems.forEach(button => {
   button.addEventListener('click', () => {
-    activateTab(button.dataset.tab, button);
+    appSelectNavigationTab(button.dataset.tab, button);
+    appNavigateToTab(button.dataset.tab, button);
   });
 });
 
@@ -699,7 +704,10 @@ if (appShopBack) appShopBack.addEventListener('click', () => {
   const collectionPage = document.getElementById('app-shop-page');
   if (collectionPage) { appCollectionMemory.scrollY = window.scrollY; collectionPage.hidden = true; appPersistScrollMemories(); }
   const homeButton = navItems.find(item => item.dataset.tab === 'Home');
-  if (homeButton) appRestoreTab('Home', homeButton);
+  if (homeButton) {
+    appSelectNavigationTab('Home', homeButton);
+    appShowTabPage('Home');
+  }
 });
 const appProductReviewsCache = new Map();
 let appRenderedProductId = '';
@@ -1601,15 +1609,7 @@ function appCartOpen() {
   if (header) header.hidden = true;
   if (bottom) bottom.hidden = false;
   const cartButton = navItems.find(function(item) { return item.dataset.tab === 'Cart'; });
-  if (cartButton) {
-    navItems.forEach(function(item) {
-      const active = item === cartButton;
-      item.classList.toggle('selected', active);
-      if (active) item.setAttribute('aria-current', 'page');
-      else item.removeAttribute('aria-current');
-    });
-    moveNavIndicator(cartButton);
-  }
+  if (cartButton) appSelectNavigationTab('Cart', cartButton);
   document.body.classList.remove('app-product-open');
   document.body.classList.add('app-cart-open');
   appCartView.hidden = false;
@@ -1629,15 +1629,7 @@ function appCartClose(fromHistory) {
   if (header) header.hidden = false;
   if (bottom) bottom.hidden = false;
   const selected = navItems.find(function(item) { return item.dataset.tab === appCartReturnTab; });
-  if (selected) {
-    navItems.forEach(function(item) {
-      const active = item === selected;
-      item.classList.toggle('selected', active);
-      if (active) item.setAttribute('aria-current', 'page');
-      else item.removeAttribute('aria-current');
-    });
-    moveNavIndicator(selected);
-  }
+  if (selected) appSelectNavigationTab(appCartReturnTab, selected);
   if (!fromHistory && location.hash === '#bag') history.back();
   window.scrollTo({top:0,behavior:'instant'});
 }
