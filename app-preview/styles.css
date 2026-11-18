@@ -197,8 +197,8 @@ body.app-product-open{overflow-x:hidden}
 .app-product-icon-button i{font-size:17px;line-height:1}
 
 .app-product-cart-count[hidden]{display:none}
-.app-product-gallery-dots{position:relative;inset:auto;display:flex;justify-content:center;gap:6px;margin:14px 0 0;padding:0;pointer-events:none}
-.app-product-gallery-dot{display:block;flex:0 0 24px;width:24px;height:0.5px;border-radius:0;background:#ccc}
+.app-product-gallery-dots{position:relative;inset:auto;display:flex;justify-content:center;gap:6px;margin:22px 0 0;padding:0;pointer-events:none}
+.app-product-gallery-dot{display:block;flex:0 0 24px;width:24px;height:2px;border-radius:0;background:#ccc}
 .app-product-gallery-dot.active{background:#111}
 .app-product-content{padding:22px 16px 150px}
 .app-product-brand{display:inline-block;width:fit-content;margin:0 0 8px;color:#111;font:500 11px/1.3 Inter,Arial,sans-serif;letter-spacing:.09em;text-transform:uppercase;text-decoration:none}
