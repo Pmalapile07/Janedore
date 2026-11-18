@@ -121,8 +121,12 @@ function appSaveCurrentTabMemory() {
   }
   const memory = appTabMemories.get(appActiveTab) || {scrollY:0, productId:null, productScrollY:0};
   if (appProductView && !appProductView.hidden) {
-    memory.productId = appCurrentProduct && appCurrentProduct.id ? String(appCurrentProduct.id) : (appRenderedProductId || null);
-    memory.productScrollY = window.scrollY;
+    // A product is a temporary detail screen, never a saved destination
+    // for a bottom-navigation tab. Preserve the underlying page's scroll
+    // position, but do not associate this product with Home/Discover/etc.
+    if (appProductReturnToCollection) memory.scrollY = appCollectionMemory.scrollY || 0;
+    memory.productId = null;
+    memory.productScrollY = 0;
   } else {
     memory.scrollY = window.scrollY;
     memory.productId = null;
@@ -168,6 +172,7 @@ function appSelectNavigationTab(tabName, activeButton) {
 
 function appRestoreTab(tabName, activeButton) {
   appProductReturnToCart = false;
+  appProductReturnToCollection = false;
   const cartView = document.getElementById('app-cart-view');
   if (cartView && !cartView.hidden) {
     cartView.hidden = true;
@@ -181,12 +186,11 @@ function appRestoreTab(tabName, activeButton) {
   if (location.hash.startsWith('#product/') || location.hash === '#bag') {
     history.replaceState(null, '', location.pathname + location.search);
   }
-  if (memory.productId) {
-    appOpenProduct(memory.productId, false).then(() => {
-      appRestoreScrollPosition(memory.productScrollY);
-    });
-    return;
-  }
+  // Product detail screens are transient. Restoring a tab always restores
+  // that tab's own content, never the last product viewed from it.
+  memory.productId = null;
+  memory.productScrollY = 0;
+  appTabMemories.set(tabName, memory);
   appProductView.hidden = true;
   document.body.classList.remove('app-product-open');
   const header = document.querySelector('.app-header');
@@ -997,6 +1001,10 @@ function appShowProductView() {
   document.body.classList.remove('app-cart-open');
   const stickyBar = document.getElementById('app-product-sticky-bar');
   if (stickyBar) stickyBar.hidden = true;
+  // Keep the product detail as the only page surface while it is open.
+  // The source collection remains remembered and is revealed by Back.
+  const collectionPage = document.getElementById('app-shop-page');
+  if (collectionPage) collectionPage.hidden = true;
   appProductView.hidden = false;
   document.body.classList.add('app-product-open');
   document.querySelectorAll('.app-tab-content').forEach(view => { view.hidden = true; });
@@ -1080,12 +1088,8 @@ async function appOpenProduct(productId, pushHistory = true) {
   const openedFromCart = !!(document.getElementById('app-cart-view') && !document.getElementById('app-cart-view').hidden);
   const collectionPage = document.getElementById('app-shop-page');
   appProductReturnToCollection = !openedFromCart && !!(collectionPage && !collectionPage.hidden);
-  if (!openedFromCart) {
-    const tabMemory = appTabMemories.get(appActiveTab) || {scrollY:0,productId:null,productScrollY:0};
-    tabMemory.productId = id;
-    tabMemory.productScrollY = 0;
-    appTabMemories.set(appActiveTab,tabMemory);
-  }
+  // Do not persist this product as the active content of a bottom tab.
+  // The product view is temporary; Back returns to its source page.
   appShowProductView();
   if (pushHistory) history.pushState({appProductId:id}, '', '#product/' + encodeURIComponent(id));
   window.scrollTo({top:0,behavior:'instant'});
