@@ -963,7 +963,10 @@ function generatePayFastSignature(data, passphrase, includeBlanks) {
 const SHIPPING_FEE = 0;
 const HOUSE_VENDOR_ID = 'vendor-janedore';
 function isHouseProduct(p) {
-  return !!p && (!p.vendorId || p.vendorId === HOUSE_VENDOR_ID || String(p.brand || '').trim().toUpperCase() === 'JANEDORE');
+  if (!p) return false;
+  const brand = String(p.brand || '').trim().toUpperCase();
+  // Missing vendorId alone must never classify a guest-brand product as JANEDORE.
+  return brand ? brand === 'JANEDORE' : p.vendorId === HOUSE_VENDOR_ID;
 }
 // A brand's free delivery offer (vendors/{id}.freeDeliveryOffer, set in
 // Admin > Brands or the brand's own profile): on its orders over
