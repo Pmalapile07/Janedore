@@ -235,8 +235,8 @@ body.app-product-open{overflow-x:hidden}
 .app-product-review{padding:10px 0;border-bottom:1px solid #eee}
 .app-product-review strong{color:#222;font-size:11px}
 .app-product-review p{margin:5px 0 0}
-.app-product-related{padding-top:26px}
-.app-product-related h2{margin:0;color:#111;font:600 17px/1.25 Inter,Arial,sans-serif;letter-spacing:0;padding:0 12px 12px}
+.app-product-related{padding-top:26px;margin-left:-16px;margin-right:-16px;width:calc(100% + 32px);overflow:hidden}
+.app-product-related h2{margin:0;color:#111;font:600 17px/1.25 Inter,Arial,sans-serif;letter-spacing:0;padding:0 16px 12px}
 @media(min-width:600px){.app-product-view{max-width:430px;margin:0 auto;min-height:850px}.app-product-gallery-slide{aspect-ratio:4/5}}
 
 /* App product detail: price appears above the product name. */
