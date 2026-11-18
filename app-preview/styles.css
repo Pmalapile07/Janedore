@@ -317,7 +317,8 @@ body.app-product-open .app-product-content{padding-bottom:120px}
 .app-new-in-track{padding-left:16px;scroll-padding-left:16px}
 .app-new-in-track::after{flex-basis:16px}
 .app-product-image-actions{padding-left:8px;padding-right:8px}
-.app-product-related-track{scroll-padding-left:0}
+.app-product-related-track{padding-left:16px!important;scroll-padding-left:16px}
+.app-product-related-track::after{flex-basis:16px}
 
 
 /* Toasts are action links; the close control remains independently clickable. */
