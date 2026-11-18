@@ -1426,7 +1426,7 @@ async function appCartHydrateItems(items) {
         if (images.length) { item.thumbnail = images[0]; changed = true; }
       }
     }
-    const vendorId = (product && product.vendorId) || item.vendorId || 'vendor-janedore';
+    const vendorId = appCartVendorId(item, product);
     await appCartLoadVendor(vendorId);
   }));
   if (changed) {
@@ -1434,7 +1434,11 @@ async function appCartHydrateItems(items) {
   }
 }
 function appCartVendorId(item, product) {
-  return (product && product.vendorId) || (item && item.vendorId) || 'vendor-janedore';
+  const brand = String((product && product.brand) || (item && item.brand) || '').trim().toUpperCase();
+  // Only JANEDORE products may fall back to the house vendor. A guest brand
+  // without a resolved vendor must not inherit JANEDORE's free-delivery offer.
+  if (brand === 'JANEDORE') return 'vendor-janedore';
+  return (product && product.vendorId) || (item && item.vendorId) || 'unknown';
 }
 function appCartGetShipments(items) {
   const groups = new Map();
@@ -1717,7 +1721,8 @@ function appRenderCart(skipHydration) {
   const discountRow = appAppliedDiscount
     ? '<div class="app-cart-total-row discount"><span>Discount (' + appProductEscape(appAppliedDiscount.code || '') + ')</span><span>-' + appCartFormat(discountAmount) + '</span></div>'
     : '';
-  appCartContent.innerHTML = '<div class="app-cart-delivery-slot" id="app-cart-delivery-slot">' + (appCartDeliveryBanner(items) || '<div class="app-cart-delivery-placeholder" aria-hidden="true"><span></span><span></span></div>') + '</div>' +
+  const deliveryBanner = appCartDeliveryBanner(items);
+  appCartContent.innerHTML = (deliveryBanner ? '<div class="app-cart-delivery-slot" id="app-cart-delivery-slot">' + deliveryBanner + '</div>' : '') +
     '<div class="app-cart-items">' + cards + '</div>' +
     appCartPromoHtml() +
     '<div class="app-cart-summary">' +
