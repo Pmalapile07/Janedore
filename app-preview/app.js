@@ -682,7 +682,7 @@ function appShopDate(product) {
 function appShopRenderProducts() {
   const grid = document.getElementById('app-shop-product-grid');
   if (!grid) return;
-  const selectedCategory = appActiveTab === 'Home' ? appHomeSelectedCategory : 'all';
+  const selectedCategory = appHomeSelectedCategory;
   const products = appShopProducts.filter(product => {
     if (selectedCategory === 'all') return true;
     if (selectedCategory === 'sale') {
