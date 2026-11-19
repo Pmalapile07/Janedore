@@ -54,7 +54,8 @@
       <div class="app-search-row">
         <div class="app-search-field">
           <i class="ph ph-magnifying-glass" aria-hidden="true"></i>
-          <span>Search products, brands or designers</span>
+          <input id="app-search-input" type="search" placeholder="Search products, brands or designers" autocomplete="off" enterkeyhint="search" readonly aria-label="Search products, brands or designers">
+          <button class="app-search-clear" id="app-search-clear" type="button" aria-label="Clear search" hidden><i class="ph ph-x" aria-hidden="true"></i></button>
         </div>
       </div>
     </header>
@@ -73,6 +74,7 @@
       </div>
     </section>
     <section class="app-category-home" id="app-category-home" hidden aria-label="Category home"></section>
+    <section class="app-search-screen" id="app-search-screen" hidden aria-label="Search"><div class="app-search-screen-body" id="app-search-screen-body" aria-live="polite"></div></section>
     <section class="app-home-hero" aria-label="JANEDORE featured image">
       <img id="app-home-hero-image" alt="" fetchpriority="high">
       <div class="app-home-hero-copy">
