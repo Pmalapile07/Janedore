@@ -1493,6 +1493,15 @@ async function appOpenProduct(productId, pushHistory = true) {
         '<div class="app-category-style-card" aria-hidden="true"><div class="app-category-style-card-image"></div></div>'.repeat(4) +
       '</div>' : '';
   }
+  const frequentlyBoughtTrack = document.getElementById('app-product-frequently-bought-track');
+  const frequentlyBoughtProgress = document.getElementById('app-product-frequently-bought-progress');
+  if (frequentlyBoughtTrack) {
+    // Keep the section visible before purchase-history data exists, using the same
+    // neutral product-card placeholders as the app's other product sliders.
+    frequentlyBoughtTrack.innerHTML =
+      '<article class="app-new-in-card app-new-in-loading" aria-hidden="true"><div class="app-new-in-image"></div><div class="app-new-in-skeleton app-new-in-brand"></div><div class="app-new-in-skeleton app-new-in-name"></div><div class="app-new-in-skeleton app-new-in-price"></div></article>'.repeat(4);
+    appBindSliderProgress(frequentlyBoughtTrack, frequentlyBoughtProgress);
+  }
   appUpdateCartIndicator();
   appUpdateProductStickyState();
   await appLoadProductReviews(id);
