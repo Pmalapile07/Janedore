@@ -2073,12 +2073,13 @@ window.addEventListener('popstate', () => {
   }
   function resetPull() {
     if (content) {
-      content.classList.remove('app-pull-refresh-moving');
-      content.style.transform = '';
+      const releasedContent = content;
+      releasedContent.style.transform = '';
+      window.setTimeout(() => releasedContent.classList.remove('app-pull-refresh-moving'), 220);
     }
     indicator.classList.remove('is-visible', 'is-refreshing', 'is-ready');
-    indicator.style.transform = 'translate(-50%, -42px)';
     setPull(0);
+    indicator.style.transform = 'translate(-50%, -42px)';
     content = null;
     pullDistance = 0;
     tracking = false;
