@@ -202,6 +202,10 @@
 
   function markdownToHtml(text) {
     if (!text) return '';
+    // Existing product descriptions are stored as HTML. When an admin opens
+    // and saves one without converting it back to plain text, keep that HTML
+    // instead of wrapping every existing tag in another paragraph.
+    if (/<\/?[a-z][^>]*>/i.test(text)) return text;
     text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
     var lines = text.split('\n');
     var output = [];
