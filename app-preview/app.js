@@ -365,7 +365,11 @@ fetch('/api/app-homepage', { headers: { Accept: 'application/json' } })
     strip.replaceChildren();
     categories.forEach(category => {
       const item = document.createElement('div');
-      item.className = 'app-category';
+      item.className = 'app-category' + (category.slug === 'all' ? ' is-selected' : '');
+      item.dataset.category = category.slug;
+      item.setAttribute('role', 'button');
+      item.setAttribute('tabindex', '0');
+      item.setAttribute('aria-pressed', String(category.slug === 'all'));
 
       const circle = document.createElement('span');
       circle.className = 'app-category-circle';
@@ -383,6 +387,32 @@ fetch('/api/app-homepage', { headers: { Accept: 'application/json' } })
   })
   .catch(error => console.warn('[APP HOME] Could not load shared homepage content:', error.message));
 
+
+// Homepage category selection is independent of bottom-tab navigation.
+const appCategoryStrip = document.querySelector('.app-category-list');
+function appSelectHomeCategory(item) {
+  if (!item) return;
+  appHomeSelectedCategory = item.dataset.category || 'all';
+  appCategoryStrip.querySelectorAll('.app-category').forEach(categoryItem => {
+    const selected = categoryItem === item;
+    categoryItem.classList.toggle('is-selected', selected);
+    categoryItem.setAttribute('aria-pressed', String(selected));
+  });
+  appOpenHomeCollection(appHomeSelectedCategory);
+}
+if (appCategoryStrip) {
+  appCategoryStrip.addEventListener('click', event => {
+    const item = event.target.closest('.app-category[data-category]');
+    if (item) appSelectHomeCategory(item);
+  });
+  appCategoryStrip.addEventListener('keydown', event => {
+    const item = event.target.closest('.app-category[data-category]');
+    if (item && (event.key === 'Enter' || event.key === ' ')) {
+      event.preventDefault();
+      appSelectHomeCategory(item);
+    }
+  });
+}
 
 // App card wishlist affordance: keep taps on the heart separate from product-card taps.
 document.addEventListener('click', event => {
@@ -637,6 +667,7 @@ const appProductDb = firebase.firestore();
 const appProductCache = new Map();
 const appProductLoads = new Map();
 
+let appHomeSelectedCategory = 'all';
 const appShopProducts = [];
 let appShopLoaded = false;
 let appShopLoading = null;
@@ -651,7 +682,27 @@ function appShopDate(product) {
 function appShopRenderProducts() {
   const grid = document.getElementById('app-shop-product-grid');
   if (!grid) return;
-  const products = [...appShopProducts];
+  const selectedCategory = appActiveTab === 'Home' ? appHomeSelectedCategory : 'all';
+  const products = appShopProducts.filter(product => {
+    if (selectedCategory === 'all') return true;
+    if (selectedCategory === 'sale') {
+      const price = Number(product.price) || 0;
+      const salePrice = Number(product.salePrice);
+      return Number.isFinite(salePrice) && salePrice > 0 && salePrice < price;
+    }
+    if (selectedCategory === 'brands') return !!String(product.brand || product.vendorName || '').trim();
+    if (selectedCategory === 'designers') return !!String(product.designer || product.designerName || '').trim();
+    const categoryText = String(product.category || product.department || product.productType || '').trim().toLowerCase();
+    const aliases = {
+      clothing:['clothing','apparel','fashion','clothes'],
+      accessories:['accessories','accessory','bags','jewellery','jewelry'],
+      beauty:['beauty','skincare','skin care','makeup','cosmetics'],
+      fragrance:['fragrance','fragrances','scent','scents','perfume','perfumes'],
+      kids:['kids','kid','children','childrens','children’s'],
+      homeware:['homeware','home','home goods','home decor','decor']
+    };
+    return (aliases[selectedCategory] || [selectedCategory]).some(term => categoryText.includes(term));
+  });
   if (!products.length) {
     grid.innerHTML = '<p class="app-new-in-empty">No products match these filters.</p>';
     return;
@@ -715,7 +766,9 @@ async function appShopLoadProducts() {
     .finally(() => { appShopLoading = null; });
   return appShopLoading;
 }
-function appOpenHomeCollection() {
+function appOpenHomeCollection(category) {
+  if (category) appHomeSelectedCategory = category;
+  else appHomeSelectedCategory = 'all';
   if (appProductView && !appProductView.hidden) appProductView.hidden = true;
   appSaveCurrentTabMemory();
   const homeView = tabViews.find(view => view.dataset.view === 'Home');
@@ -733,8 +786,8 @@ function appOpenHomeCollection() {
   homeMemory.collectionScrollY = appCollectionMemory.scrollY || 0;
   appTabMemories.set('Home',homeMemory);
   appPersistScrollMemories();
-  appShopLoadProducts();
-  appRestoreScrollPosition(appCollectionMemory.scrollY || 0);
+  appShopLoadProducts().then(() => appShopRenderProducts());
+  appRestoreScrollPosition(0);
 }
 const appShopBack = document.getElementById('app-shop-back');
 if (appShopBack) appShopBack.addEventListener('click', () => {
