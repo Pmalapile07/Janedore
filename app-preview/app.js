@@ -74,14 +74,14 @@ window.addEventListener('resize', () => {
 
 const tabViews = [...document.querySelectorAll('.app-tab-content[data-view]')];
 let appActiveTab = initialNavItem ? initialNavItem.dataset.tab : 'Home';
-const appScrollMemoryKey = 'janedore_app_scroll_history_v1';
+const appScrollMemoryKey = 'janedore_app_scroll_history_v2';
 let appSavedScrollState = {};
 try { appSavedScrollState = JSON.parse(localStorage.getItem(appScrollMemoryKey) || '{}') || {}; } catch (_) {}
 const appTabMemories = new Map(Object.entries(appSavedScrollState.tabs || {}));
 let appCollectionMemory = appSavedScrollState.collection || {type:'all-products',scrollY:0};
 if (!appCollectionMemory.type) appCollectionMemory.type = 'all-products';
-// Remember which Home-owned screen was last open independently of its scroll position.
-// Start each fresh app load on the normal Home screen; keep collection restoration in-session only.
+// Each bottom tab owns its last screen and its own scroll position.
+// Screens are restored independently: tab root, collection, or product detail.
 let appHomeScreen = 'home';
 if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
 let appScrollRestoreToken = 0;
@@ -99,57 +99,45 @@ function appPersistScrollMemories() {
 function appRestoreScrollPosition(scrollY) {
   const targetY = Math.max(0, Number(scrollY) || 0);
   const token = ++appScrollRestoreToken;
-
-  // Apply the destination before the browser paints the newly revealed page.
-  // Waiting two animation frames exposed the previous page's scroll position
-  // on first visits, making the new page appear to open near its bottom.
   window.scrollTo({top:targetY,behavior:'instant'});
-
-  // Re-apply saved positions after layout settles when returning to a page
-  // that was previously scrolled.
   if (targetY > 0) {
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        if (token !== appScrollRestoreToken) return;
-        window.scrollTo({top:targetY,behavior:'instant'});
-      });
-    });
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (token !== appScrollRestoreToken) return;
+      window.scrollTo({top:targetY,behavior:'instant'});
+    }));
   }
 }
 
+function appDefaultTabMemory() {
+  return {screen:'tab',scrollY:0,productId:null,productScrollY:0,productReturnToCollection:false,collectionScrollY:0};
+}
+
 function appSaveCurrentTabMemory() {
+  if (!appActiveTab) return;
+  const memory = appTabMemories.get(appActiveTab) || appDefaultTabMemory();
   const collectionPage = document.getElementById('app-shop-page');
   if (collectionPage && !collectionPage.hidden && (!appProductView || appProductView.hidden)) {
-    appCollectionMemory.scrollY = window.scrollY;
-    if (appActiveTab === 'Home') appHomeScreen = 'collection';
-    appPersistScrollMemories();
-    return;
-  }
-  const memory = appTabMemories.get(appActiveTab) || {scrollY:0, productId:null, productScrollY:0};
-  if (appProductView && !appProductView.hidden) {
-    // Preserve a product opened from the Home hero's All Products collection
-    // while the customer visits another bottom tab. It remains a temporary
-    // detail screen: Back still returns to the collection, not to Home's hero.
-    if (appProductReturnToCollection) {
-      // Keep Home's own scroll position untouched. The collection has its
-      // own independent scroll memory and is restored after this product.
-      memory.productId = appCurrentProduct && appCurrentProduct.id
-        ? String(appCurrentProduct.id)
-        : (appRenderedProductId || null);
-      memory.productSourceCollection = appCollectionMemory.type || 'all-products';
-      memory.productScrollY = window.scrollY;
-    } else {
-      memory.productId = null;
-      memory.productSourceCollection = null;
-      memory.productScrollY = 0;
+    memory.screen = 'collection';
+    memory.collectionScrollY = window.scrollY;
+    if (appActiveTab === 'Home') {
+      appCollectionMemory.scrollY = window.scrollY;
+      appHomeScreen = 'collection';
     }
+  } else if (appProductView && !appProductView.hidden) {
+    memory.screen = 'product';
+    memory.productId = appCurrentProduct && appCurrentProduct.id
+      ? String(appCurrentProduct.id)
+      : (appRenderedProductId || memory.productId || null);
+    memory.productScrollY = window.scrollY;
+    memory.productReturnToCollection = !!appProductReturnToCollection;
   } else {
+    memory.screen = 'tab';
     memory.scrollY = window.scrollY;
     memory.productId = null;
-    memory.productSourceCollection = null;
     memory.productScrollY = 0;
+    memory.productReturnToCollection = false;
   }
-  appTabMemories.set(appActiveTab, memory);
+  appTabMemories.set(appActiveTab,memory);
   appPersistScrollMemories();
 }
 
@@ -159,21 +147,27 @@ window.addEventListener('scroll', () => {
   appScrollSaveQueued = true;
   requestAnimationFrame(() => {
     appScrollSaveQueued = false;
+    if (appCartView && !appCartView.hidden) return;
+    const memory = appTabMemories.get(appActiveTab) || appDefaultTabMemory();
     const collectionPage = document.getElementById('app-shop-page');
-    if (collectionPage && !collectionPage.hidden && (!appProductView || appProductView.hidden)) {
-      appCollectionMemory.scrollY = window.scrollY;
-      appPersistScrollMemories();
-    } else if (!appProductView || appProductView.hidden) {
-      const memory = appTabMemories.get(appActiveTab) || {scrollY:0,productId:null,productScrollY:0};
-      memory.scrollY = window.scrollY;
-      appTabMemories.set(appActiveTab, memory);
-      appPersistScrollMemories();
-    } else {
-      const memory = appTabMemories.get(appActiveTab) || {scrollY:0,productId:null,productScrollY:0};
+    if (appProductView && !appProductView.hidden) {
+      memory.screen = 'product';
+      memory.productId = appCurrentProduct && appCurrentProduct.id ? String(appCurrentProduct.id) : (appRenderedProductId || memory.productId || null);
       memory.productScrollY = window.scrollY;
-      appTabMemories.set(appActiveTab, memory);
-      appPersistScrollMemories();
+      memory.productReturnToCollection = !!appProductReturnToCollection;
+    } else if (collectionPage && !collectionPage.hidden) {
+      memory.screen = 'collection';
+      memory.collectionScrollY = window.scrollY;
+      if (appActiveTab === 'Home') {
+        appCollectionMemory.scrollY = window.scrollY;
+        appHomeScreen = 'collection';
+      }
+    } else {
+      memory.screen = 'tab';
+      memory.scrollY = window.scrollY;
     }
+    appTabMemories.set(appActiveTab,memory);
+    appPersistScrollMemories();
   });
 });
 
@@ -210,11 +204,11 @@ function appShowTabPage(tabName) {
   const collectionPage = document.getElementById('app-shop-page');
   if (collectionPage) collectionPage.hidden = true;
   appActiveTab = tabName;
-  const memory = appTabMemories.get(tabName) || {scrollY:0, productId:null, productScrollY:0};
+  const memory = appTabMemories.get(tabName) || appDefaultTabMemory();
+  appTabMemories.set(tabName,memory);
   if (location.hash.startsWith('#product/') || location.hash === '#bag') {
     history.replaceState(null, '', location.pathname + location.search);
   }
-  appTabMemories.set(tabName, memory);
   appProductView.hidden = true;
   document.body.classList.remove('app-product-open');
   const header = document.querySelector('.app-header');
@@ -224,29 +218,30 @@ function appShowTabPage(tabName) {
   tabViews.forEach(view => { view.hidden = view.dataset.view !== tabName; });
   if (tabName === 'Shop') appShopLoadProducts();
 
-  // If this tab was left while viewing a product opened from its collection,
-  // restore that exact product. appOpenProduct runs synchronously up to its
-  // first await, so set the return destination immediately afterwards.
-  // Home can own either its homepage or the separate All Products collection.
-  // Restore the remembered screen itself, not just Home's tab-level scroll state.
-  if (tabName === 'Home' && appHomeScreen === 'collection' && collectionPage) {
-    // The collection is a separate screen: hide Home and every other tab before revealing it.
+  // Restore the exact screen last visited in this tab, not merely its root view.
+  if (memory.screen === 'collection' && collectionPage) {
     tabViews.forEach(view => { view.hidden = true; });
     collectionPage.hidden = false;
     if (header) header.hidden = true;
-    appRestoreScrollPosition(appCollectionMemory.scrollY || 0);
+    if (tabName === 'Home') appHomeScreen = 'collection';
+    appRestoreScrollPosition(tabName === 'Home'
+      ? (appCollectionMemory.scrollY || memory.collectionScrollY || 0)
+      : (memory.collectionScrollY || 0));
     return;
   }
 
-  if (memory.productId) {
+  if (memory.screen === 'product' && memory.productId) {
     const productId = String(memory.productId);
     const productScrollY = memory.productScrollY || 0;
+    const returnToCollection = !!memory.productReturnToCollection;
     appOpenProduct(productId, false);
-    appProductReturnToCollection = true;
+    appProductReturnToCollection = returnToCollection;
     appRestoreScrollPosition(productScrollY);
     return;
   }
-  appRestoreScrollPosition(memory.scrollY);
+
+  if (tabName === 'Home') appHomeScreen = 'home';
+  appRestoreScrollPosition(memory.scrollY || 0);
 }
 
 // Page-navigation layer: coordinates page transitions and asks the state
@@ -730,6 +725,10 @@ function appOpenHomeCollection() {
   if (appHeader) appHeader.hidden = true;
   appCollectionMemory.type = 'all-products';
   appHomeScreen = 'collection';
+  const homeMemory = appTabMemories.get('Home') || appDefaultTabMemory();
+  homeMemory.screen = 'collection';
+  homeMemory.collectionScrollY = appCollectionMemory.scrollY || 0;
+  appTabMemories.set('Home',homeMemory);
   appPersistScrollMemories();
   appShopLoadProducts();
   appRestoreScrollPosition(appCollectionMemory.scrollY || 0);
@@ -737,7 +736,20 @@ function appOpenHomeCollection() {
 const appShopBack = document.getElementById('app-shop-back');
 if (appShopBack) appShopBack.addEventListener('click', () => {
   const collectionPage = document.getElementById('app-shop-page');
-  if (collectionPage) { appCollectionMemory.scrollY = window.scrollY; collectionPage.hidden = true; appHomeScreen = 'home'; appPersistScrollMemories(); }
+  if (collectionPage) {
+    appCollectionMemory.scrollY = window.scrollY;
+    collectionPage.hidden = true;
+    appHomeScreen = 'home';
+    const homeMemory = appTabMemories.get('Home') || appDefaultTabMemory();
+    homeMemory.screen = 'tab';
+    homeMemory.scrollY = 0;
+    homeMemory.collectionScrollY = appCollectionMemory.scrollY;
+    homeMemory.productId = null;
+    homeMemory.productScrollY = 0;
+    homeMemory.productReturnToCollection = false;
+    appTabMemories.set('Home',homeMemory);
+    appPersistScrollMemories();
+  }
   const homeButton = navItems.find(item => item.dataset.tab === 'Home');
   if (homeButton) {
     appSelectNavigationTab('Home', homeButton);
@@ -1108,9 +1120,11 @@ function appProductClose() {
   if (appProductReturnToCollection) {
     appProductReturnToCollection = false;
     const tabMemory = appTabMemories.get(appActiveTab) || {scrollY:0,productId:null,productScrollY:0};
+    tabMemory.screen = 'collection';
     tabMemory.productId = null;
-    tabMemory.productSourceCollection = null;
+    tabMemory.productReturnToCollection = false;
     tabMemory.productScrollY = 0;
+    tabMemory.collectionScrollY = appCollectionMemory.scrollY || 0;
     appTabMemories.set(appActiveTab, tabMemory);
     appPersistScrollMemories();
     appProductView.hidden = true;
@@ -1129,7 +1143,9 @@ function appProductClose() {
     return;
   }
   const memory = appTabMemories.get(appActiveTab) || {scrollY:0,productId:null,productScrollY:0};
+  memory.screen = 'tab';
   memory.productId = null;
+  memory.productReturnToCollection = false;
   memory.productScrollY = 0;
   appTabMemories.set(appActiveTab,memory);
   appPersistScrollMemories();
@@ -1161,6 +1177,15 @@ async function appOpenProduct(productId, pushHistory = true) {
   const openedFromCart = !!(document.getElementById('app-cart-view') && !document.getElementById('app-cart-view').hidden);
   const collectionPage = document.getElementById('app-shop-page');
   appProductReturnToCollection = !openedFromCart && !!(collectionPage && !collectionPage.hidden);
+  if (!openedFromCart && appActiveTab) {
+    const memory = appTabMemories.get(appActiveTab) || appDefaultTabMemory();
+    memory.screen = 'product';
+    memory.productId = id;
+    memory.productScrollY = 0;
+    memory.productReturnToCollection = appProductReturnToCollection;
+    appTabMemories.set(appActiveTab,memory);
+    appPersistScrollMemories();
+  }
   // Do not persist this product as the active content of a bottom tab.
   // The product view is temporary; Back returns to its source page.
   appShowProductView();
