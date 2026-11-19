@@ -288,29 +288,6 @@ function appShopDate(product) {
   const parsed = Date.parse(value || product.created_at || '');
   return Number.isFinite(parsed) ? parsed : 0;
 }
-function appShopUpdateVisibleCount() {
-  const page = document.getElementById('app-shop-page');
-  const toolbar = page && page.querySelector('.app-shop-toolbar');
-  const countLabel = document.getElementById('app-shop-product-count');
-  const grid = document.getElementById('app-shop-product-grid');
-  if (!page || page.hidden || !toolbar || !countLabel || !grid) return;
-  const total = Number(countLabel.dataset.total) || 0;
-  const cards = Array.from(grid.querySelectorAll('.app-new-in-card[data-product-id]'));
-  const pageTop = page.getBoundingClientRect().top + window.scrollY;
-  const scrolled = window.scrollY > pageTop + 70;
-  toolbar.classList.toggle('is-scrolled', scrolled);
-  if (!scrolled || !cards.length) {
-    countLabel.textContent = total + (total === 1 ? ' item' : ' items');
-    return;
-  }
-  const toolbarBottom = toolbar.getBoundingClientRect().bottom;
-  let firstVisible = 1;
-  const visibleIndex = cards.findIndex(card => card.getBoundingClientRect().bottom > toolbarBottom + 4);
-  if (visibleIndex >= 0) firstVisible = visibleIndex + 1;
-  countLabel.textContent = firstVisible + ' of ' + total;
-}
-window.addEventListener('scroll', appShopUpdateVisibleCount, {passive:true});
-window.addEventListener('resize', appShopUpdateVisibleCount);
 function appShopRenderProducts() {
   const grid = document.getElementById('app-shop-product-grid');
   if (!grid) return;
@@ -340,9 +317,7 @@ function appShopRenderProducts() {
   const countLabel = document.getElementById('app-shop-product-count');
   if (countLabel) {
     const count = products.length;
-    countLabel.dataset.total = String(count);
     countLabel.textContent = count + (count === 1 ? ' item' : ' items');
-    appShopUpdateVisibleCount();
   }
   if (!products.length) {
     grid.innerHTML = '<p class="app-new-in-empty">No products match these filters.</p>';
