@@ -231,8 +231,8 @@ function appShowTabPage(tabName) {
   if (purchaseRow) purchaseRow.hidden = true;
   tabViews.forEach(view => { view.hidden = view.dataset.view !== tabName; });
 
-  // Shop is intentionally an empty tab for now, like Discover. The separate
-  // catalogue page is only a Home destination and must stay hidden on Shop.
+  // Shop uses its own static category landing grid. The separate
+  // all-products catalogue remains a Home destination and stays hidden on Shop.
   if (collectionPage) collectionPage.hidden = true;
 
   // Restore the Home collection only when returning to Home.
