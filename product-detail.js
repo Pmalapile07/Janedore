@@ -7,9 +7,18 @@ function formatPrice(amount) { return `${CURRENCIES[S.currency]?.symbol??"R"}${(
  * lets the browser repair malformed markup such as repeated nested <p> tags.
  */
 function sanitizeProductDescriptionHtml(value) {
-  const source = String(value ?? '').trim();
+  let source = String(value ?? '').trim();
   if (!source) return '';
-  const parsed = new DOMParser().parseFromString(source, 'text/html');
+  let parsed = null;
+  // Some older records contain HTML entities instead of actual tags
+  // (for example &lt;p&gt;). Decode those layers before sanitizing/rendering.
+  for (let pass = 0; pass < 3; pass++) {
+    parsed = new DOMParser().parseFromString(source, 'text/html');
+    const textOnly = parsed.body.childElementCount === 0;
+    const decoded = parsed.body.textContent || '';
+    if (!textOnly || decoded === source || !/<\/?[a-z][^>]*>/i.test(decoded)) break;
+    source = decoded;
+  }
   const allowedTags = new Set(['P', 'BR', 'STRONG', 'B', 'EM', 'I', 'U', 'UL', 'OL', 'LI', 'H2', 'H3', 'H4', 'BLOCKQUOTE']);
   const blockedTags = new Set(['SCRIPT', 'STYLE', 'IFRAME', 'OBJECT', 'EMBED', 'SVG', 'MATH', 'TEMPLATE']);
   const cleanNode = node => {
@@ -31,7 +40,6 @@ function sanitizeProductDescriptionHtml(value) {
   const container = document.createElement('div');
   Array.from(parsed.body.childNodes).map(cleanNode).filter(Boolean).forEach(node => container.appendChild(node));
   if (!container.innerHTML.trim()) return '';
-  // Plain-text descriptions should remain readable, including line breaks.
   if (!container.querySelector('*')) {
     const paragraph = document.createElement('p');
     const lines = container.textContent.split(/\r?\n/);
