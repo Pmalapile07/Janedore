@@ -22,7 +22,22 @@ function sanitizeProductDescriptionHtml(value) {
   const allowedTags = new Set(['P', 'BR', 'STRONG', 'B', 'EM', 'I', 'U', 'UL', 'OL', 'LI', 'H2', 'H3', 'H4', 'BLOCKQUOTE']);
   const blockedTags = new Set(['SCRIPT', 'STYLE', 'IFRAME', 'OBJECT', 'EMBED', 'SVG', 'MATH', 'TEMPLATE']);
   const cleanNode = node => {
-    if (node.nodeType === Node.TEXT_NODE) return document.createTextNode(node.nodeValue || '');
+    if (node.nodeType === Node.TEXT_NODE) {
+      const text = node.nodeValue || '';
+      // Some prototype products contain HTML that has been escaped inside
+      // an otherwise valid paragraph. Re-parse only recognised formatting
+      // tags so they render as markup instead of appearing literally.
+      if (/<\/?(?:p|br|strong|b|em|i|u|ul|ol|li|h[2-4]|blockquote)\\b[^>]*>/i.test(text)) {
+        const nested = new DOMParser().parseFromString(text, 'text/html');
+        if (nested.body.childElementCount) {
+          const fragment = document.createDocumentFragment();
+          Array.from(nested.body.childNodes).map(cleanNode).filter(Boolean)
+            .forEach(child => fragment.appendChild(child));
+          return fragment;
+        }
+      }
+      return document.createTextNode(text);
+    }
     if (node.nodeType !== Node.ELEMENT_NODE) return null;
     const tag = node.tagName;
     if (blockedTags.has(tag)) return null;
