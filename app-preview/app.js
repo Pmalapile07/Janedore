@@ -2031,6 +2031,146 @@ window.addEventListener('popstate', () => {
   if (location.hash.startsWith('#product/')) appOpenProduct(decodeURIComponent(location.hash.slice(9)),false);
   else if (appProductView && !appProductView.hidden) appProductClose();
 });
+
+// Pull-to-refresh is limited to the three top-level tabs. It refreshes the
+// current tab's live content without navigating or reloading the whole app.
+(function setupAppPullToRefresh() {
+  const shell = document.querySelector('.app-shell');
+  if (!shell) return;
+  const indicator = document.createElement('div');
+  indicator.className = 'app-pull-refresh-indicator';
+  indicator.setAttribute('role', 'status');
+  indicator.setAttribute('aria-live', 'polite');
+  indicator.innerHTML = '<span class="app-pull-refresh-spinner" aria-hidden="true"></span><span class="app-pull-refresh-label">Pull to refresh</span>';
+  shell.appendChild(indicator);
+
+  let startY = 0;
+  let pullDistance = 0;
+  let tracking = false;
+  let refreshing = false;
+  let content = null;
+  const threshold = 68;
+  const maxPull = 104;
+
+  function eligible() {
+    if (!['Home', 'Shop', 'Discover'].includes(appActiveTab)) return false;
+    const cart = document.getElementById('app-cart-view');
+    const collection = document.getElementById('app-shop-page');
+    return window.scrollY <= 1 &&
+      (!appProductView || appProductView.hidden) &&
+      (!cart || cart.hidden) &&
+      (!collection || collection.hidden);
+  }
+  function setPull(distance) {
+    pullDistance = Math.min(maxPull, Math.max(0, distance));
+    const progress = Math.min(1, pullDistance / threshold);
+    indicator.style.setProperty('--pull-progress', String(progress));
+    indicator.style.transform = 'translate(-50%, ' + Math.max(0, pullDistance - 38) + 'px)';
+    const label = indicator.querySelector('.app-pull-refresh-label');
+    if (label) label.textContent = pullDistance >= threshold ? 'Release to refresh' : 'Pull to refresh';
+    if (content) content.style.transform = 'translate3d(0,' + Math.round(pullDistance * .42) + 'px,0)';
+    indicator.classList.toggle('is-ready', pullDistance >= threshold);
+  }
+  function resetPull() {
+    if (content) {
+      content.classList.remove('app-pull-refresh-moving');
+      content.style.transform = '';
+    }
+    indicator.classList.remove('is-visible', 'is-refreshing', 'is-ready');
+    indicator.style.transform = 'translate(-50%, -42px)';
+    setPull(0);
+    content = null;
+    pullDistance = 0;
+    tracking = false;
+  }
+  async function refreshCurrentTab() {
+    if (appActiveTab === 'Home') {
+      // Re-fetch the shared homepage configuration without resetting the
+      // selected category, scroll history, or bottom-navigation state.
+      const response = await fetch('/api/app-homepage', {
+        headers: { Accept: 'application/json' },
+        cache: 'no-store'
+      });
+      if (!response.ok) throw new Error('Homepage refresh unavailable');
+      const data = await response.json();
+      const heroImage = document.getElementById('app-home-hero-image');
+      const heading = document.getElementById('app-home-hero-heading');
+      if (heroImage && data.heroImageUrl) heroImage.src = data.heroImageUrl;
+      if (heading) heading.textContent = data.heroHeading || '';
+      const welcomeImage = document.getElementById('app-welcome-image');
+      if (welcomeImage && data.heroImageUrl) welcomeImage.src = data.heroImageUrl;
+      // Refresh the live New In response and update the in-memory product
+      // cache; the existing cards remain visible while the request completes.
+      const productsResponse = await fetch('/api/app-new-in', {
+        headers: { Accept: 'application/json' },
+        cache: 'no-store'
+      });
+      if (productsResponse.ok) {
+        const productsData = await productsResponse.json();
+        (Array.isArray(productsData.products) ? productsData.products : []).forEach(product => {
+          if (product && product.id) appProductCache.set(String(product.id), product);
+        });
+      }
+    }
+    // Shop and Discover are intentionally empty tabs at present. The gesture
+    // still completes there without taking the customer to another screen.
+  }
+
+  document.addEventListener('touchstart', event => {
+    if (refreshing || !eligible() || event.touches.length !== 1) return;
+    startY = event.touches[0].clientY;
+    tracking = startY <= 150;
+    if (!tracking) return;
+    content = document.querySelector('.app-tab-content[data-view="' + appActiveTab + '"]');
+  }, { passive: true });
+
+  document.addEventListener('touchmove', event => {
+    if (!tracking || refreshing || event.touches.length !== 1) return;
+    const delta = event.touches[0].clientY - startY;
+    if (delta <= 0) {
+      setPull(0);
+      return;
+    }
+    if (window.scrollY > 1) { tracking = false; return; }
+    event.preventDefault();
+    if (pullDistance === 0) {
+      indicator.classList.add('is-visible');
+      if (content) content.classList.add('app-pull-refresh-moving');
+    }
+    setPull(delta * .72);
+  }, { passive: false });
+
+  document.addEventListener('touchend', async () => {
+    if (!tracking || refreshing) return;
+    tracking = false;
+    if (pullDistance < threshold) {
+      resetPull();
+      return;
+    }
+    refreshing = true;
+    indicator.classList.add('is-refreshing');
+    indicator.style.transform = 'translate(-50%, 18px)';
+    const label = indicator.querySelector('.app-pull-refresh-label');
+    if (label) label.textContent = 'Refreshing…';
+    if (content) {
+      content.classList.remove('app-pull-refresh-moving');
+      content.style.transform = 'translate3d(0,42px,0)';
+    }
+    try {
+      await refreshCurrentTab();
+    } catch (error) {
+      console.warn('[APP REFRESH] Could not refresh current tab:', error.message);
+    } finally {
+      refreshing = false;
+      resetPull();
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchcancel', () => {
+    if (tracking && !refreshing) resetPull();
+  }, { passive: true });
+})();
+
 // Warm the full All Products catalogue as soon as the app script starts.
 // This runs behind the welcome screen and shares the same in-flight request
 // when the customer opens Shop Now, so the collection is ready on arrival.
