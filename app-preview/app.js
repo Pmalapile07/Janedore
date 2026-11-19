@@ -212,17 +212,17 @@ function appShowTabPage(tabName) {
   appProductView.hidden = true;
   document.body.classList.remove('app-product-open');
   const header = document.querySelector('.app-header');
-  if (header) header.hidden = tabName === 'Shop';
+  if (header) header.hidden = false;
   const purchaseRow = document.getElementById('app-product-sticky-bar');
   if (purchaseRow) purchaseRow.hidden = true;
   tabViews.forEach(view => { view.hidden = view.dataset.view !== tabName; });
-  // Shop is a standalone catalogue page, not an .app-tab-content[data-view] panel.
-  // Show it explicitly when its bottom-navigation tab is selected.
-  if (collectionPage) collectionPage.hidden = tabName !== 'Shop';
-  if (tabName === 'Shop') appShopLoadProducts();
 
-  // Restore the exact screen last visited in this tab, not merely its root view.
-  if (memory.screen === 'collection' && collectionPage) {
+  // Shop is intentionally an empty tab for now, like Discover. The separate
+  // catalogue page is only a Home destination and must stay hidden on Shop.
+  if (collectionPage) collectionPage.hidden = true;
+
+  // Restore the Home collection only when returning to Home.
+  if (tabName === 'Home' && memory.screen === 'collection' && collectionPage) {
     tabViews.forEach(view => { view.hidden = true; });
     collectionPage.hidden = false;
     if (header) header.hidden = true;
@@ -233,7 +233,7 @@ function appShowTabPage(tabName) {
     return;
   }
 
-  if (memory.screen === 'product' && memory.productId) {
+  if (tabName !== 'Shop' && memory.screen === 'product' && memory.productId) {
     const productId = String(memory.productId);
     const productScrollY = memory.productScrollY || 0;
     const returnToCollection = !!memory.productReturnToCollection;
