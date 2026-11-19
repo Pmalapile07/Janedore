@@ -1,5 +1,6 @@
 function appSelectHomeCategory(item) {
   if (!item) return;
+  if (appSearchScreen && !appSearchScreen.hidden) appSearchClose();
   appHomeSelectedCategory = item.dataset.category || 'all';
   appCategoryStrip.querySelectorAll('.app-category').forEach(categoryItem => {
     const selected = categoryItem === item;
@@ -1818,6 +1819,7 @@ const appSearchInput = document.getElementById('app-search-input');
 const appSearchScreen = document.getElementById('app-search-screen');
 const appSearchBody = document.getElementById('app-search-screen-body');
 const appSearchClear = document.getElementById('app-search-clear');
+const appSearchCancel = document.getElementById('app-search-cancel');
 const APP_RECENT_SEARCH_KEY = 'janedore_recent_searches';
 let appSearchSuggestions = [];
 
@@ -1850,11 +1852,14 @@ function appSearchOpen() {
   }
   if (appProductView && !appProductView.hidden) return;
   if (appCartView && !appCartView.hidden) return;
+  const header = document.querySelector('.app-header');
+  if (header) header.hidden = false;
   appSearchScreen.hidden = false;
   [...appHomeView.querySelectorAll(':scope > section:not(.app-category-strip):not(#app-search-screen)')].forEach(section => { section.hidden = true; });
   appSearchInput.readOnly = false;
+  if (appSearchCancel) appSearchCancel.hidden = false;
   appSearchInput.focus();
-  appSearchRenderDefault();
+  appShopLoadProducts().then(() => appSearchRenderDefault());
   if (appSearchClear) appSearchClear.hidden = !appSearchInput.value;
   window.scrollTo({top:0,behavior:'instant'});
 }
@@ -1864,6 +1869,8 @@ function appSearchClose() {
   appSearchScreen.hidden = true;
   appSearchInput.value = '';
   appSearchInput.readOnly = true;
+  if (appSearchCancel) appSearchCancel.hidden = true;
+  appRenderHomeCategory(appHomeSelectedCategory);
   if (appSearchClear) appSearchClear.hidden = true;
   appRenderHomeCategory(appHomeSelectedCategory);
 }
@@ -1938,6 +1945,7 @@ if (appSearchInput) {
     if (event.key==='Escape') { event.preventDefault(); appSearchClose(); }
   });
 }
+if (appSearchCancel) appSearchCancel.addEventListener('click', appSearchClose);
 if (appSearchClear) appSearchClear.addEventListener('click', () => {
   appSearchInput.value=''; appSearchInput.focus(); appSearchRenderDefault(); appSearchClear.hidden=true;
 });
@@ -1957,7 +1965,7 @@ if (appSearchBody) appSearchBody.addEventListener('click', event => {
   if (row) {
     const type=row.dataset.searchType, value=row.dataset.searchValue, label=row.dataset.searchLabel;
     appSearchSaveRecent(label,type);
-    if (type==='product') { appSearchScreen.hidden=true; appSearchInput.readOnly=true; appSearchInput.value=''; appOpenProduct(value); return; }
+    if (type==='product') { appSearchScreen.hidden=true; appSearchInput.readOnly=true; appSearchInput.value=''; if(appSearchCancel) appSearchCancel.hidden=true; appRenderHomeCategory(appHomeSelectedCategory); appOpenProduct(value); return; }
     appSearchInput.value=label;
     appSearchRender(label);
     if (appSearchClear) appSearchClear.hidden=false;
@@ -1967,6 +1975,8 @@ if (appSearchBody) appSearchBody.addEventListener('click', event => {
   if (card && !event.target.closest('.app-new-in-wishlist')) {
     appSearchSaveRecent(appSearchInput.value,'query');
     appSearchScreen.hidden=true; appSearchInput.readOnly=true; appSearchInput.value='';
+    if(appSearchCancel) appSearchCancel.hidden=true;
+    appRenderHomeCategory(appHomeSelectedCategory);
     appOpenProduct(card.dataset.productId);
   }
 });
