@@ -1,5 +1,48 @@
 function safeImage(url) { return url || PLACEHOLDER_IMAGE; }
 function formatPrice(amount) { return `${CURRENCIES[S.currency]?.symbol??"R"}${(amount??0).toFixed(2)}`; }
+
+/**
+ * Safely render brand-supplied product descriptions as formatted HTML.
+ * Keeps common text formatting, strips unsafe elements/attributes, and
+ * lets the browser repair malformed markup such as repeated nested <p> tags.
+ */
+function sanitizeProductDescriptionHtml(value) {
+  const source = String(value ?? '').trim();
+  if (!source) return '';
+  const parsed = new DOMParser().parseFromString(source, 'text/html');
+  const allowedTags = new Set(['P', 'BR', 'STRONG', 'B', 'EM', 'I', 'U', 'UL', 'OL', 'LI', 'H2', 'H3', 'H4', 'BLOCKQUOTE']);
+  const blockedTags = new Set(['SCRIPT', 'STYLE', 'IFRAME', 'OBJECT', 'EMBED', 'SVG', 'MATH', 'TEMPLATE']);
+  const cleanNode = node => {
+    if (node.nodeType === Node.TEXT_NODE) return document.createTextNode(node.nodeValue || '');
+    if (node.nodeType !== Node.ELEMENT_NODE) return null;
+    const tag = node.tagName;
+    if (blockedTags.has(tag)) return null;
+    const children = Array.from(node.childNodes).map(cleanNode).filter(Boolean);
+    if (!allowedTags.has(tag)) {
+      const fragment = document.createDocumentFragment();
+      children.forEach(child => fragment.appendChild(child));
+      return fragment;
+    }
+    const clean = document.createElement(tag.toLowerCase());
+    children.forEach(child => clean.appendChild(child));
+    if (tag === 'P' && !clean.textContent.trim() && !clean.querySelector('br')) return null;
+    return clean;
+  };
+  const container = document.createElement('div');
+  Array.from(parsed.body.childNodes).map(cleanNode).filter(Boolean).forEach(node => container.appendChild(node));
+  if (!container.innerHTML.trim()) return '';
+  // Plain-text descriptions should remain readable, including line breaks.
+  if (!container.querySelector('*')) {
+    const paragraph = document.createElement('p');
+    const lines = container.textContent.split(/\r?\n/);
+    lines.forEach((line, index) => {
+      if (index) paragraph.appendChild(document.createElement('br'));
+      paragraph.appendChild(document.createTextNode(line));
+    });
+    container.replaceChildren(paragraph);
+  }
+  return container.innerHTML;
+}
 function isProductSoldOut(product) { return (product?.stock??0)<=0; }
 
 // Pre-order: the Badge field set to "pre-order" in admin, with the brand's
@@ -684,7 +727,7 @@ async function renderProductPage(product) {
             <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
           <div class="info-accordion-body">
-            <div>${product.description||'No description available.'}</div>
+            <div>${sanitizeProductDescriptionHtml(product.description)||'No description available.'}</div>
             ${product.compositionCare?`<p class="info-sub-label">Composition &amp; care</p><p>${product.compositionCare}</p>`:''}
             ${product.measurements?`<p class="info-sub-label">Measurements</p><p>${product.measurements}</p>`:''}
           </div>
