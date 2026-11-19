@@ -742,7 +742,6 @@ if (appShopBack) appShopBack.addEventListener('click', () => {
     appHomeScreen = 'home';
     const homeMemory = appTabMemories.get('Home') || appDefaultTabMemory();
     homeMemory.screen = 'tab';
-    homeMemory.scrollY = 0;
     homeMemory.collectionScrollY = appCollectionMemory.scrollY;
     homeMemory.productId = null;
     homeMemory.productScrollY = 0;
