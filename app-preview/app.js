@@ -406,7 +406,7 @@ function appRenderHomeCategory(category) {
     homeware: [...common, 'app-shop-by-brand'],
     brands: [...common, 'app-shop-by-brand'],
     designers: [...common, 'app-shop-by-brand'],
-    sale: [...common, 'app-bestsellers']
+    sale: [...common, 'app-generic-bestsellers']
   };
   const visibleClasses = sectionsByCategory[category] || sectionsByCategory.all;
   allSections.forEach(section => {
@@ -416,6 +416,7 @@ function appRenderHomeCategory(category) {
     const visible = visibleClasses.some(name =>
       name === 'app-beauty-editorial' ? label === 'Beauty editorial image placeholder' :
       name === 'app-kids-editorial' ? label === 'Inspire your kids' :
+      name === 'app-generic-bestsellers' ? (classes.includes('app-bestsellers') && !['app-shop-clothing','app-shop-accessories','app-shop-kids','app-shop-skincare','app-shop-makeup','app-based-on-habits'].some(c => classes.includes(c))) :
       classes.includes(name)
     );
     section.hidden = !visible;
