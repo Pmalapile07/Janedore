@@ -1783,7 +1783,7 @@ function appRenderCart(skipHydration) {
       '<div class="app-cart-item-price">' + appCartFormat(appCartUnitPrice(item) * quantity) + '</div></article>';
   }).join('');
   const discountRow = appAppliedDiscount
-    ? '<div class="app-cart-total-row discount"><span>Discount (' + appProductEscape(appAppliedDiscount.code || '') + ')</span><span>-' + appCartFormat(discountAmount) + '</span></div>'
+    ? '<div class="app-cart-total-row discount"><span>Discount</span><span>-' + appCartFormat(discountAmount) + '</span></div>'
     : '';
   const deliveryBanner = appCartDeliveryBanner(items);
   const recentSection = '<section class="app-cart-recent" id="app-cart-recent" hidden><h2>Recently viewed</h2><div class="app-cart-recent-track" id="app-cart-recent-track"></div></section>';
