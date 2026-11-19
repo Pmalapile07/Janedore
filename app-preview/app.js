@@ -1493,6 +1493,23 @@ async function appOpenProduct(productId, pushHistory = true) {
         '<div class="app-category-style-card" aria-hidden="true"><div class="app-category-style-card-image"></div></div>'.repeat(4) +
       '</div>' : '';
   }
+  const accessoriesStyle = document.getElementById('app-product-accessories-style');
+  if (accessoriesStyle) {
+    // Use the Admin taxonomy category slug to decide whether this product
+    // belongs to the Accessories department.
+    const categorySlug = String(product.category || '').trim();
+    const isAccessoriesProduct = !!(
+      window.JDTaxonomy &&
+      window.JDTaxonomy.departmentOf(categorySlug) === 'accessories'
+    );
+    accessoriesStyle.hidden = !isAccessoriesProduct;
+    accessoriesStyle.innerHTML = isAccessoriesProduct ?
+      '<div class="app-new-in-heading"><h2 id="app-product-accessories-style-title">Ways to style</h2><p>A few pieces to finish the look.</p></div>' +
+      '<div class="app-category-style-editorial" role="img" aria-label="Accessories editorial image placeholder"></div>' +
+      '<div class="app-category-style-grid" aria-label="Four accessories product placeholders">' +
+        '<div class="app-category-style-card" aria-hidden="true"><div class="app-category-style-card-image"></div></div>'.repeat(4) +
+      '</div>' : '';
+  }
   const frequentlyBoughtTrack = document.getElementById('app-product-frequently-bought-track');
   const frequentlyBoughtProgress = document.getElementById('app-product-frequently-bought-progress');
   if (frequentlyBoughtTrack) {
