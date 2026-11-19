@@ -375,7 +375,6 @@ fetch('/api/app-homepage', { headers: { Accept: 'application/json' } })
       { name: 'Clothing', slug: 'clothing' },
       { name: 'Accessories', slug: 'accessories' },
       { name: 'Beauty', slug: 'beauty' },
-      { name: 'Fragrance', slug: 'fragrance' },
       { name: 'Kids', slug: 'kids' },
       { name: 'Homeware', slug: 'homeware' },
       { name: 'Brands', slug: 'brands' },
