@@ -216,6 +216,9 @@ function appShowTabPage(tabName) {
   const purchaseRow = document.getElementById('app-product-sticky-bar');
   if (purchaseRow) purchaseRow.hidden = true;
   tabViews.forEach(view => { view.hidden = view.dataset.view !== tabName; });
+  // Shop is a standalone catalogue page, not an .app-tab-content[data-view] panel.
+  // Show it explicitly when its bottom-navigation tab is selected.
+  if (collectionPage) collectionPage.hidden = tabName !== 'Shop';
   if (tabName === 'Shop') appShopLoadProducts();
 
   // Restore the exact screen last visited in this tab, not merely its root view.
@@ -730,7 +733,9 @@ function appShopDate(product) {
 function appShopRenderProducts() {
   const grid = document.getElementById('app-shop-product-grid');
   if (!grid) return;
-  const selectedCategory = appHomeSelectedCategory;
+  // The Shop bottom tab is its own all-products destination. Homepage
+  // category selection must never filter or otherwise change this catalogue.
+  const selectedCategory = 'all';
   const products = appShopProducts.filter(product => {
     if (selectedCategory === 'all') return true;
     if (selectedCategory === 'sale') {
