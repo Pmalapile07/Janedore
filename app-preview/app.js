@@ -1478,29 +1478,12 @@ async function appOpenProduct(productId, pushHistory = true) {
   }
   const homewareStyle = document.getElementById('app-product-homeware-style');
   if (homewareStyle) {
-    const categoryValues = [
-      product.category,
-      product.department,
-      product.productType,
-      product.categoryName,
-      ...(Array.isArray(product.categories) ? product.categories : [])
-    ].filter(value => value != null && value !== '');
-    const normalizedCategories = categoryValues.map(value => {
-      const name = typeof value === 'object'
-        ? String(value.name || value.slug || value.label || value.title || '')
-        : String(value);
-      return name.trim().toLowerCase()
-        .replace(/&/g, ' and ')
-        .replace(/[_-]+/g, ' ')
-        .replace(/\\s+/g, ' ')
-        .trim();
-    }).filter(Boolean);
-    const isHomewareProduct = normalizedCategories.some(value =>
-      value === 'home' ||
-      value.includes('homeware') ||
-      value.includes('home decor') ||
-      value.includes('home goods') ||
-      value.includes('home and living')
+    // Admin saves the selected taxonomy category as product.category.
+    // Resolve its parent department through the same shared taxonomy used by Admin.
+    const categorySlug = String(product.category || '').trim();
+    const isHomewareProduct = !!(
+      window.JDTaxonomy &&
+      window.JDTaxonomy.departmentOf(categorySlug) === 'homeware'
     );
     homewareStyle.hidden = !isHomewareProduct;
     homewareStyle.innerHTML = isHomewareProduct ?
