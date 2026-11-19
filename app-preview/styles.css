@@ -113,6 +113,14 @@ body{background:#fff;color:var(--ink);font-family:Inter,Arial,sans-serif;-webkit
 /* First category editorial feature: homeware styling placeholders */
 .app-category-style-feature{padding:8px 12px 34px;overflow:hidden}
 .app-category-style-feature>.app-new-in-heading{margin-bottom:12px}
+.app-product-view .app-category-style-feature{padding:26px 0 30px;margin-top:0}
+.app-product-view .app-category-style-feature>.app-new-in-heading{display:block;padding:0 0 12px;margin:0}
+.app-product-view .app-category-style-feature>.app-new-in-heading h2{margin:0 0 5px;color:#111;font:600 17px/1.25 Inter,Arial,sans-serif}
+.app-product-view .app-category-style-feature>.app-new-in-heading p{margin:0;color:#777;font:400 12px/1.45 Inter,Arial,sans-serif}
+.app-product-view .app-category-style-feature .app-category-style-editorial{aspect-ratio:4/3}
+.app-product-view .app-category-style-feature .app-category-style-grid{margin-top:12px}
+.app-product-view .app-category-style-feature .app-category-style-card-image{aspect-ratio:25/33}
+
 .app-category-style-editorial{width:100%;aspect-ratio:4/3;background:linear-gradient(110deg,#f1f1f1 0%,#e8e8e8 45%,#f3f3f3 100%);background-size:220% 100%;animation:app-category-style-shimmer 1.8s ease-in-out infinite}
 .app-category-style-products{margin-top:20px}
 .app-category-style-products>.app-new-in-heading{margin-bottom:10px}
