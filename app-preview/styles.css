@@ -117,7 +117,7 @@ body{background:#fff;color:var(--ink);font-family:Inter,Arial,sans-serif;-webkit
 .app-product-view .app-category-style-feature>.app-new-in-heading{display:block;padding:0 0 12px;margin:0}
 .app-product-view .app-category-style-feature>.app-new-in-heading h2{margin:0 0 5px;color:#111;font:600 17px/1.25 Inter,Arial,sans-serif}
 .app-product-view .app-category-style-feature>.app-new-in-heading p{margin:0;color:#777;font:400 12px/1.45 Inter,Arial,sans-serif}
-.app-product-view .app-category-style-feature .app-category-style-editorial{aspect-ratio:4/3}
+.app-product-view .app-category-style-feature .app-category-style-editorial{aspect-ratio:40/33}
 .app-product-view .app-category-style-feature .app-category-style-grid{margin-top:12px}
 .app-product-view .app-category-style-feature .app-category-style-card-image{aspect-ratio:25/33}
 
@@ -527,3 +527,11 @@ body.app-cart-open .bottom-nav{display:grid!important;grid-template-columns:repe
 .app-cart-delivery-placeholder span{display:block;height:7px;border-radius:8px;background:#e7e7e7}
 .app-cart-delivery-placeholder span:first-child{width:58%}.app-cart-delivery-placeholder span:last-child{width:28%}
 .app-cart-recent-placeholder{flex:0 0 calc((100% - 8px)/2);aspect-ratio:3/4;background:#f3f3f3}
+
+
+/* Frequently bought with — same horizontal product-slider treatment as Suggested products. */
+.app-product-frequently-bought{padding-top:26px;margin-left:-16px;margin-right:-16px;width:calc(100% + 32px);overflow:hidden}
+.app-product-frequently-bought h2{margin:0;color:#111;font:600 17px/1.25 Inter,Arial,sans-serif;letter-spacing:0;padding:0 16px 12px}
+.app-product-frequently-bought-track{padding-left:16px!important;scroll-padding-left:16px}
+.app-product-frequently-bought-track::after{flex-basis:16px}
+.app-product-frequently-bought-progress{margin:10px 12px 0}
