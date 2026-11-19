@@ -272,8 +272,33 @@ function appNavigateToTab(tabName, activeButton) {
 
 navItems.forEach(button => {
   button.addEventListener('click', () => {
-    appSelectNavigationTab(button.dataset.tab, button);
-    appNavigateToTab(button.dataset.tab, button);
+    const tabName = button.dataset.tab;
+    const reselectingHome = tabName === 'Home' && button.classList.contains('selected');
+
+    if (reselectingHome) {
+      // Tapping the already-selected Home tab again is a shortcut to the
+      // top-level Home screen, clearing its remembered subpage and scroll.
+      const homeMemory = appDefaultTabMemory();
+      homeMemory.scrollY = 0;
+      homeMemory.screen = 'tab';
+      homeMemory.productId = null;
+      homeMemory.productScrollY = 0;
+      homeMemory.productReturnToCollection = false;
+      homeMemory.collectionScrollY = 0;
+      appTabMemories.set('Home', homeMemory);
+      appCollectionMemory.scrollY = 0;
+      appPersistScrollMemories();
+
+      const allCategory = appCategoryStrip && appCategoryStrip.querySelector('.app-category[data-category="all"]');
+      if (allCategory) appSelectHomeCategory(allCategory);
+      appSelectNavigationTab('Home', button);
+      appShowTabPage('Home');
+      window.scrollTo({top:0,behavior:'instant'});
+      return;
+    }
+
+    appSelectNavigationTab(tabName, button);
+    appNavigateToTab(tabName, button);
   });
 });
 
