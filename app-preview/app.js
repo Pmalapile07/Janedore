@@ -760,6 +760,11 @@ function appShopRenderProducts() {
     };
     return (aliases[selectedCategory] || [selectedCategory]).some(term => categoryText.includes(term));
   });
+  const countLabel = document.getElementById('app-shop-product-count');
+  if (countLabel) {
+    const count = products.length;
+    countLabel.textContent = count + (count === 1 ? ' item' : ' items');
+  }
   if (!products.length) {
     grid.innerHTML = '<p class="app-new-in-empty">No products match these filters.</p>';
     return;
