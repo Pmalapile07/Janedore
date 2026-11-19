@@ -1476,6 +1476,23 @@ async function appOpenProduct(productId, pushHistory = true) {
     suggestedSection.hidden = true;
     suggestedTrack.innerHTML = '';
   }
+  const homewareStyle = document.getElementById('app-product-homeware-style');
+  if (homewareStyle) {
+    const categoryValue = product.category || product.department || product.productType || '';
+    const categoryName = typeof categoryValue === 'object'
+      ? String(categoryValue.name || categoryValue.slug || categoryValue.label || '')
+      : String(categoryValue);
+    const normalizedCategory = categoryName.trim().toLowerCase().replace(/[_-]+/g, ' ').replace(/\\s+/g, ' ');
+    const isHomewareProduct = ['homeware', 'home decor', 'home goods', 'home and living']
+      .some(value => normalizedCategory === value || normalizedCategory.includes(value));
+    homewareStyle.hidden = !isHomewareProduct;
+    homewareStyle.innerHTML = isHomewareProduct ?
+      '<div class="app-new-in-heading"><h2 id="app-product-homeware-style-title">Style the space</h2><p>A few pieces to bring your space together.</p></div>' +
+      '<div class="app-category-style-editorial" role="img" aria-label="Homeware editorial image placeholder"></div>' +
+      '<div class="app-category-style-grid" aria-label="Four homeware product placeholders">' +
+        '<div class="app-category-style-card" aria-hidden="true"><div class="app-category-style-card-image"></div></div>'.repeat(4) +
+      '</div>' : '';
+  }
   appUpdateCartIndicator();
   appUpdateProductStickyState();
   await appLoadProductReviews(id);
