@@ -394,34 +394,25 @@ const appCategoryStrip = document.querySelector('.app-category-list');
 const appHomeView = document.querySelector('.app-tab-content[data-view="Home"]');
 function appRenderHomeCategory(category) {
   if (!appHomeView) return;
-  const allSections = [...appHomeView.querySelectorAll(':scope > section:not(.app-category-strip)')];
-  const common = ['app-home-hero', 'app-new-in', 'app-home-disclaimer'];
-  const sectionsByCategory = {
-    all: null,
-    clothing: [...common, 'app-home-editorial', 'app-home-shopping-grid', 'app-shop-clothing'],
-    accessories: [...common, 'app-shop-accessories', 'app-shop-by-brand'],
-    beauty: [...common, 'app-beauty-editorial', 'app-shop-skincare', 'app-shop-makeup'],
-    fragrance: [...common, 'app-shop-by-brand'],
-    kids: [...common, 'app-kids-editorial', 'app-shop-kids'],
-    homeware: [...common, 'app-shop-by-brand'],
-    brands: [...common, 'app-shop-by-brand'],
-    designers: [...common, 'app-shop-by-brand'],
-    sale: [...common, 'app-generic-bestsellers']
-  };
-  const visibleClasses = sectionsByCategory[category] || sectionsByCategory.all;
-  allSections.forEach(section => {
-    if (!visibleClasses) { section.hidden = false; return; }
-    const classes = [...section.classList];
-    const label = section.getAttribute('aria-label');
-    const visible = visibleClasses.some(name =>
-      name === 'app-beauty-editorial' ? label === 'Beauty editorial image placeholder' :
-      name === 'app-kids-editorial' ? label === 'Inspire your kids' :
-      name === 'app-generic-bestsellers' ? (classes.includes('app-bestsellers') && !['app-shop-clothing','app-shop-accessories','app-shop-kids','app-shop-skincare','app-shop-makeup','app-based-on-habits'].some(c => classes.includes(c))) :
-      classes.includes(name)
-    );
-    section.hidden = !visible;
-  });
+  const selectedCategory = category || 'all';
+  const isAllHome = selectedCategory === 'all';
+  const allSections = [...appHomeView.querySelectorAll(':scope > section:not(.app-category-strip):not(.app-category-home)')];
+
+  // All is the full homepage. Every other category opens its own empty
+  // category home for now, while keeping the shared header, search and
+  // category selector available.
+  allSections.forEach(section => { section.hidden = !isAllHome; });
+
+  const categoryHome = document.getElementById('app-category-home');
+  if (categoryHome) {
+    categoryHome.hidden = isAllHome;
+    categoryHome.dataset.category = selectedCategory;
+    const selectedItem = appCategoryStrip && appCategoryStrip.querySelector('.app-category[data-category="' + selectedCategory + '"]');
+    const categoryName = selectedItem ? selectedItem.textContent.trim() : selectedCategory;
+    categoryHome.setAttribute('aria-label', categoryName + ' home');
+  }
 }
+
 function appSelectHomeCategory(item) {
   if (!item) return;
   appHomeSelectedCategory = item.dataset.category || 'all';
