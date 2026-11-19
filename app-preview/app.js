@@ -172,13 +172,16 @@ window.addEventListener('scroll', () => {
 });
 
 function appUpdateHeaderTitle(tabName) {
-  const headerTitle = document.querySelector('.app-header-top .app-logo');
-  if (!headerTitle) return;
+  const header = document.querySelector('.app-header-top');
+  const logo = header?.querySelector('.app-logo');
+  const pageTitle = header?.querySelector('.app-page-title');
+  if (!logo || !pageTitle) return;
   const pageTitles = { Shop: 'Shop', Discover: 'Discovery' };
   const isPageTitle = Object.prototype.hasOwnProperty.call(pageTitles, tabName);
-  headerTitle.textContent = isPageTitle ? pageTitles[tabName] : 'JANEDORE';
-  headerTitle.classList.toggle('app-header-tab-title', isPageTitle);
-  headerTitle.setAttribute('aria-label', isPageTitle ? pageTitles[tabName] : 'JANEDORE');
+  logo.hidden = isPageTitle;
+  pageTitle.hidden = !isPageTitle;
+  pageTitle.textContent = isPageTitle ? pageTitles[tabName] : '';
+  header.setAttribute('aria-label', isPageTitle ? pageTitles[tabName] : 'JANEDORE');
 }
 
 function appSelectNavigationTab(tabName, activeButton) {
