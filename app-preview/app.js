@@ -875,6 +875,11 @@ let appGalleryImages = [];
 function appProductEscape(value) {
   return String(value == null ? '' : value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 }
+function appProductFormatMultiline(value) {
+  return appProductEscape(value)
+    .replace(/\\r?\\n/g, '<br>')
+    .replace(/\r\n?|\n/g, '<br>');
+}
 
 let appReviewItems = [];
 let appReviewSort = 'newest';
@@ -1322,7 +1327,7 @@ async function appOpenProduct(productId, pushHistory = true) {
     document.getElementById('app-product-price').innerHTML = Number.isFinite(previewSale) && previewSale > 0 && previewSale < previewPrice
       ? '<span class="app-product-sale-price">' + appProductMoney(previewSale) + '</span><s>' + appProductMoney(previewPrice) + '</s>'
       : appProductMoney(previewPrice);
-    document.getElementById('app-product-description').innerHTML = appProductEscape(product.description || 'No description available.').replace(/\\n/g,'<br>');
+    document.getElementById('app-product-description').innerHTML = appProductFormatMultiline(product.description || 'No description available.');
     document.getElementById('app-product-shipping').textContent = product.shippingReturns || 'Please see the delivery and returns information at checkout.';
     appRenderProductOptions(product, 0);
     document.getElementById('app-product-qty').textContent = '1';
@@ -1405,9 +1410,9 @@ async function appOpenProduct(productId, pushHistory = true) {
   document.getElementById('app-product-qty').textContent = '1';
   document.getElementById('app-product-qty-minus').disabled = true;
   appUpdateQuantityControls();
-  document.getElementById('app-product-description').innerHTML = appProductEscape(product.description || 'No description available.').replace(/\n/g,'<br>') +
-    (product.compositionCare ? '<p><strong>Composition &amp; care</strong><br>' + appProductEscape(product.compositionCare).replace(/\n/g,'<br>') + '</p>' : '') +
-    (product.measurements ? '<p><strong>Measurements</strong><br>' + appProductEscape(product.measurements).replace(/\n/g,'<br>') + '</p>' : '');
+  document.getElementById('app-product-description').innerHTML = appProductFormatMultiline(product.description || 'No description available.') +
+    (product.compositionCare ? '<p><strong>Composition &amp; care</strong><br>' + appProductFormatMultiline(product.compositionCare) + '</p>' : '') +
+    (product.measurements ? '<p><strong>Measurements</strong><br>' + appProductFormatMultiline(product.measurements) + '</p>' : '');
   document.getElementById('app-product-shipping').textContent = product.shippingReturns || 'Please see the delivery and returns information at checkout.';
   appRenderProductStickyBar(product, regular, sale);
 
