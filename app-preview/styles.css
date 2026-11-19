@@ -391,6 +391,9 @@ body.app-cart-open .bottom-nav{display:grid!important;grid-template-columns:repe
 .app-cart-recent h2{margin:0;padding:0 16px 13px;color:#111;font:600 16px/1.25 Inter,Arial,sans-serif}
 .app-cart-recent-track{display:flex;gap:8px;margin:0;padding:0 16px 6px;box-sizing:border-box;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scroll-padding-left:16px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .app-cart-recent-track::-webkit-scrollbar{display:none}
+.app-cart-recent-progress{margin:10px 16px 0}
+.app-product-related-progress{margin:10px 12px 0}
+
 .app-cart-recent-track .app-new-in-name{display:-webkit-box;min-width:0;min-height:30px;max-height:30px;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow-wrap:anywhere}
 .app-cart-recent-track .app-new-in-card{flex:0 0 calc((100% - 8px)/2);min-width:0}
 .app-cart-recent-card{display:flex;flex:0 0 132px;min-width:0;flex-direction:column;align-items:flex-start;gap:5px;padding:0;border:0;background:transparent;color:#111;text-align:left;scroll-snap-align:start}
