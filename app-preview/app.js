@@ -236,6 +236,9 @@ function appShowTabPage(tabName) {
     const returnToCollection = !!memory.productReturnToCollection;
     appOpenProduct(productId, false);
     appProductReturnToCollection = returnToCollection;
+    memory.productReturnToCollection = returnToCollection;
+    appTabMemories.set(tabName,memory);
+    appPersistScrollMemories();
     appRestoreScrollPosition(productScrollY);
     return;
   }
