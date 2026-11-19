@@ -786,7 +786,7 @@ function appOpenHomeCollection(category) {
   homeMemory.collectionScrollY = appCollectionMemory.scrollY || 0;
   appTabMemories.set('Home',homeMemory);
   appPersistScrollMemories();
-  appShopLoadProducts().then(() => appShopRenderProducts());
+  appShopLoadProducts();
   appRestoreScrollPosition(0);
 }
 const appShopBack = document.getElementById('app-shop-back');
