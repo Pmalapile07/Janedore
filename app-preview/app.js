@@ -1872,7 +1872,6 @@ function appSearchClose() {
   if (appSearchCancel) appSearchCancel.hidden = true;
   appRenderHomeCategory(appHomeSelectedCategory);
   if (appSearchClear) appSearchClear.hidden = true;
-  appRenderHomeCategory(appHomeSelectedCategory);
 }
 function appSearchLabel(slug) {
   try { return window.JDTaxonomy ? window.JDTaxonomy.label(slug) : String(slug).replace(/[-_]/g,' ').replace(/\b\w/g,c=>c.toUpperCase()); }
@@ -1982,13 +1981,14 @@ if (appSearchBody) appSearchBody.addEventListener('click', event => {
 });
 appSearchBody && appSearchBody.addEventListener('keydown', event => {
   const card=event.target.closest('.app-new-in-card[data-product-id]');
-  if (card && (event.key==='Enter'||event.key===' ')) { event.preventDefault(); appSearchScreen.hidden=true; appSearchInput.readOnly=true; appSearchInput.value=''; appOpenProduct(card.dataset.productId); }
+  if (card && (event.key==='Enter'||event.key===' ')) { event.preventDefault(); appSearchScreen.hidden=true; appSearchInput.readOnly=true; appSearchInput.value=''; if(appSearchCancel) appSearchCancel.hidden=true; appRenderHomeCategory(appHomeSelectedCategory); appOpenProduct(card.dataset.productId); }
 });
 const appShopSearchButton=document.getElementById('app-shop-search');
 if (appShopSearchButton) appShopSearchButton.addEventListener('click', appSearchOpen);
 
 function appSelectHomeCategory(item) {
   if (!item) return;
+  if (appSearchScreen && !appSearchScreen.hidden) appSearchClose();
   appHomeSelectedCategory = item.dataset.category || 'all';
   appCategoryStrip.querySelectorAll('.app-category').forEach(categoryItem => {
     const selected = categoryItem === item;
