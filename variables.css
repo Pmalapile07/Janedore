@@ -6,12 +6,17 @@
      1px under the page heading. */
   --section-heading-size: calc(var(--heading-size) - 1px);
   --ui-font-size: 10px !important;
-  --ui-letter-spacing: 0.1em;
+  --ui-letter-spacing: normal;
   --ui-font-weight: 400;
   --body-font-size: 13px;
-  --body-letter-spacing: 0.04em;
+  --body-letter-spacing: normal;
   --body-font-weight: 300;
   --body-line-height: 1.6;
 }
 
 @media (min-width: 768px) { :root { --heading-size: 28px; } }
+
+/* JANEDORE app-wide typography: keep every interface element at normal letter spacing. */
+*, *::before, *::after {
+  letter-spacing: normal !important;
+}
