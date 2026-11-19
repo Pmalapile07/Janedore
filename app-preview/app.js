@@ -1,6 +1,452 @@
+// Restore the customer's Firebase session before deciding which opening screen to show.
+const appFirebaseConfig = {
+  apiKey: "AIzaSyBjtD9j-jKHtjMVmI2ENxy0T3ts9uf2JNI",
+  authDomain: "janedore-9f035.firebaseapp.com",
+  projectId: "janedore-9f035",
+  storageBucket: "janedore-9f035.firebasestorage.app",
+  messagingSenderId: "571299748651",
+  appId: "1:571299748651:web:01463a772d47b39cc4036e"
+};
+if (!firebase.apps.length) firebase.initializeApp(appFirebaseConfig);
+const appAuth = firebase.auth();
+const welcomeScreen = document.getElementById('app-welcome');
+const guestButton = document.getElementById('app-continue-guest');
+let guestContinuedThisLaunch = false;
+
+function showAppHome() {
+  if (welcomeScreen) welcomeScreen.hidden = true;
+}
+
+function showAppWelcome() {
+  if (welcomeScreen) welcomeScreen.hidden = false;
+}
+
+if (guestButton) {
+  guestButton.addEventListener('click', () => {
+    guestContinuedThisLaunch = true;
+    showAppHome();
+  });
+}
+
+let authResolved = false;
+function completeAppLaunch(user) {
+  if (user && !user.isAnonymous) {
+    showAppHome();
+  } else if (guestContinuedThisLaunch) {
+    showAppHome();
+  } else {
+    showAppWelcome();
+  }
+}
+
+const launchFallback = window.setTimeout(() => {
+  if (!authResolved) {
+    authResolved = true;
+    completeAppLaunch(null);
+  }
+}, 5000);
+
+appAuth.onAuthStateChanged(user => {
+  if (authResolved && !user) return;
+  authResolved = true;
+  window.clearTimeout(launchFallback);
+  completeAppLaunch(user);
+});
+
+
+const nav = document.querySelector('.bottom-nav');
+const navItems = [...document.querySelectorAll('.nav-item')];
+const navIndicator = document.querySelector('.nav-indicator');
+
+function moveNavIndicator(item) {
+  if (!nav || !item || !navIndicator) return;
+  const navRect = nav.getBoundingClientRect();
+  const itemRect = item.getBoundingClientRect();
+  const x = itemRect.left - navRect.left + (itemRect.width - navIndicator.offsetWidth) / 2;
+  nav.style.setProperty('--indicator-x', `${x}px`);
+}
+
+const initialNavItem = navItems.find(item => item.classList.contains('selected')) || navItems[0];
+moveNavIndicator(initialNavItem);
+window.addEventListener('resize', () => {
+  moveNavIndicator(navItems.find(item => item.classList.contains('selected')));
+});
+
+const tabViews = [...document.querySelectorAll('.app-tab-content[data-view]')];
+let appActiveTab = initialNavItem ? initialNavItem.dataset.tab : 'Home';
+const appScrollMemoryKey = 'janedore_app_scroll_history_v2';
+let appSavedScrollState = {};
+try { appSavedScrollState = JSON.parse(localStorage.getItem(appScrollMemoryKey) || '{}') || {}; } catch (_) {}
+const appTabMemories = new Map(Object.entries(appSavedScrollState.tabs || {}));
+let appCollectionMemory = appSavedScrollState.collection || {type:'all-products',scrollY:0};
+if (!appCollectionMemory.type) appCollectionMemory.type = 'all-products';
+// Each bottom tab owns its last screen and its own scroll position.
+// Screens are restored independently: tab root, collection, or product detail.
+let appHomeScreen = 'home';
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+let appScrollRestoreToken = 0;
+
+function appPersistScrollMemories() {
+  try {
+    localStorage.setItem(appScrollMemoryKey, JSON.stringify({
+      tabs:Object.fromEntries(appTabMemories),
+      collection:appCollectionMemory,
+      homeScreen:appHomeScreen
+    }));
+  } catch (_) {}
+}
+
+function appRestoreScrollPosition(scrollY) {
+  const targetY = Math.max(0, Number(scrollY) || 0);
+  const token = ++appScrollRestoreToken;
+  window.scrollTo({top:targetY,behavior:'instant'});
+  if (targetY > 0) {
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (token !== appScrollRestoreToken) return;
+      window.scrollTo({top:targetY,behavior:'instant'});
+    }));
+  }
+}
+
+function appDefaultTabMemory() {
+  return {screen:'tab',scrollY:0,productId:null,productScrollY:0,productReturnToCollection:false,collectionScrollY:0};
+}
+
+function appSaveCurrentTabMemory() {
+  if (!appActiveTab) return;
+  const memory = appTabMemories.get(appActiveTab) || appDefaultTabMemory();
+  const collectionPage = document.getElementById('app-shop-page');
+  if (collectionPage && !collectionPage.hidden && (!appProductView || appProductView.hidden)) {
+    memory.screen = 'collection';
+    memory.collectionScrollY = window.scrollY;
+    if (appActiveTab === 'Home') {
+      appCollectionMemory.scrollY = window.scrollY;
+      appHomeScreen = 'collection';
+    }
+  } else if (appProductView && !appProductView.hidden) {
+    memory.screen = 'product';
+    memory.productId = appCurrentProduct && appCurrentProduct.id
+      ? String(appCurrentProduct.id)
+      : (appRenderedProductId || memory.productId || null);
+    memory.productScrollY = window.scrollY;
+    memory.productReturnToCollection = !!appProductReturnToCollection;
+  } else {
+    memory.screen = 'tab';
+    memory.scrollY = window.scrollY;
+    memory.productId = null;
+    memory.productScrollY = 0;
+    memory.productReturnToCollection = false;
+  }
+  appTabMemories.set(appActiveTab,memory);
+  appPersistScrollMemories();
+}
+
+let appScrollSaveQueued = false;
+window.addEventListener('scroll', () => {
+  if (appScrollSaveQueued) return;
+  appScrollSaveQueued = true;
+  requestAnimationFrame(() => {
+    appScrollSaveQueued = false;
+    if (appCartView && !appCartView.hidden) return;
+    const memory = appTabMemories.get(appActiveTab) || appDefaultTabMemory();
+    const collectionPage = document.getElementById('app-shop-page');
+    if (appProductView && !appProductView.hidden) {
+      memory.screen = 'product';
+      memory.productId = appCurrentProduct && appCurrentProduct.id ? String(appCurrentProduct.id) : (appRenderedProductId || memory.productId || null);
+      memory.productScrollY = window.scrollY;
+      memory.productReturnToCollection = !!appProductReturnToCollection;
+    } else if (collectionPage && !collectionPage.hidden) {
+      memory.screen = 'collection';
+      memory.collectionScrollY = window.scrollY;
+      if (appActiveTab === 'Home') {
+        appCollectionMemory.scrollY = window.scrollY;
+        appHomeScreen = 'collection';
+      }
+    } else {
+      memory.screen = 'tab';
+      memory.scrollY = window.scrollY;
+    }
+    appTabMemories.set(appActiveTab,memory);
+    appPersistScrollMemories();
+  });
+});
+
+function appSelectNavigationTab(tabName, activeButton) {
+  navItems.forEach(item => {
+    const active = item === activeButton;
+    item.classList.toggle('selected', active);
+    if (active) item.setAttribute('aria-current', 'page');
+    else item.removeAttribute('aria-current');
+
+    // Use filled Phosphor icons for selected tabs, while keeping the custom
+    // Home mark unchanged.
+    if (item.dataset.tab !== 'Home') {
+      const icon = item.querySelector('i[class*="ph-"]');
+      if (icon) {
+        icon.classList.toggle('ph-fill', active);
+        icon.classList.toggle('ph', !active);
+      }
+    }
+  });
+  moveNavIndicator(activeButton);
+}
+
+// Page-navigation layer: show a tab's remembered page. This does not own
+// the bottom navigation's selected state.
+function appShowTabPage(tabName) {
+  appProductReturnToCart = false;
+  appProductReturnToCollection = false;
+  const cartView = document.getElementById('app-cart-view');
+  if (cartView && !cartView.hidden) {
+    cartView.hidden = true;
+    document.body.classList.remove('app-cart-open');
+  }
+  const collectionPage = document.getElementById('app-shop-page');
+  if (collectionPage) collectionPage.hidden = true;
+  appActiveTab = tabName;
+  const memory = appTabMemories.get(tabName) || appDefaultTabMemory();
+  appTabMemories.set(tabName,memory);
+  if (location.hash.startsWith('#product/') || location.hash === '#bag') {
+    history.replaceState(null, '', location.pathname + location.search);
+  }
+  appProductView.hidden = true;
+  document.body.classList.remove('app-product-open');
+  const header = document.querySelector('.app-header');
+  if (header) header.hidden = false;
+  const purchaseRow = document.getElementById('app-product-sticky-bar');
+  if (purchaseRow) purchaseRow.hidden = true;
+  tabViews.forEach(view => { view.hidden = view.dataset.view !== tabName; });
+
+  // Shop is intentionally an empty tab for now, like Discover. The separate
+  // catalogue page is only a Home destination and must stay hidden on Shop.
+  if (collectionPage) collectionPage.hidden = true;
+
+  // Restore the Home collection only when returning to Home.
+  if (tabName === 'Home' && memory.screen === 'collection' && collectionPage) {
+    tabViews.forEach(view => { view.hidden = true; });
+    collectionPage.hidden = false;
+    if (header) header.hidden = true;
+    if (tabName === 'Home') appHomeScreen = 'collection';
+    appRestoreScrollPosition(tabName === 'Home'
+      ? (appCollectionMemory.scrollY || memory.collectionScrollY || 0)
+      : (memory.collectionScrollY || 0));
+    return;
+  }
+
+  if (tabName !== 'Shop' && memory.screen === 'product' && memory.productId) {
+    const productId = String(memory.productId);
+    const productScrollY = memory.productScrollY || 0;
+    const returnToCollection = !!memory.productReturnToCollection;
+    appOpenProduct(productId, false);
+    appProductReturnToCollection = returnToCollection;
+    memory.productReturnToCollection = returnToCollection;
+    appTabMemories.set(tabName,memory);
+    appPersistScrollMemories();
+    appRestoreScrollPosition(productScrollY);
+    return;
+  }
+
+  if (tabName === 'Home') appHomeScreen = 'home';
+  appRestoreScrollPosition(memory.scrollY || 0);
+}
+
+// Page-navigation layer: coordinates page transitions and asks the state
+// manager to save/restore page state. The bottom-nav click handler does not
+// contain any of this routing logic.
+function appNavigateToTab(tabName, activeButton) {
+  if (tabName === 'Cart') {
+    // Save the current Home → collection → product journey before Cart
+    // temporarily takes over the screen. Returning to Home can then restore
+    // the same product, its source collection, and both scroll positions.
+    if (appCartView && appCartView.hidden) appSaveCurrentTabMemory();
+    appCartOpen();
+    return;
+  }
+  const cartView = document.getElementById('app-cart-view');
+  if (cartView && !cartView.hidden) {
+    appShowTabPage(tabName);
+    return;
+  }
+  const collectionPage = document.getElementById('app-shop-page');
+  if (tabName === appActiveTab && (!appProductView || appProductView.hidden) && (!collectionPage || collectionPage.hidden)) return;
+  appSaveCurrentTabMemory();
+  appShowTabPage(tabName);
+}
+
+navItems.forEach(button => {
+  button.addEventListener('click', () => {
+    const tabName = button.dataset.tab;
+    const reselectingHome = tabName === 'Home' && button.classList.contains('selected');
+
+    if (reselectingHome) {
+      // Tapping the already-selected Home tab again is a shortcut to the
+      // top-level Home screen, clearing its remembered subpage and scroll.
+      const homeMemory = appDefaultTabMemory();
+      homeMemory.scrollY = 0;
+      homeMemory.screen = 'tab';
+      homeMemory.productId = null;
+      homeMemory.productScrollY = 0;
+      homeMemory.productReturnToCollection = false;
+      homeMemory.collectionScrollY = 0;
+      appTabMemories.set('Home', homeMemory);
+      appCollectionMemory.scrollY = 0;
+      appPersistScrollMemories();
+
+      const allCategory = appCategoryStrip && appCategoryStrip.querySelector('.app-category[data-category="all"]');
+      if (allCategory) appSelectHomeCategory(allCategory);
+      appSelectNavigationTab('Home', button);
+      appShowTabPage('Home');
+      window.scrollTo({top:0,behavior:'instant'});
+      return;
+    }
+
+    appSelectNavigationTab(tabName, button);
+    appNavigateToTab(tabName, button);
+  });
+});
+
+// The app reads the shared homepage hero and category tiles from the
+// same Firestore content managed in Admin. The labels below are placeholders
+// only until categories have been added in Admin > Categories.
+fetch('/api/app-homepage', { headers: { Accept: 'application/json' } })
+  .then(response => {
+    if (!response.ok) throw new Error('Homepage content unavailable');
+    return response.json();
+  })
+  .then(content => {
+    const image = document.getElementById('app-home-hero-image');
+    if (image && content.heroImageUrl) image.src = content.heroImageUrl;
+    const welcomeImage = document.getElementById('app-welcome-image');
+    if (welcomeImage && content.heroImageUrl) {
+      const welcomeImageUrl = String(content.heroImageUrl);
+      const welcomeImagePreload = new Image();
+      welcomeImagePreload.onload = () => {
+        const safeWelcomeImageUrl = welcomeImageUrl.replace(/["\\]/g, '');
+        const backgroundValue = 'url("' + safeWelcomeImageUrl + '")';
+        document.documentElement.style.setProperty('--app-welcome-background', backgroundValue);
+        if (welcomeScreen) welcomeScreen.style.backgroundImage = backgroundValue;
+        welcomeImage.src = welcomeImageUrl;
+        try { localStorage.setItem('janedore_app_welcome_image', welcomeImageUrl); } catch (_) {}
+      };
+      welcomeImagePreload.onerror = () => {
+        // Keep the last successfully cached welcome image if the new image fails.
+      };
+      welcomeImagePreload.src = welcomeImageUrl;
+    }
+
+    // Use the exact heading and CTA configured for the main website hero.
+    const heroHeading = document.getElementById('app-home-hero-heading');
+    const heroButton = document.getElementById('app-home-hero-button');
+    if (heroHeading) heroHeading.textContent = content.heroHeading || '';
+    if (heroButton) {
+      heroButton.textContent = content.heroButtonText || '';
+      const link = content.heroButtonLink || { type: 'products' };
+      const value = String(link.value || '').trim();
+      const destinations = {
+        home: '/',
+        products: '/shop',
+        sale: '/sale',
+        category: value ? '/collections/' + encodeURIComponent(value) : '/shop',
+        collection: value ? '/collections/' + encodeURIComponent(value) : '/shop',
+        vendor: value ? '/brands/' + encodeURIComponent(value) : '/brands',
+        product: value ? '/products/' + encodeURIComponent(value) : '/shop',
+        page: value ? '/pages/' + encodeURIComponent(value) : '/',
+        url: /^https:\/\//i.test(value) ? value : '/shop'
+      };
+      if (link.type === 'products') {
+        heroButton.href = '#all-products';
+        heroButton.addEventListener('click', function(event) {
+          event.preventDefault();
+          appOpenHomeCollection();
+        });
+      } else {
+        heroButton.href = destinations[link.type] || '/shop';
+      }
+      if (link.type === 'url' && /^https:\/\//i.test(value)) {
+        heroButton.target = '_blank';
+        heroButton.rel = 'noopener';
+      }
+    }
+
+    const strip = document.querySelector('.app-category-list');
+    if (!strip) return;
+    const categoryOrder = [
+      { name: 'All', slug: 'all' },
+      { name: 'Clothing', slug: 'clothing' },
+      { name: 'Accessories', slug: 'accessories' },
+      { name: 'Beauty', slug: 'beauty' },
+      { name: 'Fragrance', slug: 'fragrance' },
+      { name: 'Kids', slug: 'kids' },
+      { name: 'Homeware', slug: 'homeware' },
+      { name: 'Brands', slug: 'brands' },
+      { name: 'Designers', slug: 'designers' },
+      { name: 'Sale', slug: 'sale' }
+    ];
+    const configuredCategories = Array.isArray(content.categories) ? content.categories : [];
+    const categories = categoryOrder.map(category => {
+      const configured = configuredCategories.find(item =>
+        String(item.name || '').trim().toLowerCase() === category.name.toLowerCase()
+      );
+      return configured ? { ...configured, name: category.name, slug: category.slug } : category;
+    });
+
+    strip.replaceChildren();
+    categories.forEach(category => {
+      const item = document.createElement('div');
+      item.className = 'app-category' + (category.slug === 'all' ? ' is-selected' : '');
+      item.dataset.category = category.slug;
+      item.setAttribute('role', 'button');
+      item.setAttribute('tabindex', '0');
+      item.setAttribute('aria-pressed', String(category.slug === 'all'));
+
+      const circle = document.createElement('span');
+      circle.className = 'app-category-circle';
+      circle.setAttribute('aria-hidden', 'true');
+      if (category.imageUrl && /^https:\/\//i.test(category.imageUrl)) {
+        circle.style.backgroundImage = 'url("' + category.imageUrl.replace(/"/g, '') + '")';
+        circle.classList.add('has-image');
+      }
+
+      const label = document.createElement('span');
+      label.textContent = category.name;
+      item.append(circle, label);
+      strip.appendChild(item);
+    });
+  })
+  .catch(error => console.warn('[APP HOME] Could not load shared homepage content:', error.message));
+
+
+// Homepage category navigation switches the Home content only. It never
+// opens the Shop collection or changes the selected bottom-navigation tab.
+const appCategoryStrip = document.querySelector('.app-category-list');
+const appHomeView = document.querySelector('.app-tab-content[data-view="Home"]');
+function appRenderHomeCategory(category) {
+  if (!appHomeView) return;
+  const selectedCategory = category || 'all';
+  const isAllHome = selectedCategory === 'all';
+  const allSections = [...appHomeView.querySelectorAll(':scope > section:not(.app-category-strip):not(.app-category-home)')];
+
+  // All is the full homepage. Every other category opens its own empty
+  // category home for now, while keeping the shared header, search and
+  // category selector available.
+  allSections.forEach(section => { section.hidden = !isAllHome; });
+
+  const categoryHome = document.getElementById('app-category-home');
+  if (categoryHome) {
+    categoryHome.hidden = isAllHome;
+    categoryHome.dataset.category = selectedCategory;
+    const selectedItem = appCategoryStrip && appCategoryStrip.querySelector('.app-category[data-category="' + selectedCategory + '"]');
+    const categoryName = selectedItem ? selectedItem.textContent.trim() : selectedCategory;
+    categoryHome.setAttribute('aria-label', categoryName + ' home');
+
+    // Category homes stay empty until their intended category-specific
+    // editorial/product content is implemented in the correct location.
+    categoryHome.innerHTML = '';
+  }
+}
+
 function appSelectHomeCategory(item) {
   if (!item) return;
-  if (appSearchScreen && !appSearchScreen.hidden) appSearchClose();
   appHomeSelectedCategory = item.dataset.category || 'all';
   appCategoryStrip.querySelectorAll('.app-category').forEach(categoryItem => {
     const selected = categoryItem === item;
@@ -1812,193 +2258,3 @@ window.addEventListener('popstate', () => {
 appShopLoadProducts();
 appUpdateCartIndicator();
 if (location.hash.startsWith('#product/')) appOpenProduct(decodeURIComponent(location.hash.slice(9)),false);
-
-/* Dedicated search screen: the shared header, category strip and bottom
-   navigation remain visible while the Home content is temporarily replaced. */
-const appSearchInput = document.getElementById('app-search-input');
-const appSearchScreen = document.getElementById('app-search-screen');
-const appSearchBody = document.getElementById('app-search-screen-body');
-const appSearchClear = document.getElementById('app-search-clear');
-const appSearchCancel = document.getElementById('app-search-cancel');
-const APP_RECENT_SEARCH_KEY = 'janedore_recent_searches';
-let appSearchSuggestions = [];
-let appSearchTrendingCache = null;
-let appSearchTrendingPromise = null;
-
-function appSearchRecentItems() {
-  try {
-    const items = JSON.parse(localStorage.getItem(APP_RECENT_SEARCH_KEY) || '[]');
-    return Array.isArray(items) ? items.filter(item => item && item.label).slice(0,10) : [];
-  } catch (_) { return []; }
-}
-function appSearchSaveRecent(label, type) {
-  const value = String(label || '').trim();
-  if (value.length < 2) return;
-  const list = [{type:type || 'query',label:value,value:value}].concat(
-    appSearchRecentItems().filter(item => String(item.label).toLowerCase() !== value.toLowerCase())
-  ).slice(0,10);
-  try { localStorage.setItem(APP_RECENT_SEARCH_KEY, JSON.stringify(list)); } catch (_) {}
-  try { fetch('/api/search-log',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify({term:value})}).catch(()=>{}); } catch (_) {}
-}
-function appSearchLoadTrending() {
-  if (appSearchTrendingCache) return Promise.resolve(appSearchTrendingCache);
-  if (!appSearchTrendingPromise) appSearchTrendingPromise = fetch('/api/trending-searches').then(response=>response.json()).catch(()=>({terms:[]})).then(data=>{
-    const live=(data.terms||[]).map(label=>({type:'query',label:String(label),value:String(label)}));
-    const brands=[...new Set(appShopProducts.filter(p=>p.status==='active').map(p=>String(p.brand||p.vendorName||'').trim()).filter(Boolean))].slice(0,8).map(label=>({type:'query',label,value:label}));
-    appSearchTrendingCache=live.concat(brands.filter(item=>!live.some(entry=>entry.label.toLowerCase()===item.label.toLowerCase()))).slice(0,8);
-    return appSearchTrendingCache;
-  });
-  return appSearchTrendingPromise;
-}
-function appSearchOpen() {
-  if (!appSearchScreen || !appSearchInput) return;
-  const collectionPage = document.getElementById('app-shop-page');
-  if (collectionPage && !collectionPage.hidden) {
-    collectionPage.hidden = true;
-    appActiveTab = 'Home';
-    const homeButton = navItems.find(item => item.dataset.tab === 'Home');
-    if (homeButton) appSelectNavigationTab('Home', homeButton);
-    tabViews.forEach(view => { view.hidden = view.dataset.view !== 'Home'; });
-    const homeMemory = appTabMemories.get('Home') || appDefaultTabMemory();
-    homeMemory.screen = 'tab';
-    appTabMemories.set('Home', homeMemory);
-  }
-  if (appProductView && !appProductView.hidden) return;
-  if (appCartView && !appCartView.hidden) return;
-  const header = document.querySelector('.app-header');
-  if (header) header.hidden = false;
-  appSearchScreen.hidden = false;
-  [...appHomeView.querySelectorAll(':scope > section:not(.app-category-strip):not(#app-search-screen)')].forEach(section => { section.hidden = true; });
-  appSearchInput.readOnly = false;
-  if (appSearchCancel) appSearchCancel.hidden = false;
-  appSearchInput.focus();
-  appShopLoadProducts().then(() => appSearchRenderDefault());
-  if (appSearchClear) appSearchClear.hidden = !appSearchInput.value;
-  window.scrollTo({top:0,behavior:'instant'});
-}
-function appSearchClose() {
-  if (!appSearchScreen || appSearchScreen.hidden) return;
-  appSearchSaveRecent(appSearchInput.value, 'query');
-  appSearchScreen.hidden = true;
-  appSearchInput.value = '';
-  appSearchInput.readOnly = true;
-  if (appSearchCancel) appSearchCancel.hidden = true;
-  appRenderHomeCategory(appHomeSelectedCategory);
-  if (appSearchClear) appSearchClear.hidden = true;
-}
-function appSearchLabel(slug) {
-  try { return window.JDTaxonomy ? window.JDTaxonomy.label(slug) : String(slug).replace(/[-_]/g,' ').replace(/\b\w/g,c=>c.toUpperCase()); }
-  catch (_) { return String(slug); }
-}
-function appSearchProductMatches(query) {
-  const q = String(query || '').trim().toLowerCase();
-  if (!q) return [];
-  return appShopProducts.filter(product => product.status === 'active' &&
-    [product.name,product.title,product.brand,product.vendorName,appSearchLabel(product.category),product.category]
-      .some(value => String(value || '').toLowerCase().includes(q)));
-}
-function appSearchBuildSuggestions(query) {
-  const q = String(query || '').trim().toLowerCase();
-  if (!q) return [];
-  const found = [];
-  const add = (type,label,value) => {
-    const text = String(label || '');
-    if (!text) return;
-    const lower = text.toLowerCase();
-    const rank = lower.startsWith(q) ? 0 : lower.split(/[\s\-/&]+/).some(word=>word.startsWith(q)) ? 1 : (q.length>=3 && lower.includes(q) ? 2 : -1);
-    if (rank >= 0 && !found.some(item=>item.type===type && String(item.value)===String(value))) found.push({type,label:text,value,rank});
-  };
-  const brands = [...new Set(appShopProducts.filter(p=>p.status==='active').map(p=>String(p.brand||p.vendorName||'').trim()).filter(Boolean))];
-  brands.forEach(brand=>add('brand',brand,brand));
-  const categories = [...new Set(appShopProducts.filter(p=>p.status==='active').map(p=>String(p.category||'').trim()).filter(Boolean))];
-  categories.forEach(slug=>add('category',appSearchLabel(slug),slug));
-  appShopProducts.filter(p=>p.status==='active').forEach(p=>add('product',p.name||p.title,p.id));
-  const order={brand:0,category:1,product:2};
-  return found.sort((a,b)=>a.rank-b.rank||order[a.type]-order[b.type]||a.label.localeCompare(b.label)).slice(0,8);
-}
-function appSearchRenderRows(items, recentMode) {
-  return items.map((item,index)=>'<button type="button" class="app-search-row" data-search-type="'+appProductEscape(item.type||'query')+'" data-search-value="'+appProductEscape(item.value||item.label)+'" data-search-label="'+appProductEscape(item.label)+'"><span class="app-search-row-icon"><i class="ph '+(item.type==='product'?'ph-t-shirt':item.type==='brand'?'ph-storefront':item.type==='category'?'ph-squares-four':'ph-clock-counter-clockwise')+'" aria-hidden="true"></i></span><span class="app-search-row-label">'+appProductEscape(item.label)+'</span>'+(item.type && item.type!=='query'?'<span class="app-search-row-type">'+appProductEscape(item.type)+'</span>':'')+(recentMode?'<span class="app-search-row-remove" data-search-remove="'+index+'"><i class="ph ph-x" aria-hidden="true"></i></span>':'')+'</button>').join('');
-}
-function appSearchRenderDefault() {
-  if (!appSearchBody) return;
-  const recent=appSearchRecentItems();
-  if (recent.length) {
-    appSearchBody.innerHTML='<div class="app-search-section-title">Recent searches</div>'+appSearchRenderRows(recent,true)+'<button type="button" class="app-search-back" id="app-search-clear-recent">Clear recent searches</button>';
-    return;
-  }
-  appSearchBody.innerHTML='<div class="app-search-section-title">Trending searches</div><div class="app-search-empty">Loading searches…</div>';
-  appSearchLoadTrending().then(items=>{
-    if (!appSearchScreen || appSearchScreen.hidden || appSearchInput.value.trim() || appSearchRecentItems().length) return;
-    appSearchBody.innerHTML='<div class="app-search-section-title">Trending searches</div>'+(items.length?appSearchRenderRows(items,false):'<div class="app-search-empty">Start typing to search products, brands or categories.</div>');
-  });
-}
-function appSearchRender(query) {
-  if (!appSearchBody) return;
-  const q=String(query||'').trim();
-  if (!q) { appSearchRenderDefault(); return; }
-  const matches=appSearchProductMatches(q);
-  appSearchSuggestions=appSearchBuildSuggestions(q);
-  const suggestionHtml=appSearchSuggestions.length?'<div class="app-search-section-title">Suggestions</div>'+appSearchRenderRows(appSearchSuggestions,false):'';
-  const cards=matches.map(product=>{
-    const regular=Number(product.price)||0, salePrice=Number(product.salePrice);
-    const sale=Number.isFinite(salePrice)&&salePrice>0&&salePrice<regular;
-    const image=appProductImages(product)[0]||product.imageUrl||'';
-    const price=sale?'<span class="app-new-in-old-price">R'+regular.toFixed(2)+'</span><span class="app-new-in-sale-price">R'+salePrice.toFixed(2)+'</span>':'<span>R'+regular.toFixed(2)+'</span>';
-    return '<article class="app-new-in-card'+(Number(product.stock)<=0?' is-sold-out':'')+'" data-product-id="'+appProductEscape(product.id)+'" role="button" tabindex="0" aria-label="View '+appProductEscape(product.name||product.title||'Product')+'"><div class="app-new-in-image">'+(image?'<img src="'+appProductEscape(image)+'" alt="'+appProductEscape(product.name||product.title||'Product')+'" loading="lazy">':'')+'<button class="app-new-in-wishlist" type="button" aria-label="Add to wishlist" aria-pressed="false"><i class="ph ph-heart-straight" aria-hidden="true"></i></button></div><div class="app-new-in-brand">'+appProductEscape(product.brand||product.vendorName||'')+'</div><div class="app-new-in-name">'+appProductEscape(product.name||product.title||'Product')+'</div><div class="app-new-in-price">'+price+'</div></article>';
-  }).join('');
-  appSearchBody.innerHTML=suggestionHtml+'<div class="app-search-results-title">'+matches.length+' result'+(matches.length===1?'':'s')+'</div>'+(matches.length?'<div class="app-search-results-grid">'+cards+'</div>':'<div class="app-search-empty">No results found. Please try a different search.</div>');
-}
-if (appSearchInput) {
-  appSearchInput.addEventListener('click', appSearchOpen);
-  appSearchInput.addEventListener('focus', () => { if (appSearchInput.readOnly) appSearchOpen(); });
-  appSearchInput.addEventListener('input', () => {
-    appSearchRender(appSearchInput.value);
-    if (appSearchClear) appSearchClear.hidden = !appSearchInput.value;
-  });
-  appSearchInput.addEventListener('keydown', event => {
-    if (event.key==='Enter') { event.preventDefault(); appSearchSaveRecent(appSearchInput.value,'query'); appSearchInput.blur(); }
-    if (event.key==='Escape') { event.preventDefault(); appSearchClose(); }
-  });
-}
-if (appSearchCancel) appSearchCancel.addEventListener('click', appSearchClose);
-if (appSearchClear) appSearchClear.addEventListener('click', () => {
-  appSearchInput.value=''; appSearchInput.focus(); appSearchRenderDefault(); appSearchClear.hidden=true;
-});
-if (appSearchBody) appSearchBody.addEventListener('click', event => {
-  const remove=event.target.closest('[data-search-remove]');
-  if (remove) {
-    const index=Number(remove.dataset.searchRemove);
-    const list=appSearchRecentItems(); list.splice(index,1);
-    try { localStorage.setItem(APP_RECENT_SEARCH_KEY,JSON.stringify(list)); } catch (_) {}
-    appSearchRenderDefault(); return;
-  }
-  if (event.target.closest('#app-search-clear-recent')) {
-    try { localStorage.removeItem(APP_RECENT_SEARCH_KEY); } catch (_) {}
-    appSearchRenderDefault(); return;
-  }
-  const row=event.target.closest('.app-search-row');
-  if (row) {
-    const type=row.dataset.searchType, value=row.dataset.searchValue, label=row.dataset.searchLabel;
-    appSearchSaveRecent(label,type);
-    if (type==='product') { appSearchScreen.hidden=true; appSearchInput.readOnly=true; appSearchInput.value=''; if(appSearchCancel) appSearchCancel.hidden=true; appRenderHomeCategory(appHomeSelectedCategory); appOpenProduct(value); return; }
-    appSearchInput.value=label;
-    appSearchRender(label);
-    if (appSearchClear) appSearchClear.hidden=false;
-    return;
-  }
-  const card=event.target.closest('.app-new-in-card[data-product-id]');
-  if (card && !event.target.closest('.app-new-in-wishlist')) {
-    appSearchSaveRecent(appSearchInput.value,'query');
-    appSearchScreen.hidden=true; appSearchInput.readOnly=true; appSearchInput.value='';
-    if(appSearchCancel) appSearchCancel.hidden=true;
-    appRenderHomeCategory(appHomeSelectedCategory);
-    appOpenProduct(card.dataset.productId);
-  }
-});
-appSearchBody && appSearchBody.addEventListener('keydown', event => {
-  const card=event.target.closest('.app-new-in-card[data-product-id]');
-  if (card && (event.key==='Enter'||event.key===' ')) { event.preventDefault(); appSearchScreen.hidden=true; appSearchInput.readOnly=true; appSearchInput.value=''; if(appSearchCancel) appSearchCancel.hidden=true; appRenderHomeCategory(appHomeSelectedCategory); appOpenProduct(card.dataset.productId); }
-});
-const appShopSearchButton=document.getElementById('app-shop-search');
-if (appShopSearchButton) appShopSearchButton.addEventListener('click', appSearchOpen);
-
