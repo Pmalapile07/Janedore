@@ -6,6 +6,7 @@ body{background:#fff;color:var(--ink);font-family:Inter,Arial,sans-serif;-webkit
 .app-header{position:sticky;top:0;z-index:15;background:#fff;display:flex;flex-direction:column}
 /* Ensure the hidden attribute overrides the header and navigation display rules. */
 .app-header[hidden],.bottom-nav[hidden]{display:none!important}
+.app-tab-content>section[hidden]{display:none!important}
 .app-header-top{height:calc(56px + env(safe-area-inset-top));padding:env(safe-area-inset-top) 16px 0;display:flex;align-items:center;justify-content:space-between}
 .app-logo{font-family:Inter,Helvetica,Arial,sans-serif;font-size:22px;font-weight:600;letter-spacing:.02em;text-transform:uppercase;color:#111;white-space:nowrap}
 .app-logo.cs-site-logo-image{display:block;height:15px;width:auto;max-width:200px;object-fit:contain}
