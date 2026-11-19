@@ -388,8 +388,39 @@ fetch('/api/app-homepage', { headers: { Accept: 'application/json' } })
   .catch(error => console.warn('[APP HOME] Could not load shared homepage content:', error.message));
 
 
-// Homepage category selection is independent of bottom-tab navigation.
+// Homepage category navigation switches the Home content only. It never
+// opens the Shop collection or changes the selected bottom-navigation tab.
 const appCategoryStrip = document.querySelector('.app-category-list');
+const appHomeView = document.querySelector('.app-tab-content[data-view="Home"]');
+function appRenderHomeCategory(category) {
+  if (!appHomeView) return;
+  const allSections = [...appHomeView.querySelectorAll(':scope > section:not(.app-category-strip)')];
+  const common = ['app-home-hero', 'app-new-in', 'app-home-disclaimer'];
+  const sectionsByCategory = {
+    all: null,
+    clothing: [...common, 'app-home-editorial', 'app-home-shopping-grid', 'app-shop-clothing'],
+    accessories: [...common, 'app-shop-accessories', 'app-shop-by-brand'],
+    beauty: [...common, 'app-beauty-editorial', 'app-shop-skincare', 'app-shop-makeup'],
+    fragrance: [...common, 'app-shop-by-brand'],
+    kids: [...common, 'app-kids-editorial', 'app-shop-kids'],
+    homeware: [...common, 'app-shop-by-brand'],
+    brands: [...common, 'app-shop-by-brand'],
+    designers: [...common, 'app-shop-by-brand'],
+    sale: [...common, 'app-bestsellers']
+  };
+  const visibleClasses = sectionsByCategory[category] || sectionsByCategory.all;
+  allSections.forEach(section => {
+    if (!visibleClasses) { section.hidden = false; return; }
+    const classes = [...section.classList];
+    const label = section.getAttribute('aria-label');
+    const visible = visibleClasses.some(name =>
+      name === 'app-beauty-editorial' ? label === 'Beauty editorial image placeholder' :
+      name === 'app-kids-editorial' ? label === 'Inspire your kids' :
+      classes.includes(name)
+    );
+    section.hidden = !visible;
+  });
+}
 function appSelectHomeCategory(item) {
   if (!item) return;
   appHomeSelectedCategory = item.dataset.category || 'all';
@@ -398,7 +429,7 @@ function appSelectHomeCategory(item) {
     categoryItem.classList.toggle('is-selected', selected);
     categoryItem.setAttribute('aria-pressed', String(selected));
   });
-  appOpenHomeCollection(appHomeSelectedCategory);
+  appRenderHomeCategory(appHomeSelectedCategory);
 }
 if (appCategoryStrip) {
   appCategoryStrip.addEventListener('click', event => {
