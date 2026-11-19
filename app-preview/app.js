@@ -1462,6 +1462,7 @@ async function appOpenProduct(productId, pushHistory = true) {
       '</article>';
     }).join('');
     suggestedSection.hidden = false;
+    appBindSliderProgress(suggestedTrack, document.getElementById('app-product-related-progress'));
   } else {
     suggestedSection.hidden = true;
     suggestedTrack.innerHTML = '';
@@ -1761,6 +1762,27 @@ async function appCartRecentlyViewedProducts() {
     return product && (!product.status || String(product.status).toLowerCase() === 'active');
   }).slice(0, 10);
 }
+function appBindSliderProgress(track, progress) {
+  if (!track || !progress) return;
+  const fill = progress.querySelector('.app-new-in-progress-fill');
+  if (!fill) return;
+  function update() {
+    const maxScroll = Math.max(0, track.scrollWidth - track.clientWidth);
+    const visibleRatio = track.scrollWidth > 0 ? track.clientWidth / track.scrollWidth : 1;
+    const thumbRatio = Math.min(1, visibleRatio);
+    const travel = Math.max(0, progress.clientWidth * (1 - thumbRatio));
+    const position = maxScroll > 0 ? track.scrollLeft / maxScroll : 0;
+    fill.style.width = (thumbRatio * 100) + '%';
+    fill.style.transform = 'translateX(' + (travel * position) + 'px)';
+    progress.setAttribute('aria-valuenow', String(Math.round(position * 100)));
+  }
+  track.onscroll = update;
+  if (progress._resizeHandler) window.removeEventListener('resize', progress._resizeHandler);
+  progress._resizeHandler = update;
+  window.addEventListener('resize', update);
+  requestAnimationFrame(update);
+}
+
 async function appCartRenderRecentlyViewed(renderVersion) {
   const section = document.getElementById('app-cart-recent');
   const track = document.getElementById('app-cart-recent-track');
@@ -1798,6 +1820,7 @@ async function appCartRenderRecentlyViewed(renderVersion) {
       '</article>';
     }).join('');
     section.hidden = false;
+    appBindSliderProgress(track, document.getElementById('app-cart-recent-progress'));
   } catch (error) {
     section.hidden = true;
     console.warn('[APP BAG] Recently viewed products could not be loaded:', error && error.message);
@@ -1892,7 +1915,7 @@ function appRenderCart(skipHydration) {
     ? '<div class="app-cart-total-row discount"><span>Discount</span><span>-' + appCartFormat(discountAmount) + '</span></div>'
     : '';
   const deliveryBanner = appCartDeliveryBanner(items);
-  const recentSection = '<section class="app-cart-recent" id="app-cart-recent" hidden><h2>Recently viewed</h2><div class="app-cart-recent-track" id="app-cart-recent-track"></div></section>';
+  const recentSection = '<section class="app-cart-recent" id="app-cart-recent" hidden><h2>Recently viewed</h2><div class="app-cart-recent-track" id="app-cart-recent-track"></div><div class="app-new-in-progress app-cart-recent-progress" id="app-cart-recent-progress" role="progressbar" aria-label="Recently viewed slider position" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span class="app-new-in-progress-fill"></span></div></section>';
   appCartContent.innerHTML = (deliveryBanner ? '<div class="app-cart-delivery-slot" id="app-cart-delivery-slot">' + deliveryBanner + '</div>' : '') +
     '<div class="app-cart-items">' + cards + '</div>' +
     appCartPromoHtml() +
