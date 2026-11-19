@@ -1822,6 +1822,8 @@ const appSearchClear = document.getElementById('app-search-clear');
 const appSearchCancel = document.getElementById('app-search-cancel');
 const APP_RECENT_SEARCH_KEY = 'janedore_recent_searches';
 let appSearchSuggestions = [];
+let appSearchTrendingCache = null;
+let appSearchTrendingPromise = null;
 
 function appSearchRecentItems() {
   try {
@@ -1836,6 +1838,17 @@ function appSearchSaveRecent(label, type) {
     appSearchRecentItems().filter(item => String(item.label).toLowerCase() !== value.toLowerCase())
   ).slice(0,10);
   try { localStorage.setItem(APP_RECENT_SEARCH_KEY, JSON.stringify(list)); } catch (_) {}
+  try { fetch('/api/search-log',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify({term:value})}).catch(()=>{}); } catch (_) {}
+}
+function appSearchLoadTrending() {
+  if (appSearchTrendingCache) return Promise.resolve(appSearchTrendingCache);
+  if (!appSearchTrendingPromise) appSearchTrendingPromise = fetch('/api/trending-searches').then(response=>response.json()).catch(()=>({terms:[]})).then(data=>{
+    const live=(data.terms||[]).map(label=>({type:'query',label:String(label),value:String(label)}));
+    const brands=[...new Set(appShopProducts.filter(p=>p.status==='active').map(p=>String(p.brand||p.vendorName||'').trim()).filter(Boolean))].slice(0,8).map(label=>({type:'query',label,value:label}));
+    appSearchTrendingCache=live.concat(brands.filter(item=>!live.some(entry=>entry.label.toLowerCase()===item.label.toLowerCase()))).slice(0,8);
+    return appSearchTrendingCache;
+  });
+  return appSearchTrendingPromise;
 }
 function appSearchOpen() {
   if (!appSearchScreen || !appSearchInput) return;
@@ -1913,8 +1926,11 @@ function appSearchRenderDefault() {
     appSearchBody.innerHTML='<div class="app-search-section-title">Recent searches</div>'+appSearchRenderRows(recent,true)+'<button type="button" class="app-search-back" id="app-search-clear-recent">Clear recent searches</button>';
     return;
   }
-  const popular=[...new Set(appShopProducts.filter(p=>p.status==='active').map(p=>String(p.brand||p.vendorName||'').trim()).filter(Boolean))].slice(0,8).map(label=>({type:'query',label,value:label}));
-  appSearchBody.innerHTML='<div class="app-search-section-title">Popular searches</div>'+(popular.length?appSearchRenderRows(popular,false):'<div class="app-search-empty">Start typing to search products, brands or categories.</div>');
+  appSearchBody.innerHTML='<div class="app-search-section-title">Trending searches</div><div class="app-search-empty">Loading searches…</div>';
+  appSearchLoadTrending().then(items=>{
+    if (!appSearchScreen || appSearchScreen.hidden || appSearchInput.value.trim() || appSearchRecentItems().length) return;
+    appSearchBody.innerHTML='<div class="app-search-section-title">Trending searches</div>'+(items.length?appSearchRenderRows(items,false):'<div class="app-search-empty">Start typing to search products, brands or categories.</div>');
+  });
 }
 function appSearchRender(query) {
   if (!appSearchBody) return;
