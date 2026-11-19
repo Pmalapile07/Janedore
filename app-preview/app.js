@@ -438,6 +438,27 @@ function appRenderHomeCategory(category) {
     const selectedItem = appCategoryStrip && appCategoryStrip.querySelector('.app-category[data-category="' + selectedCategory + '"]');
     const categoryName = selectedItem ? selectedItem.textContent.trim() : selectedCategory;
     categoryHome.setAttribute('aria-label', categoryName + ' home');
+
+    // Homeware is the first category to receive the reusable editorial styling
+    // feature. Keep it entirely placeholder-based until real products are ready.
+    if (selectedCategory === 'homeware') {
+      categoryHome.innerHTML = `
+        <section class="app-category-style-feature" aria-labelledby="app-category-style-title">
+          <div class="app-new-in-heading"><h2 id="app-category-style-title">Style the space</h2></div>
+          <div class="app-category-style-editorial" role="img" aria-label="Homeware editorial image placeholder"></div>
+          <div class="app-category-style-products">
+            <div class="app-new-in-heading"><h2>Shop the pieces</h2></div>
+            <div class="app-category-style-grid" aria-label="Four complementary homeware product placeholders">
+              <div class="app-category-style-card" aria-hidden="true"><div class="app-category-style-card-image"></div><span></span><span class="short"></span></div>
+              <div class="app-category-style-card" aria-hidden="true"><div class="app-category-style-card-image"></div><span></span><span class="short"></span></div>
+              <div class="app-category-style-card" aria-hidden="true"><div class="app-category-style-card-image"></div><span></span><span class="short"></span></div>
+              <div class="app-category-style-card" aria-hidden="true"><div class="app-category-style-card-image"></div><span></span><span class="short"></span></div>
+            </div>
+          </div>
+        </section>`;
+    } else {
+      categoryHome.innerHTML = '';
+    }
   }
 }
 
