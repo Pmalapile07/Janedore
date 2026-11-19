@@ -542,8 +542,8 @@ body.app-cart-open .bottom-nav{display:grid!important;grid-template-columns:repe
 
 /* Shop landing page: category grid and secondary destinations. */
 .app-shop-category-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;padding:12px 0 0}
-.app-shop-category-tile{display:flex;align-items:center;justify-content:flex-start;min-width:0;min-height:112px;box-sizing:border-box;padding:16px;background:#f2f2f2;color:#111;font:500 14px/1.2 Inter,Arial,sans-serif;text-align:left}
-.app-shop-more{padding:26px 0 120px}
+.app-shop-category-tile{display:flex;align-items:center;justify-content:flex-start;min-width:0;min-height:112px;box-sizing:border-box;padding:16px;background:#f4f4f4;color:#111;font:500 14px/1.2 Inter,Arial,sans-serif;text-align:left}
+.app-shop-more{padding:0 0 120px}
 .app-shop-more h2{margin:0 0 14px;color:#111;font:600 16px/1.25 Inter,Arial,sans-serif;letter-spacing:0;text-align:left}
 .app-shop-more-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}
 .app-shop-more-tile{display:flex;align-items:center;justify-content:flex-start;min-width:0;min-height:112px;box-sizing:border-box;padding:16px;border:0;background:#f4f4f4;color:#111;font:500 14px/1.2 Inter,Arial,sans-serif;text-align:left}
