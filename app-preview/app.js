@@ -885,9 +885,51 @@ function appProductEscape(value) {
   return String(value == null ? '' : value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 }
 function appProductFormatMultiline(value) {
-  return appProductEscape(value)
-    .replace(/\\r?\\n/g, '<br>')
-    .replace(/\r\n?|\n/g, '<br>');
+  let source = String(value == null ? '' : value).trim();
+  if (!source) return '';
+
+  // Product descriptions may already contain HTML, or may contain HTML
+  // that was entity-escaped before it reached the app prototype.
+  let parsed = null;
+  for (let pass = 0; pass < 3; pass++) {
+    parsed = new DOMParser().parseFromString(source, 'text/html');
+    const decoded = parsed.body.textContent || '';
+    if (parsed.body.childElementCount || decoded === source || !/<\\/?(?:p|br|strong|b|em|i|u|ul|ol|li|h[2-4]|blockquote)\\b[^>]*>/i.test(decoded)) break;
+    source = decoded;
+  }
+
+  const allowed = new Set(['P', 'BR', 'STRONG', 'B', 'EM', 'I', 'U', 'UL', 'OL', 'LI', 'H2', 'H3', 'H4', 'BLOCKQUOTE']);
+  const blocked = new Set(['SCRIPT', 'STYLE', 'IFRAME', 'OBJECT', 'EMBED', 'SVG', 'MATH', 'TEMPLATE']);
+  const cleanNode = node => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      return document.createTextNode(node.nodeValue || '');
+    }
+    if (node.nodeType !== Node.ELEMENT_NODE || blocked.has(node.tagName)) return null;
+    const children = Array.from(node.childNodes).map(cleanNode).filter(Boolean);
+    if (!allowed.has(node.tagName)) {
+      const fragment = document.createDocumentFragment();
+      children.forEach(child => fragment.appendChild(child));
+      return fragment;
+    }
+    const clean = document.createElement(node.tagName.toLowerCase());
+    children.forEach(child => clean.appendChild(child));
+    return clean;
+  };
+
+  const container = document.createElement('div');
+  Array.from(parsed.body.childNodes).map(cleanNode).filter(Boolean)
+    .forEach(node => container.appendChild(node));
+
+  // Plain-text descriptions remain plain text, with their line breaks kept.
+  if (!container.querySelector('*')) {
+    const paragraph = document.createElement('p');
+    String(container.textContent || '').split(/\\r?\\n/).forEach((line, index) => {
+      if (index) paragraph.appendChild(document.createElement('br'));
+      paragraph.appendChild(document.createTextNode(line));
+    });
+    container.replaceChildren(paragraph);
+  }
+  return container.innerHTML;
 }
 
 let appReviewItems = [];
