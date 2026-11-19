@@ -20,7 +20,10 @@ body{background:#fff;color:var(--ink);font-family:Inter,Arial,sans-serif;-webkit
 .app-category-list{display:flex;align-items:flex-start;gap:14px;padding:0 12px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .app-category-list::-webkit-scrollbar{display:none}
 .app-category{flex:0 0 62px;min-width:62px;display:flex;flex-direction:column;align-items:center;gap:7px;padding:0;border:0;background:transparent;color:#111;font:500 10px/1.2 Inter,Arial,sans-serif;white-space:nowrap}
-.app-category-circle{display:block;width:62px;height:62px;border-radius:50%;background:#F4F4F4}
+.app-category-circle{box-sizing:border-box;display:block;width:62px;height:62px;border:1.2px solid transparent;border-radius:50%;background:#F4F4F4}
+.app-category.is-selected .app-category-circle{border:1.2px solid #000}
+.app-category{cursor:pointer}
+.app-category:focus-visible{outline:2px solid #000;outline-offset:3px;border-radius:4px}
 .app-home-hero{width:calc(100% - 24px);margin:0 12px;overflow:hidden;background:#F4F4F4;aspect-ratio:4/5;position:relative}
 .app-home-hero img{display:block;width:100%;height:100%;object-fit:cover;object-position:center}
 .app-home-hero-copy{position:absolute;inset:auto 20px 24px;z-index:1;display:flex;flex-direction:column;align-items:flex-start;gap:14px;color:#fff}
