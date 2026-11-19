@@ -171,7 +171,18 @@ window.addEventListener('scroll', () => {
   });
 });
 
+function appUpdateHeaderTitle(tabName) {
+  const headerTitle = document.querySelector('.app-header-top .app-logo');
+  if (!headerTitle) return;
+  const pageTitles = { Shop: 'Shop', Discover: 'Discovery' };
+  const isPageTitle = Object.prototype.hasOwnProperty.call(pageTitles, tabName);
+  headerTitle.textContent = isPageTitle ? pageTitles[tabName] : 'JANEDORE';
+  headerTitle.classList.toggle('app-header-tab-title', isPageTitle);
+  headerTitle.setAttribute('aria-label', isPageTitle ? pageTitles[tabName] : 'JANEDORE');
+}
+
 function appSelectNavigationTab(tabName, activeButton) {
+  appUpdateHeaderTitle(tabName);
   navItems.forEach(item => {
     const active = item === activeButton;
     item.classList.toggle('selected', active);
