@@ -27,7 +27,7 @@ function sanitizeProductDescriptionHtml(value) {
       // Some prototype products contain HTML that has been escaped inside
       // an otherwise valid paragraph. Re-parse only recognised formatting
       // tags so they render as markup instead of appearing literally.
-      if (/<\/?(?:p|br|strong|b|em|i|u|ul|ol|li|h[2-4]|blockquote)\\b[^>]*>/i.test(text)) {
+      if (/<\/?(?:p|br|strong|b|em|i|u|ul|ol|li|h[2-4]|blockquote)\b[^>]*>/i.test(text)) {
         const nested = new DOMParser().parseFromString(text, 'text/html');
         if (nested.body.childElementCount) {
           const fragment = document.createDocumentFragment();
