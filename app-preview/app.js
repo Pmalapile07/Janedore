@@ -894,7 +894,7 @@ function appProductFormatMultiline(value) {
   for (let pass = 0; pass < 3; pass++) {
     parsed = new DOMParser().parseFromString(source, 'text/html');
     const decoded = parsed.body.textContent || '';
-    if (parsed.body.childElementCount || decoded === source || !/<\\/?(?:p|br|strong|b|em|i|u|ul|ol|li|h[2-4]|blockquote)\\b[^>]*>/i.test(decoded)) break;
+    if (parsed.body.childElementCount || decoded === source || !/<\/?(?:p|br|strong|b|em|i|u|ul|ol|li|h[2-4]|blockquote)\b[^>]*>/i.test(decoded)) break;
     source = decoded;
   }
 
@@ -923,7 +923,7 @@ function appProductFormatMultiline(value) {
   // Plain-text descriptions remain plain text, with their line breaks kept.
   if (!container.querySelector('*')) {
     const paragraph = document.createElement('p');
-    String(container.textContent || '').split(/\\r?\\n/).forEach((line, index) => {
+    String(container.textContent || '').split(/\r?\n/).forEach((line, index) => {
       if (index) paragraph.appendChild(document.createElement('br'));
       paragraph.appendChild(document.createTextNode(line));
     });
