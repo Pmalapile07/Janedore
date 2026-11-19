@@ -1227,16 +1227,17 @@ function appShowAddedToast(message, icon, destination) {
 }
 function appOpenWishlistDestination() {
   appSaveCurrentTabMemory();
-  appActiveTab = 'Wishlist';
-  if (appProductView) appProductView.hidden = true;
-  const cartView = document.getElementById('app-cart-view');
-  if (cartView) cartView.hidden = true;
-  document.body.classList.remove('app-product-open');
-  const header = document.querySelector('.app-header');
-  const bottom = document.querySelector('.bottom-nav');
-  if (header) header.hidden = false;
-  if (bottom) bottom.hidden = false;
-  tabViews.forEach(view => { view.hidden = view.dataset.view !== 'Wishlist'; });
+  const wishlistMemory = appTabMemories.get('Wishlist') || appDefaultTabMemory();
+  wishlistMemory.screen = 'tab';
+  wishlistMemory.scrollY = 0;
+  wishlistMemory.productId = null;
+  wishlistMemory.productScrollY = 0;
+  wishlistMemory.productReturnToCollection = false;
+  appTabMemories.set('Wishlist', wishlistMemory);
+  appPersistScrollMemories();
+  const wishlistButton = navItems.find(item => item.dataset.tab === 'Wishlist');
+  if (wishlistButton) appSelectNavigationTab('Wishlist', wishlistButton);
+  appShowTabPage('Wishlist');
   window.scrollTo({top:0,behavior:'instant'});
 }
 function appHideAddedToast() {
