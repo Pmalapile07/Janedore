@@ -387,7 +387,7 @@ fetch('/api/app-homepage', { headers: { Accept: 'application/json' } })
       const configured = configuredCategories.find(item =>
         String(item.name || '').trim().toLowerCase() === category.name.toLowerCase()
       );
-      return configured ? { ...category, ...configured } : category;
+      return configured ? { ...configured, name: category.name, slug: category.slug } : category;
     });
 
     strip.replaceChildren();
