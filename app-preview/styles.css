@@ -117,7 +117,8 @@ body{background:#fff;color:var(--ink);font-family:Inter,Arial,sans-serif;-webkit
 .app-product-view .app-category-style-feature>.app-new-in-heading{display:block;padding:0 0 12px;margin:0}
 .app-product-view .app-category-style-feature>.app-new-in-heading h2{margin:0 0 5px;color:#111;font:600 17px/1.25 Inter,Arial,sans-serif}
 .app-product-view .app-category-style-feature>.app-new-in-heading p{margin:0;color:#777;font:400 12px/1.45 Inter,Arial,sans-serif}
-.app-product-view .app-category-style-feature .app-category-style-editorial{aspect-ratio:4/5}
+.app-product-view .app-category-style-feature .app-category-style-editorial{aspect-ratio:8/11!important}
+.app-product-view .app-category-style-feature>.app-new-in-heading p{color:#111}
 .app-product-view .app-category-style-feature .app-category-style-grid{margin-top:12px}
 .app-product-view .app-category-style-feature .app-category-style-card-image{aspect-ratio:25/33}
 
