@@ -567,5 +567,5 @@ body.app-cart-open .bottom-nav{display:grid!important;grid-template-columns:repe
 
 /* Women shop tile: editorial image on the right, matching the Sale tile layout. */
 .app-shop-women-tile{position:relative;overflow:hidden;background:#EBC9D1;color:#35242A}
-.app-shop-women-tile>span{position:relative;z-index:1;color:#35242A}
+.app-shop-women-tile>span{position:relative;z-index:1;color:#fff}
 .app-shop-women-art{position:absolute;top:10%;right:-3%;width:auto;height:90%;max-width:none;object-fit:contain;object-position:right bottom;pointer-events:none}
