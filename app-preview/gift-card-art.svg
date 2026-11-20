@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 40 580 500" width="580" height="500" shape-rendering="crispEdges">
-<rect x="0" y="40" width="580" height="500" fill="#E0EBFF"/>
-<g fill="#809ADD">
+
+<g fill="#E0EBFF">
 <rect x="40" y="40" width="140" height="20"/>
 <rect x="200" y="40" width="40" height="20"/>
 <rect x="260" y="40" width="20" height="20"/>
