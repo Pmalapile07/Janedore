@@ -258,7 +258,7 @@ body.app-product-open{overflow-x:hidden}
 .app-product-sticky-wish{flex:0 0 48px;width:48px;height:47px;margin:0;padding:0;border:1px solid #111;border-radius:0;background:#fff;color:#111;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .app-product-sticky-wish i{font-size:19px;line-height:1}
 .app-product-sticky-wish.wished{background:#fff;color:#111}
-.app-product-sticky-add{flex:1;min-width:0;height:47px;border:0;background:#111;color:#fff;display:flex;align-items:center;justify-content:center;padding:0 20px;font:500 12px/1 Inter,Arial,sans-serif;letter-spacing:0;text-transform:none}
+.app-product-sticky-add{flex:1;min-width:0;height:47px;border:0;background:#111;color:#fff;display:flex;align-items:center;justify-content:center;padding:0 20px;font:500 14px/1 Inter,Arial,sans-serif;letter-spacing:0;text-transform:none}
 .app-product-sticky-add:disabled{background:#ccc;color:#fff}
 .app-product-sticky-bar[hidden]{display:none!important}
 .app-product-accordions{margin-top:28px;border-top:1px solid #e8e8e8}
@@ -329,7 +329,7 @@ body.app-product-open{overflow-x:hidden}
 .app-cart-summary>div{display:flex;justify-content:space-between;align-items:center;font:400 13px Inter,Arial,sans-serif}
 .app-cart-summary>div strong{font-weight:600}
 .app-cart-summary p{margin:12px 0 18px;color:#777;font:400 11px Inter,Arial,sans-serif}
-.app-cart-summary>button{width:100%;height:49px;border:0;background:#809ADD;color:#fff;font:500 12px/1 Inter,Arial,sans-serif;letter-spacing:0;text-transform:none}
+.app-cart-summary>button{width:100%;height:49px;border:0;background:#809ADD;color:#fff;font:500 14px/1 Inter,Arial,sans-serif;letter-spacing:0;text-transform:none}
 .header-action-button{position:relative}
 .app-header-cart-count,.app-product-cart-count{position:absolute;top:50%;right:-10px;transform:translateY(-50%);min-width:0;height:auto;padding:0;border-radius:0;background:transparent;color:#111;font:500 11px/1 Inter,Arial,sans-serif;text-align:left;white-space:nowrap}
 .app-header-cart-count[hidden]{display:none}
