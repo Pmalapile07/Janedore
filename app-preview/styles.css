@@ -581,8 +581,8 @@ body.app-cart-open .bottom-nav{display:grid!important;grid-template-columns:repe
   padding:4px 0;
   color:#777;
 }
-.bottom-nav .nav-item i{font-size:20px}
-.bottom-nav .nav-item .home-mark{width:23px;height:23px}
+.bottom-nav .nav-item i{font-size:20.5px;color:#000}
+.bottom-nav .nav-item .home-mark{width:23.5px;height:23.5px;color:#000}
 .bottom-nav .nav-item .nav-label{
   display:block;
   color:inherit;
