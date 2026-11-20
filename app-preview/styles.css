@@ -548,6 +548,25 @@ body.app-cart-open .bottom-nav{display:grid!important;grid-template-columns:repe
 .app-shop-gift-cards{position:relative;overflow:hidden;background:#809ADD;color:#fff}
 .app-shop-gift-cards>span{position:relative;z-index:1;color:#fff}
 .app-shop-gift-card-art{position:absolute;top:0;right:0;width:34%;height:100%;object-fit:cover;object-position:center;pointer-events:none}
+/* Saturated colour palette for the Shop landing cards. */
+.app-shop-category-grid>.app-shop-category-tile{color:#fff}
+.app-shop-category-grid>.app-shop-category-tile:nth-child(2){background:#5278C8}
+.app-shop-category-grid>.app-shop-category-tile:nth-child(3){background:#D65A79}
+.app-shop-category-grid>.app-shop-category-tile:nth-child(4){background:#456BB5}
+.app-shop-category-grid>.app-shop-category-tile:nth-child(5){background:#E6A52E}
+.app-shop-category-grid>.app-shop-category-tile:nth-child(6){background:#8B65B5}
+.app-shop-category-grid>.app-shop-category-tile:nth-child(7){background:#C66A42}
+.app-shop-category-grid>.app-shop-category-tile:nth-child(8){background:#E47745}
+.app-shop-category-grid>.app-shop-category-tile:nth-child(9){background:#A64D91}
+.app-shop-category-grid>.app-shop-category-tile:nth-child(10){background:#3D9670}
+.app-shop-category-grid>.app-shop-category-tile:nth-child(11){background:#75436F}
+.app-shop-category-grid>.app-shop-category-tile:nth-child(12){background:#278C96}
+.app-shop-category-grid>.app-shop-category-tile:nth-child(13){background:#A77A43}
+.app-shop-category-grid>.app-shop-category-tile:nth-child(14){background:#31965A}
+.app-shop-category-grid>.app-shop-category-tile:nth-child(15){background:#344E83}
+.app-shop-category-grid>.app-shop-more-tile:nth-child(16){background:#2F7D8A;color:#fff}
+.app-shop-category-grid>.app-shop-more-tile:nth-child(17){background:#7554A6;color:#fff}
+
 @media(max-width:360px){.app-shop-category-tile,.app-shop-more-tile{min-height:100px;padding:13px;font-size:13px}}
 
 
