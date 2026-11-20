@@ -141,8 +141,8 @@ body{background:#fff;color:var(--ink);font-family:Inter,Arial,sans-serif;-webkit
 /* Homepage editorial image with its copy layered over the image */
 .app-home-editorial{padding:8px 12px 30px}
 .app-home-editorial-image{position:relative;width:100%;aspect-ratio:1/1;overflow:hidden;background:linear-gradient(180deg,rgba(0,0,0,0) 35%,rgba(0,0,0,.52) 100%),#d8d8d8}
-.app-home-editorial-copy{position:absolute;inset:auto 20px 22px;padding:0;color:#fff}
-.app-home-editorial-copy h2{margin:0;color:#fff;font:600 23px/1.12 Inter,Arial,sans-serif;letter-spacing:0}
+.app-home-editorial-copy{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;color:#fff;text-align:center}
+.app-home-editorial-copy h2{margin:0;color:#fff;font:600 20px/1.2 Inter,Arial,sans-serif;letter-spacing:0}
 .app-home-editorial-description{max-width:330px;margin:9px 0 14px;color:rgba(255,255,255,.92);font:400 12px/1.55 Inter,Arial,sans-serif}
 .app-home-editorial-link{flex-shrink:0;white-space:nowrap;font-family:Inter,Arial,sans-serif;font-weight:500;font-size:12px;letter-spacing:0;text-transform:none;background:#fff;color:#111;border:0;border-radius:5px;min-height:43px;padding:0 32px;cursor:pointer;transition:opacity .2s;margin:0;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
 
