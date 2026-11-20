@@ -548,7 +548,7 @@ body.app-cart-open .bottom-nav{display:grid!important;grid-template-columns:repe
 .app-shop-more-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}
 .app-shop-more-tile{display:flex;align-items:center;justify-content:flex-start;min-width:0;min-height:112px;box-sizing:border-box;padding:16px;border:0;background:#f4f4f4;color:#111;font:500 14px/1.2 Inter,Arial,sans-serif;text-align:left}
 .app-shop-more-tile:nth-child(1){background:#D32F2F;color:#fff}
-.app-shop-more-tile:nth-child(3){position:relative;overflow:hidden;background:#E0EBFF;color:#fff}
+.app-shop-more-tile:nth-child(3){position:relative;overflow:hidden;background:#809ADD;color:#fff}
 .app-shop-gift-cards>span{position:relative;z-index:1;color:#fff}
 .app-shop-gift-card-art{position:absolute;top:0;right:0;width:34%;height:100%;object-fit:cover;object-position:center;pointer-events:none}
 @media(max-width:360px){.app-shop-category-tile,.app-shop-more-tile{min-height:100px;padding:13px;font-size:13px}}
