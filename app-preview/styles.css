@@ -582,7 +582,7 @@ body.app-cart-open .bottom-nav{display:grid!important;grid-template-columns:repe
   color:#777;
 }
 .bottom-nav .nav-item i{font-size:20.5px;color:#000}
-.bottom-nav .nav-item .home-mark{width:23.5px;height:23.5px;color:#000}
+.bottom-nav .nav-item .home-mark{width:24px;height:24px;color:#000}
 .bottom-nav .nav-item .nav-label{
   display:block;
   color:inherit;
