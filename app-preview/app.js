@@ -219,18 +219,7 @@ function appShowTabPage(tabName) {
   if (collectionPage) collectionPage.hidden = true;
   appActiveTab = tabName;
   const memory = appTabMemories.get(tabName) || appDefaultTabMemory();
-  if (tabName === 'Shop') {
-    // The Shop landing page should always open at its first category row,
-    // rather than restoring an old position from the previous visit.
-    memory.screen = 'tab';
-    memory.scrollY = 0;
-    memory.productId = null;
-    memory.productScrollY = 0;
-    memory.productReturnToCollection = false;
-    memory.collectionScrollY = 0;
-  }
   appTabMemories.set(tabName,memory);
-  if (tabName === 'Shop') appPersistScrollMemories();
   if (location.hash.startsWith('#product/') || location.hash === '#bag') {
     history.replaceState(null, '', location.pathname + location.search);
   }
