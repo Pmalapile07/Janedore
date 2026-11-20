@@ -554,42 +554,7 @@ body.app-cart-open .bottom-nav{display:grid!important;grid-template-columns:repe
 @media(max-width:360px){.app-shop-category-tile,.app-shop-more-tile{min-height:100px;padding:13px;font-size:13px}}
 
 
-/* Fixed, full-width bottom navigation trial. */
-.bottom-nav{
-  left:50%;
-  right:auto;
-  bottom:0;
-  transform:translateX(-50%);
-  width:min(100%,430px);
-  height:calc(62px + env(safe-area-inset-bottom,0px));
-  padding:5px 8px calc(5px + env(safe-area-inset-bottom,0px));
-  border:0;
-  border-top:1px solid #e9e9e9;
-  border-radius:0;
-  background:#fff;
-  box-shadow:none;
-  -webkit-backdrop-filter:none;
-  backdrop-filter:none;
-  isolation:auto;
-}
-.bottom-nav .nav-indicator{display:none!important}
-.bottom-nav .nav-item{
-  width:100%;
-  height:50px;
-  border-radius:0;
-  gap:3px;
-  padding:4px 0;
-  color:#777;
-}
+/* Keep the updated icon sizes and visible labels on the floating glass navigation. */
 .bottom-nav .nav-item i{font-size:20.5px;color:#000}
 .bottom-nav .nav-item .home-mark{width:24px;height:24px;color:#000}
-.bottom-nav .nav-item .nav-label{
-  display:block;
-  color:inherit;
-  font:500 9px/1.1 Inter,Arial,sans-serif;
-  letter-spacing:0;
-  white-space:nowrap;
-}
-.bottom-nav .nav-item.selected{background:transparent;color:#111}
-.bottom-nav .nav-item.selected .nav-label{font-weight:600}
-.bottom-nav .nav-cart-count{top:1px;right:calc(50% - 20px)}
+.bottom-nav .nav-item .nav-label{display:block}
