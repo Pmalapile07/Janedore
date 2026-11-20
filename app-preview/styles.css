@@ -86,7 +86,7 @@ body{background:#fff;color:var(--ink);font-family:Inter,Arial,sans-serif;-webkit
 
 .app-new-in{padding:22px 0 30px;overflow:hidden}
 .app-new-in-heading{padding:0 12px 12px}
-.app-new-in-heading h2{margin:0;color:#111;font:600 17px/1.25 Inter,Arial,sans-serif;letter-spacing:0}
+.app-new-in-heading h2{margin:0;color:#111;font:600 18.5px/1.25 Inter,Arial,sans-serif;letter-spacing:0}
 .app-new-in-track{display:flex;gap:8px;width:100%;padding:0 0 4px 12px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scroll-padding-left:12px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .app-new-in-track::-webkit-scrollbar{display:none}
 .app-new-in-card{flex:0 0 calc((100% - 20px)/2);max-width:none;min-width:0;scroll-snap-align:start;color:#111}
@@ -117,7 +117,7 @@ body{background:#fff;color:var(--ink);font-family:Inter,Arial,sans-serif;-webkit
 .app-category-style-feature>.app-new-in-heading{margin-bottom:12px}
 .app-product-view .app-category-style-feature{padding:26px 0 30px;margin-top:0}
 .app-product-view .app-category-style-feature>.app-new-in-heading{display:block;padding:0 0 12px;margin:0}
-.app-product-view .app-category-style-feature>.app-new-in-heading h2{margin:0 0 5px;color:#111;font:600 17px/1.25 Inter,Arial,sans-serif}
+.app-product-view .app-category-style-feature>.app-new-in-heading h2{margin:0 0 5px;color:#111;font:600 18.5px/1.25 Inter,Arial,sans-serif}
 .app-product-view .app-category-style-feature>.app-new-in-heading p{margin:0;color:#777;font:400 12px/1.45 Inter,Arial,sans-serif}
 .app-product-view .app-category-style-feature .app-category-style-editorial{aspect-ratio:8/11!important}
 .app-product-view .app-category-style-feature>.app-new-in-heading p{color:#111}
@@ -273,7 +273,7 @@ body.app-product-open{overflow-x:hidden}
 .app-product-review strong{color:#222;font-size:11px}
 .app-product-review p{margin:5px 0 0}
 .app-product-related{padding-top:26px;margin-left:-16px;margin-right:-16px;width:calc(100% + 32px);overflow:hidden}
-.app-product-related h2{margin:0;color:#111;font:600 17px/1.25 Inter,Arial,sans-serif;letter-spacing:0;padding:0 16px 12px}
+.app-product-related h2{margin:0;color:#111;font:600 18.5px/1.25 Inter,Arial,sans-serif;letter-spacing:0;padding:0 16px 12px}
 @media(min-width:600px){.app-product-view{max-width:430px;margin:0 auto;min-height:850px}.app-product-gallery-slide{aspect-ratio:4/5}}
 
 /* App product detail: price appears above the product name. */
@@ -535,7 +535,7 @@ body.app-cart-open .bottom-nav{display:grid!important;grid-template-columns:repe
 
 /* Frequently bought with — same horizontal product-slider treatment as Suggested products. */
 .app-product-frequently-bought{padding-top:26px;margin-left:-16px;margin-right:-16px;width:calc(100% + 32px);overflow:hidden}
-.app-product-frequently-bought h2{margin:0;color:#111;font:600 17px/1.25 Inter,Arial,sans-serif;letter-spacing:0;padding:0 16px 12px}
+.app-product-frequently-bought h2{margin:0;color:#111;font:600 18.5px/1.25 Inter,Arial,sans-serif;letter-spacing:0;padding:0 16px 12px}
 .app-product-frequently-bought-track{padding-left:16px!important;scroll-padding-left:16px}
 .app-product-frequently-bought-track::after{flex-basis:16px}
 .app-product-frequently-bought-progress{margin:10px 12px 0}
