@@ -560,7 +560,5 @@ body.app-cart-open .bottom-nav{display:grid!important;grid-template-columns:repe
 .bottom-nav .nav-item .nav-label{display:block}
 
 
-/* Scent category tile: muted sage with the supplied diffuser artwork. */
-.app-shop-scent-tile{position:relative;overflow:hidden;background:#5E6E62;color:#fff}
-.app-shop-scent-tile>span{position:relative;z-index:1;color:#fff}
-.app-shop-scent-art{position:absolute;top:0;right:0;width:34%;height:100%;object-fit:contain;object-position:center;pointer-events:none}
+/* Empty scent tile placeholder. */
+.app-shop-scent-tile{background:#f4f4f4}
