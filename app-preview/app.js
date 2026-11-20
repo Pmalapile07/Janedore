@@ -1859,10 +1859,15 @@ function appCartRemovePromoCode() {
 function appRecordRecentlyViewed(product) {
   if (!product || !product.id) return;
   try {
+    const id = String(product.id);
     const saved = JSON.parse(localStorage.getItem('janedore_recently_viewed') || '[]');
     const ids = Array.isArray(saved) ? saved.map(String) : [];
-    const id = String(product.id);
     localStorage.setItem('janedore_recently_viewed', JSON.stringify([id].concat(ids.filter(function(value) { return value !== id; })).slice(0, 20)));
+    const cached = JSON.parse(localStorage.getItem('janedore_recently_viewed_products') || '{}');
+    cached[id] = product;
+    const allowed = new Set([id].concat(ids.filter(function(value) { return value !== id; })).slice(0, 20));
+    Object.keys(cached).forEach(function(key) { if (!allowed.has(key)) delete cached[key]; });
+    localStorage.setItem('janedore_recently_viewed_products', JSON.stringify(cached));
   } catch (_) {}
 }
 async function appCartRecentlyViewedProducts() {
@@ -1897,19 +1902,30 @@ function appBindSliderProgress(track, progress) {
   requestAnimationFrame(update);
 }
 
-async function appCartRenderRecentlyViewed(renderVersion) {
+function appCartRenderRecentlyViewed(renderVersion) {
   const section = document.getElementById('app-cart-recent');
   const track = document.getElementById('app-cart-recent-track');
   if (!section || !track) return;
+
+  let ids = [];
+  let cached = {};
   try {
-    const products = await appCartRecentlyViewedProducts();
+    const savedIds = JSON.parse(localStorage.getItem('janedore_recently_viewed') || '[]');
+    ids = Array.isArray(savedIds) ? savedIds.map(String).slice(0, 12) : [];
+    cached = JSON.parse(localStorage.getItem('janedore_recently_viewed_products') || '{}') || {};
+  } catch (_) { ids = []; cached = {}; }
+
+  function paint(products) {
     if (renderVersion !== appCartRenderVersion || !section.isConnected) return;
-    if (!products.length) {
+    const visible = products.filter(function(product) {
+      return product && (!product.status || String(product.status).toLowerCase() === 'active');
+    }).slice(0, 10);
+    if (!visible.length) {
       section.hidden = true;
       track.innerHTML = '';
       return;
     }
-    track.innerHTML = products.map(function(product) {
+    track.innerHTML = visible.map(function(product) {
       const regularPrice = Number(product.price) || 0;
       const salePrice = product.salePrice == null || product.salePrice === '' ? NaN : Number(product.salePrice);
       const sale = Number.isFinite(salePrice) && salePrice > 0 && salePrice < regularPrice;
@@ -1935,10 +1951,23 @@ async function appCartRenderRecentlyViewed(renderVersion) {
     }).join('');
     section.hidden = false;
     appBindSliderProgress(track, document.getElementById('app-cart-recent-progress'));
-  } catch (error) {
-    section.hidden = true;
-    console.warn('[APP BAG] Recently viewed products could not be loaded:', error && error.message);
   }
+
+  const cachedProducts = ids.map(function(id) { return cached[id] || appProductCache.get(id) || null; }).filter(Boolean);
+  if (cachedProducts.length) paint(cachedProducts);
+
+  Promise.all(ids.map(appCartLoadProduct)).then(function(products) {
+    if (renderVersion !== appCartRenderVersion || !section.isConnected) return;
+    const fresh = products.filter(Boolean);
+    try {
+      const nextCache = Object.assign({}, cached);
+      fresh.forEach(function(product) { nextCache[String(product.id)] = product; });
+      localStorage.setItem('janedore_recently_viewed_products', JSON.stringify(nextCache));
+    } catch (_) {}
+    paint(fresh);
+  }).catch(function(error) {
+    console.warn('[APP BAG] Recently viewed products could not be refreshed:', error && error.message);
+  });
 }
 function appCartOpen() {
   if (!appCartView) return;
