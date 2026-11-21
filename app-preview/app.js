@@ -457,14 +457,9 @@ function appRenderHomeCategory(category) {
     const categoryName = selectedItem ? selectedItem.textContent.trim() : selectedCategory;
     categoryHome.setAttribute('aria-label', categoryName + ' home');
 
-    if (selectedCategory === 'brands') {
-      categoryHome.innerHTML = appBuildBrandDirectoryHTML();
-      appLoadBrandDirectory();
-    } else {
-      // Other category homes stay empty until their category-specific
-      // editorial/product content is implemented.
-      categoryHome.innerHTML = '';
-    }
+    // Homepage category destinations remain separate from the Shop
+    // Brands directory. Category-specific Home content can be added later.
+    categoryHome.innerHTML = '';
   }
 }
 
@@ -763,10 +758,6 @@ function appBuildBrandDirectoryHTML() {
 }
 
 function appRefreshBrandDirectories() {
-  const homeDirectory = document.getElementById('app-category-home');
-  if (homeDirectory && homeDirectory.dataset.category === 'brands' && !homeDirectory.hidden) {
-    homeDirectory.innerHTML = appBuildBrandDirectoryHTML();
-  }
   const shopDirectory = document.getElementById('app-shop-brands-directory');
   if (shopDirectory && !shopDirectory.hidden) {
     shopDirectory.innerHTML = '<button type="button" class="app-shop-brands-back" id="app-shop-brands-back">Back to Shop</button>' + appBuildBrandDirectoryHTML();
