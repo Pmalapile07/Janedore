@@ -33,6 +33,7 @@ body{background:#fff;color:var(--ink);font-family:Inter,Arial,sans-serif;-webkit
 .app-category{flex:0 0 62px;min-width:62px;display:flex;flex-direction:column;align-items:center;gap:7px;padding:0;border:0;background:transparent;color:#111;font:500 10px/1.2 Inter,Arial,sans-serif;white-space:nowrap}
 .app-category-circle{box-sizing:border-box;display:block;width:62px;height:62px;border:1.2px solid transparent;border-radius:50%;background:#F4F4F4}
 .app-category-circle.is-sale{background:#D62828 url('home-sale-mark.svg') center/58% 58% no-repeat}
+.app-category-circle.is-brands{background:#000 url('brands-chevron.svg') center/58% 58% no-repeat}
 .app-category.is-selected .app-category-circle{border:1.2px solid #000}
 .app-category{cursor:pointer}
 .app-category:focus-visible{outline:none}
