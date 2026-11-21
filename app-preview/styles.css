@@ -547,8 +547,8 @@ body.app-cart-open .bottom-nav{display:grid!important;grid-template-columns:repe
 .app-shell:has(.app-tab-content[data-view="Shop"]:not([hidden])) .app-search-field>span{font-size:0}
 .app-shell:has(.app-tab-content[data-view="Shop"]:not([hidden])) .app-search-field>span::after{content:"Search";font:400 13px/normal Inter,Arial,sans-serif;color:#888}
 .app-shell:has(.app-tab-content[data-view="Shop"]:not([hidden])) .app-search-field i{font-size:19.5px}
-.app-shop-search-selector{position:absolute;top:50%;right:6px;display:none;align-items:center;width:172px;height:35px;padding:0;transform:translateY(-50%);border-radius:999px;background:#f3f3f3}
-.app-shop-search-option{display:grid;grid-template-columns:minmax(0,1fr);place-items:center;flex:0 0 28px;height:35px;min-width:0;overflow:hidden;padding:0;border-radius:999px;color:#555;font:400 12px/1 Inter,Arial,sans-serif;white-space:nowrap}
+.app-shop-search-selector{position:absolute;top:50%;right:6px;display:none;align-items:center;width:172px;height:30px;padding:0;transform:translateY(-50%);border-radius:999px;background:#f3f3f3}
+.app-shop-search-option{display:grid;grid-template-columns:minmax(0,1fr);place-items:center;flex:0 0 28px;height:30px;min-width:0;overflow:hidden;padding:0;border-radius:999px;color:#555;font:400 12px/1 Inter,Arial,sans-serif;white-space:nowrap}
 .app-shop-search-option.is-selected{flex:1 1 28px;background:#111;color:#fff}
 .app-shop-search-option span{grid-area:1/1}
 .app-shop-search-option .full{opacity:0}
