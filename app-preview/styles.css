@@ -540,6 +540,22 @@ body.app-cart-open .bottom-nav{display:grid!important;grid-template-columns:repe
 .app-product-frequently-bought-track::after{flex-basis:16px}
 .app-product-frequently-bought-progress{margin:10px 12px 0}
 
+/* Shop landing search field with a visual-only category selector. */
+.app-shop-search-wrap{position:relative;display:flex;align-items:center;height:41px;margin:8px 12px 4px;padding:0 184px 0 42px;border-radius:24px;background:#f3f3f3;color:#111}
+.app-shop-search-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:19.5px;line-height:1;color:#000;pointer-events:none}
+.app-shop-search-input{width:100%;min-width:0;height:100%;padding:0;border:0;outline:0;background:transparent;color:#111;font:400 12px Inter,Arial,sans-serif;-webkit-appearance:none;appearance:none}
+.app-shop-search-input::placeholder{color:#888;opacity:1}
+.app-shop-search-input::-webkit-search-cancel-button{-webkit-appearance:none}
+.app-shop-search-selector{position:absolute;top:50%;right:6px;display:flex;align-items:center;width:172px;padding:3px;transform:translateY(-50%);border-radius:999px;background:#f3f3f3}
+.app-shop-search-option{display:grid;grid-template-columns:minmax(0,1fr);place-items:center;flex:0 0 28px;min-width:0;overflow:hidden;padding:6px 0;border-radius:999px;color:#555;font:400 12px/1 Inter,Arial,sans-serif;white-space:nowrap}
+.app-shop-search-option.is-selected{flex:1 1 28px;background:#111;color:#fff}
+.app-shop-search-option span{grid-area:1/1}
+.app-shop-search-option .full{opacity:0}
+.app-shop-search-option .short{opacity:1}
+.app-shop-search-option.is-selected .full{opacity:1}
+.app-shop-search-option.is-selected .short{opacity:0}
+@media(max-width:360px){.app-shop-search-wrap{padding-right:184px}}
+
 /* Shop landing page: category grid and secondary destinations. */
 .app-shop-featured-categories{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin-top:4px;background:#fff}
 .app-shop-featured-categories .app-shop-category-tile{min-height:76px;justify-content:center;padding:12px 6px;text-align:center;background:#F4F4F4}
