@@ -74,11 +74,10 @@ window.addEventListener('resize', () => {
 
 const tabViews = [...document.querySelectorAll('.app-tab-content[data-view]')];
 let appActiveTab = initialNavItem ? initialNavItem.dataset.tab : 'Home';
-const appScrollMemoryKey = 'janedore_app_scroll_history_v2';
-let appSavedScrollState = {};
-try { appSavedScrollState = JSON.parse(localStorage.getItem(appScrollMemoryKey) || '{}') || {}; } catch (_) {}
-const appTabMemories = new Map(Object.entries(appSavedScrollState.tabs || {}));
-let appCollectionMemory = appSavedScrollState.collection || {type:'all-products',scrollY:0};
+// Scroll history lives only for the current app runtime. A refresh or relaunch
+// starts clean, while tab navigation within this runtime still restores positions.
+const appTabMemories = new Map();
+let appCollectionMemory = {type:'all-products',scrollY:0};
 if (!appCollectionMemory.type) appCollectionMemory.type = 'all-products';
 // Each bottom tab owns its last screen and its own scroll position.
 // Screens are restored independently: tab root, collection, or product detail.
@@ -87,13 +86,7 @@ if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
 let appScrollRestoreToken = 0;
 
 function appPersistScrollMemories() {
-  try {
-    localStorage.setItem(appScrollMemoryKey, JSON.stringify({
-      tabs:Object.fromEntries(appTabMemories),
-      collection:appCollectionMemory,
-      homeScreen:appHomeScreen
-    }));
-  } catch (_) {}
+  // Intentionally memory-only: never carry scroll history across refreshes or launches.
 }
 
 function appRestoreScrollPosition(scrollY) {
@@ -234,21 +227,6 @@ function appShowTabPage(tabName) {
   // Shop uses its own static category landing grid. The separate
   // all-products catalogue remains a Home destination and stays hidden on Shop.
   if (collectionPage) collectionPage.hidden = true;
-
-  // The Shop landing page should always open from its first category.
-  // Do not restore a stale scroll position from an earlier app session.
-  if (tabName === 'Shop') {
-    memory.screen = 'tab';
-    memory.scrollY = 0;
-    memory.collectionScrollY = 0;
-    memory.productId = null;
-    memory.productScrollY = 0;
-    memory.productReturnToCollection = false;
-    appTabMemories.set(tabName, memory);
-    appPersistScrollMemories();
-    appRestoreScrollPosition(0);
-    return;
-  }
 
   // Restore the Home collection only when returning to Home.
   if (tabName === 'Home' && memory.screen === 'collection' && collectionPage) {
