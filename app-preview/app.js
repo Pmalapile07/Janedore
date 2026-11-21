@@ -168,12 +168,14 @@ function appUpdateHeaderTitle(tabName) {
   const header = document.querySelector('.app-header-top');
   const logo = header?.querySelector('.app-logo');
   const pageTitle = header?.querySelector('.app-page-title');
+  const brandsBack = header?.querySelector('.app-shop-brands-header-back');
   if (!logo || !pageTitle) return;
   const brandDirectoryOpen = document.body.classList.contains('app-shop-brands-open');
   const pageTitles = { Shop: brandDirectoryOpen ? 'A–Z Brands' : 'Shop', Discover: 'Discovery' };
   const isPageTitle = Object.prototype.hasOwnProperty.call(pageTitles, tabName);
   logo.hidden = isPageTitle;
   pageTitle.hidden = !isPageTitle;
+  if (brandsBack) brandsBack.hidden = !brandDirectoryOpen;
   pageTitle.textContent = isPageTitle ? pageTitles[tabName] : '';
   header.setAttribute('aria-label', isPageTitle ? pageTitles[tabName] : 'JANEDORE');
 }
@@ -715,10 +717,7 @@ function appBuildBrandDirectoryHTML() {
     {letter:'B',brands:['Brand Three']},
     {letter:'C',brands:['Brand Four','Brand Five']}
   ];
-  return '<header class="app-shop-brands-heading">' +
-    '<button class="app-shop-back app-shop-brands-back" id="app-shop-brands-back" type="button" aria-label="Go back to Shop"><i class="ph ph-arrow-left" aria-hidden="true"></i></button>' +
-    '<h1>A–Z BRANDS</h1><span aria-hidden="true"></span></header>' +
-    '<div class="app-brands-az-list">' + groups.map(group =>
+  return '<div class="app-brands-az-list">' + groups.map(group =>
       '<section class="app-brands-az-group"><h2>' + group.letter + '</h2><ul>' +
       group.brands.map(name => '<li><span>' + name + '</span></li>').join('') +
       '</ul></section>'
