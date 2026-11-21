@@ -169,10 +169,13 @@ function appUpdateHeaderTitle(tabName) {
   const logo = header?.querySelector('.app-logo');
   const pageTitle = header?.querySelector('.app-page-title');
   const brandsBack = header?.querySelector('.app-shop-brands-header-back');
-  const searchLabel = header?.querySelector('.app-search-field span');
+  const searchLabel = header?.querySelector('#app-search-label');
   if (!logo || !pageTitle) return;
   const brandDirectoryOpen = document.body.classList.contains('app-shop-brands-open');
-  if (searchLabel) searchLabel.textContent = brandDirectoryOpen ? 'Search brands' : 'Search products and brands';
+  if (searchLabel) {
+    searchLabel.textContent = brandDirectoryOpen ? 'Search brands' : 'Search products and brands';
+    searchLabel.setAttribute('aria-label', searchLabel.textContent);
+  }
   const pageTitles = { Shop: brandDirectoryOpen ? 'A–Z Brands' : 'Shop', Discover: 'Discovery' };
   const isPageTitle = Object.prototype.hasOwnProperty.call(pageTitles, tabName);
   logo.hidden = isPageTitle;
