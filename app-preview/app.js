@@ -709,88 +709,24 @@ let appBrandDirectoryData = [];
 let appBrandDirectoryLoaded = false;
 let appBrandDirectoryLoading = null;
 
-function appBrandEscape(value) {
-  return String(value == null ? '' : value).replace(/[&<>"']/g, char => ({
-    '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
-  }[char]));
-}
-
 function appBuildBrandDirectoryHTML() {
-  if (!appBrandDirectoryLoaded) {
-    return '<div class="app-brands-loading">Loading brands…</div>';
-  }
-  const brands = appBrandDirectoryData.slice().sort((a,b) =>
-    String(a.name || a.brandName || a.brand || '').localeCompare(String(b.name || b.brandName || b.brand || ''))
-  );
-  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ#'.split('');
-  const groups = {};
-  brands.forEach(brand => {
-    const name = String(brand.name || brand.brandName || brand.brand || 'Unknown brand');
-    const first = name.charAt(0).toUpperCase();
-    const letter = /^[A-Z]$/.test(first) ? first : '#';
-    (groups[letter] ||= []).push(brand);
-  });
-  const featured = brands.map(brand => {
-    const name = brand.name || brand.brandName || brand.brand || 'Unknown brand';
-    const slug = brand.slug || brand.id;
-    const image = brand.heroImageUrl || brand.logoUrl || '';
-    return '<a class="app-brands-feature-card" href="/brands/' + encodeURIComponent(slug) + '">' +
-      '<span class="app-brands-feature-image">' +
-      (image ? '<img src="' + appBrandEscape(image) + '" alt="" loading="lazy">' : '') +
-      '</span><span class="app-brands-feature-name">' + appBrandEscape(name) + '</span></a>';
-  }).join('');
-  const index = letters.map(letter => {
-    const available = !!groups[letter];
-    return available
-      ? '<a class="app-brands-az-letter" href="#app-brands-letter-' + letter + '">' + letter + '</a>'
-      : '<span class="app-brands-az-letter is-disabled">' + letter + '</span>';
-  }).join('');
-  const list = letters.filter(letter => groups[letter]).map(letter =>
-    '<section class="app-brands-az-group" id="app-brands-letter-' + letter + '">' +
-    '<h2>' + letter + '</h2><ul>' + groups[letter].map(brand => {
-      const name = brand.name || brand.brandName || brand.brand || 'Unknown brand';
-      return '<li><a href="/brands/' + encodeURIComponent(brand.slug || brand.id) + '">' + appBrandEscape(name) + '</a></li>';
-    }).join('') + '</ul></section>'
-  ).join('');
-  return (featured ? '<div class="app-brands-feature-grid">' + featured + '</div>' : '') +
-    '<nav class="app-brands-az-index" aria-label="Jump to brand letter">' + index + '</nav>' +
-    (list || '<p class="app-new-in-empty">No brands are currently available.</p>');
+  const groups = [
+    {letter:'A',brands:['Brand One','Brand Two']},
+    {letter:'B',brands:['Brand Three']},
+    {letter:'C',brands:['Brand Four','Brand Five']}
+  ];
+  return '<header class="app-shop-brands-heading">' +
+    '<button class="app-shop-back app-shop-brands-back" id="app-shop-brands-back" type="button" aria-label="Go back to Shop"><i class="ph ph-arrow-left" aria-hidden="true"></i></button>' +
+    '<h1>A–Z BRANDS</h1><span aria-hidden="true"></span></header>' +
+    '<div class="app-brands-az-list">' + groups.map(group =>
+      '<section class="app-brands-az-group"><h2>' + group.letter + '</h2><ul>' +
+      group.brands.map(name => '<li><span>' + name + '</span></li>').join('') +
+      '</ul></section>'
+    ).join('') + '</div>';
 }
 
-function appRefreshBrandDirectories() {
-  const shopDirectory = document.getElementById('app-shop-brands-directory');
-  if (shopDirectory && !shopDirectory.hidden) {
-    shopDirectory.innerHTML = '<button type="button" class="app-shop-brands-back" id="app-shop-brands-back">Back to Shop</button>' + appBuildBrandDirectoryHTML();
-  }
-}
-
-function appLoadBrandDirectory() {
-  if (appBrandDirectoryLoaded) {
-    appRefreshBrandDirectories();
-    return Promise.resolve(appBrandDirectoryData);
-  }
-  if (appBrandDirectoryLoading) return appBrandDirectoryLoading;
-  appBrandDirectoryLoading = firebase.firestore().collection('vendors')
-    .where('status', '==', 'active').get()
-    .then(snapshot => {
-      appBrandDirectoryData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      appBrandDirectoryLoaded = true;
-      appRefreshBrandDirectories();
-      return appBrandDirectoryData;
-    })
-    .catch(error => {
-      console.warn('[APP BRANDS] Could not load full brand directory:', error.message);
-      appBrandDirectoryLoaded = true;
-      appBrandDirectoryData = [];
-      appRefreshBrandDirectories();
-      return [];
-    })
-    .finally(() => { appBrandDirectoryLoading = null; });
-  return appBrandDirectoryLoading;
-}
-
-// The Shop tile opens the same directory but keeps the Shop-specific header:
-// search field plus the A–Z Brands title, without the JANEDORE logo.
+// The Shop Brands page uses design-only placeholder names for now.
+// It does not read or expose the vendor directory until real brands are onboarded.
 document.addEventListener('click', event => {
   const back = event.target.closest('#app-shop-brands-back');
   if (back) {
@@ -812,8 +748,7 @@ document.addEventListener('click', event => {
     directory.hidden = false;
     document.body.classList.add('app-shop-brands-open');
     appUpdateHeaderTitle('Shop');
-    directory.innerHTML = '<button type="button" class="app-shop-brands-back" id="app-shop-brands-back">Back to Shop</button>' + appBuildBrandDirectoryHTML();
-    appLoadBrandDirectory();
+    directory.innerHTML = appBuildBrandDirectoryHTML();
     window.scrollTo({ top: 0, behavior: 'instant' });
   }
 });
