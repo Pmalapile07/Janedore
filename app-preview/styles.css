@@ -599,3 +599,5 @@ body.app-cart-open .bottom-nav{display:grid!important;grid-template-columns:repe
 .app-brands-az-group ul{list-style:none;margin:0;padding:0}
 .app-brands-az-group li{margin:0}
 .app-brands-az-group li a{display:block;padding:10px 0;color:#222;text-decoration:none;font:400 13px/1.35 Inter,Arial,sans-serif}
+
+.app-shop-brands-back{display:inline-flex;align-items:center;min-height:32px;margin:0 0 14px;padding:0;border:0;background:transparent;color:#555;font:500 11px Inter,Arial,sans-serif;cursor:pointer}
