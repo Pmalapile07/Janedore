@@ -747,7 +747,7 @@ function appBuildBrandDirectoryHTML() {
   ];
   return '<div class="app-brands-az-list">' + groups.map(group =>
     '<section class="app-brands-az-group" id="app-brands-letter-' + group.letter + '"><h2>' + group.letter + '</h2><ul>' +
-    group.brands.map(name => '<li><span>' + name + '</span></li>').join('') +
+    group.brands.map(name => '<li><span class="app-brands-az-logo" aria-hidden="true"></span><span class="app-brands-az-name">' + name + '</span><i class="ph ph-shopping-bag app-brands-az-shop" aria-hidden="true"></i></li>').join('') +
     '</ul></section>'
   ).join('') + '</div><nav class="app-brands-az-index" aria-label="Jump to brand letter">' +
     groups.map(group => '<a class="app-brands-az-letter" href="#app-brands-letter-' + group.letter + '">' + group.letter + '</a>').join('') +
