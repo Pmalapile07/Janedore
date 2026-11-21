@@ -245,12 +245,18 @@
       <div class="app-shop-grid" id="app-shop-product-grid" aria-live="polite"><p class="app-new-in-empty">Loading products…</p></div>
     </main>
     <main class="app-tab-content app-shop-landing" data-view="Shop" aria-label="Shop" hidden>
-      <section class="app-shop-category-grid" aria-label="Shop">
-        <div class="app-shop-more-tile app-shop-sale-tile"><span>Sale</span><img class="app-shop-sale-art" src="sale-mark.svg" alt="" aria-hidden="true"></div>
-        <div class="app-shop-category-tile">New In</div>
-        <div class="app-shop-more-tile app-shop-women-tile"><span>Women</span><img class="app-shop-women-art" src="assets/IMG_0312.png" alt="" aria-hidden="true"></div>
+      <div class="app-shop-toolbar app-shop-landing-toolbar" aria-label="Shop controls">
+        <button type="button"><span>SORT</span></button>
+        <button type="button"><span>FILTER</span></button>
+      </div>
+      <section class="app-shop-featured-categories" aria-label="Main categories">
+        <div class="app-shop-category-tile">Women</div>
         <div class="app-shop-category-tile">Men</div>
         <div class="app-shop-category-tile">Kids</div>
+      </section>
+      <section class="app-shop-category-grid" aria-label="Shop categories">
+        <div class="app-shop-more-tile app-shop-sale-tile"><span>Sale</span><img class="app-shop-sale-art" src="sale-mark.svg" alt="" aria-hidden="true"></div>
+        <div class="app-shop-category-tile">New In</div>
         <div class="app-shop-category-tile">Shoes</div>
         <div class="app-shop-category-tile">Bags</div>
         <div class="app-shop-category-tile">Accessories</div>
@@ -260,10 +266,9 @@
         <div class="app-shop-category-tile">Home</div>
         <div class="app-shop-category-tile">Lifestyle</div>
         <div class="app-shop-category-tile">Activewear</div>
-        <div class="app-shop-more-tile app-shop-designers-tile"><span>Designers</span><img class="app-shop-designers-art" src="brands-chevron.svg" alt="" aria-hidden="true"></div>
         <div class="app-shop-category-tile">Streetwear</div>
+        <div class="app-shop-more-tile app-shop-designers-tile"><span>Designers</span><img class="app-shop-designers-art" src="brands-chevron.svg" alt="" aria-hidden="true"></div>
         <div class="app-shop-more-tile app-shop-brands-tile"><span>Brands</span><img class="app-shop-brands-art" src="brands-chevron.svg" alt="" aria-hidden="true"></div>
-        
         <div class="app-shop-more-tile app-shop-gift-cards"><span>Gift Cards</span><img class="app-shop-gift-card-art" src="gift-card-art.svg" alt="" aria-hidden="true"></div>
       </section>
     </main>
