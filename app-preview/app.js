@@ -169,7 +169,7 @@ function appUpdateHeaderTitle(tabName) {
   const logo = header?.querySelector('.app-logo');
   const pageTitle = header?.querySelector('.app-page-title');
   const brandsBack = header?.querySelector('.app-shop-brands-header-back');
-  const searchLabel = header?.querySelector('#app-search-label');
+  const searchLabel = document.getElementById('app-search-label');
   if (!logo || !pageTitle) return;
   const brandDirectoryOpen = document.body.classList.contains('app-shop-brands-open');
   if (searchLabel) {
@@ -774,8 +774,8 @@ document.addEventListener('click', event => {
     grid.hidden = true;
     directory.hidden = false;
     document.body.classList.add('app-shop-brands-open');
-    appUpdateHeaderTitle('Shop');
     directory.innerHTML = appBuildBrandDirectoryHTML();
+    appUpdateHeaderTitle('Shop');
     window.scrollTo({ top: 0, behavior: 'instant' });
   }
 });
