@@ -235,6 +235,21 @@ function appShowTabPage(tabName) {
   // all-products catalogue remains a Home destination and stays hidden on Shop.
   if (collectionPage) collectionPage.hidden = true;
 
+  // The Shop landing page should always open from its first category.
+  // Do not restore a stale scroll position from an earlier app session.
+  if (tabName === 'Shop') {
+    memory.screen = 'tab';
+    memory.scrollY = 0;
+    memory.collectionScrollY = 0;
+    memory.productId = null;
+    memory.productScrollY = 0;
+    memory.productReturnToCollection = false;
+    appTabMemories.set(tabName, memory);
+    appPersistScrollMemories();
+    appRestoreScrollPosition(0);
+    return;
+  }
+
   // Restore the Home collection only when returning to Home.
   if (tabName === 'Home' && memory.screen === 'collection' && collectionPage) {
     tabViews.forEach(view => { view.hidden = true; });
