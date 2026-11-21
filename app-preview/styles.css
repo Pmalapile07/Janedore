@@ -602,7 +602,7 @@ body.app-cart-open .bottom-nav{display:grid!important;grid-template-columns:repe
 
 .app-header-top .app-shop-brands-header-back{display:flex;flex:0 0 34px;align-items:center;justify-content:center;width:34px;height:38px;margin:0 4px 0 -8px;padding:0;border:0;background:transparent;color:#111;font-size:22px}
 .app-header-top .app-shop-brands-header-back[hidden]{display:none!important}
-.app-header-top .app-page-title{flex:1}
+.app-header-top{position:relative}.app-header-top .app-page-title{position:absolute;left:50%;transform:translateX(-50%);text-align:center;white-space:nowrap;pointer-events:none}
 .app-brands-az-list{padding:0 2px 100px}
 .app-brands-az-group{padding:15px 0 4px;border-bottom:1px solid #eee;scroll-margin-top:112px}
 .app-brands-az-group h2{margin:0 0 5px;color:#111;font:600 16px/1.2 Inter,Arial,sans-serif}
