@@ -746,10 +746,12 @@ function appBuildBrandDirectoryHTML() {
     {letter:'Z',brands:['Brand Z1','Brand Z2','Brand Z3']}
   ];
   return '<div class="app-brands-az-list">' + groups.map(group =>
-    '<section class="app-brands-az-group"><h2>' + group.letter + '</h2><ul>' +
+    '<section class="app-brands-az-group" id="app-brands-letter-' + group.letter + '"><h2>' + group.letter + '</h2><ul>' +
     group.brands.map(name => '<li><span>' + name + '</span></li>').join('') +
     '</ul></section>'
-  ).join('') + '</div>';
+  ).join('') + '</div><nav class="app-brands-az-index" aria-label="Jump to brand letter">' +
+    groups.map(group => '<a class="app-brands-az-letter" href="#app-brands-letter-' + group.letter + '">' + group.letter + '</a>').join('') +
+    '</nav>';
 }
 
 // The Shop Brands page uses design-only placeholder names for now.
