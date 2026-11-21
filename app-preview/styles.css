@@ -550,7 +550,7 @@ body.app-cart-open .bottom-nav{display:grid!important;grid-template-columns:repe
 .app-shop-brands-tile{position:relative;overflow:hidden;background:#000;color:#fff}
 .app-shop-brands-tile>span{position:relative;z-index:1;color:#fff}
 .app-shop-brands-art{position:absolute;top:0;right:0;width:34%;height:100%;object-fit:contain;object-position:center;pointer-events:none}
-.app-shop-designers-tile{position:relative;overflow:hidden;background:#5E2B35;color:#fff}
+.app-shop-designers-tile{position:relative;overflow:hidden;background:#000;color:#fff}
 .app-shop-designers-tile>span{position:relative;z-index:1;color:#fff}
 .app-shop-designers-art{position:absolute;top:0;right:0;width:34%;height:100%;object-fit:contain;object-position:center;pointer-events:none}
 .app-shop-gift-cards{position:relative;overflow:hidden;background:#809ADD;color:#fff}
@@ -566,9 +566,9 @@ body.app-cart-open .bottom-nav{display:grid!important;grid-template-columns:repe
 
 
 /* Empty scent tile placeholder. */
-.app-shop-scent-tile{background:#5E6E62;color:#fff}
+.app-shop-scent-tile{background:transparent;color:#000}
 
 /* Women shop tile: editorial image on the right, matching the Sale tile layout. */
-.app-shop-women-tile{position:relative;overflow:hidden;background:#D2ACD8;color:#fff}
-.app-shop-women-tile>span{position:relative;z-index:1;color:#fff}
+.app-shop-women-tile{position:relative;overflow:hidden;background:transparent;color:#000}
+.app-shop-women-tile>span{position:relative;z-index:1;color:#000}
 .app-shop-women-art{position:absolute;top:5%;right:-3%;width:auto;height:95%;max-width:none;object-fit:contain;object-position:right bottom;pointer-events:none}
