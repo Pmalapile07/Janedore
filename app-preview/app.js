@@ -768,7 +768,9 @@ function appRefreshBrandDirectories() {
     homeDirectory.innerHTML = appBuildBrandDirectoryHTML();
   }
   const shopDirectory = document.getElementById('app-shop-brands-directory');
-  if (shopDirectory && !shopDirectory.hidden) shopDirectory.innerHTML = appBuildBrandDirectoryHTML();
+  if (shopDirectory && !shopDirectory.hidden) {
+    shopDirectory.innerHTML = '<button type="button" class="app-shop-brands-back" id="app-shop-brands-back">Back to Shop</button>' + appBuildBrandDirectoryHTML();
+  }
 }
 
 function appLoadBrandDirectory() {
@@ -799,6 +801,17 @@ function appLoadBrandDirectory() {
 // The Shop tile opens the same directory but keeps the Shop-specific header:
 // search field plus the A–Z Brands title, without the JANEDORE logo.
 document.addEventListener('click', event => {
+  const back = event.target.closest('#app-shop-brands-back');
+  if (back) {
+    const grid = document.querySelector('.app-shop-category-grid');
+    const directory = document.getElementById('app-shop-brands-directory');
+    if (grid) grid.hidden = false;
+    if (directory) directory.hidden = true;
+    document.body.classList.remove('app-shop-brands-open');
+    appUpdateHeaderTitle('Shop');
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    return;
+  }
   const tile = event.target.closest('.app-shop-brands-tile');
   if (tile) {
     const grid = document.querySelector('.app-shop-category-grid');
@@ -808,7 +821,7 @@ document.addEventListener('click', event => {
     directory.hidden = false;
     document.body.classList.add('app-shop-brands-open');
     appUpdateHeaderTitle('Shop');
-    directory.innerHTML = appBuildBrandDirectoryHTML();
+    directory.innerHTML = '<button type="button" class="app-shop-brands-back" id="app-shop-brands-back">Back to Shop</button>' + appBuildBrandDirectoryHTML();
     appLoadBrandDirectory();
     window.scrollTo({ top: 0, behavior: 'instant' });
   }
