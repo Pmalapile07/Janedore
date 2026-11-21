@@ -617,9 +617,9 @@ body.app-shop-brands-open .app-brands-az-letter:active{color:#111}
 .app-brands-az-group li{display:flex;align-items:center;gap:11px;min-height:54px;margin:0;border-top:1px solid #f1f1f1}
 .app-brands-az-group li:first-child{border-top:0}
 .app-brands-az-group li:last-child{border-bottom:0}
-.app-brands-az-group li .app-brands-az-logo{display:block;box-sizing:border-box;flex:0 0 30px;width:30px;height:30px;min-width:30px;min-height:30px;padding:0;border:0;border-radius:50%;aspect-ratio:1/1;background:#F4F4F4}
-.app-brands-az-group li .app-brands-az-name{flex:1;min-width:0;color:#222;font:400 15px/1.35 Inter,Arial,sans-serif}
-.app-brands-az-group li .app-brands-az-chevron{flex:0 0 auto;margin-left:auto;padding:0;color:#c8c8c8;font-size:15px;line-height:1}
+.app-brands-az-group li .app-brands-az-logo{display:block;box-sizing:border-box;flex:0 0 33px;width:33px;height:33px;min-width:33px;min-height:33px;padding:0;border:0;border-radius:50%;aspect-ratio:1/1;background:#F4F4F4}
+.app-brands-az-group li .app-brands-az-name{flex:1;min-width:0;color:#222;font:400 13px/1.35 Inter,Arial,sans-serif}
+.app-brands-az-group li .app-brands-az-chevron{display:inline-flex;align-items:center;justify-content:center;flex:0 0 16px;width:16px;height:20px;margin-left:auto;padding:0;color:#c8c8c8;font-size:16px;line-height:1}
 
 /* Hide scrollbar indicators across the app while keeping all scrolling enabled. */
 .app-shell *{scrollbar-width:none;-ms-overflow-style:none}
