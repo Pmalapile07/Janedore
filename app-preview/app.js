@@ -410,8 +410,10 @@ fetch('/api/app-homepage', { headers: { Accept: 'application/json' } })
       circle.setAttribute('aria-hidden', 'true');
       if (category.slug === 'sale') {
         circle.classList.add('is-sale');
+      } else if (category.slug === 'brands') {
+        circle.classList.add('is-brands');
       }
-      if (category.imageUrl && /^https:\/\//i.test(category.imageUrl)) {
+      if (category.slug !== 'brands' && category.imageUrl && /^https:\/\//i.test(category.imageUrl)) {
         circle.style.backgroundImage = 'url("' + category.imageUrl.replace(/"/g, '') + '")';
         circle.classList.add('has-image');
       }
