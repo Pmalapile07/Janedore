@@ -600,4 +600,12 @@ body.app-cart-open .bottom-nav{display:grid!important;grid-template-columns:repe
 .app-brands-az-group li{margin:0}
 .app-brands-az-group li a{display:block;padding:10px 0;color:#222;text-decoration:none;font:400 13px/1.35 Inter,Arial,sans-serif}
 
-.app-shop-brands-back{display:inline-flex;align-items:center;min-height:32px;margin:0 0 14px;padding:0;border:0;background:transparent;color:#555;font:500 11px Inter,Arial,sans-serif;cursor:pointer}
+.app-shop-brands-heading{position:relative;display:grid;grid-template-columns:34px 1fr 34px;align-items:center;min-height:44px;margin:0 0 8px}
+.app-shop-brands-heading h1{margin:0;color:#111;text-align:center;font:600 14px/1.2 Inter,Arial,sans-serif;letter-spacing:.02em;text-transform:uppercase}
+.app-shop-brands-back{position:static;top:auto;left:auto;width:34px;height:38px;min-height:38px;margin:0;font-size:22px}
+.app-brands-az-list{padding:0 2px 100px}
+.app-brands-az-group{padding:15px 0 4px;border-bottom:1px solid #eee;scroll-margin-top:112px}
+.app-brands-az-group h2{margin:0 0 5px;color:#111;font:600 16px/1.2 Inter,Arial,sans-serif}
+.app-brands-az-group ul{list-style:none;margin:0;padding:0}
+.app-brands-az-group li{margin:0;border-top:1px solid #f1f1f1}
+.app-brands-az-group li span{display:block;padding:12px 0;color:#222;font:400 13px/1.35 Inter,Arial,sans-serif}
