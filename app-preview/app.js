@@ -393,7 +393,6 @@ fetch('/api/app-homepage', { headers: { Accept: 'application/json' } })
       { name: 'Kids', slug: 'kids' },
       { name: 'Homeware', slug: 'homeware' },
       { name: 'Brands', slug: 'brands' },
-      { name: 'Designers', slug: 'designers' },
       { name: 'Sale', slug: 'sale' }
     ];
     const configuredCategories = Array.isArray(content.categories) ? content.categories : [];
