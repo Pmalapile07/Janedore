@@ -604,11 +604,16 @@ body.app-cart-open .bottom-nav{display:grid!important;grid-template-columns:repe
 .app-header-top .app-shop-brands-header-back[hidden]{display:none!important}
 .app-header-top{position:relative}.app-header-top .app-page-title{position:absolute;left:50%;transform:translateX(-50%);text-align:center;white-space:nowrap;pointer-events:none}
 .app-brands-az-list{padding:0 2px 100px}
-.app-brands-az-group{padding:15px 0 4px;border-bottom:1px solid #eee;scroll-margin-top:112px}
-.app-brands-az-group h2{margin:0 0 5px;color:#111;font:600 16px/1.2 Inter,Arial,sans-serif}
+.app-brands-az-group{position:relative;padding:19px 22px 8px 0;border:0;scroll-margin-top:112px}
+.app-brands-az-group:after{content:"";position:absolute;left:0;right:22px;bottom:0;height:1px;background:#eee}
+.app-brands-az-group h2{margin:0 0 13px;padding:0 0 9px;border-bottom:1px solid #eee;color:#111;font:600 16px/1.2 Inter,Arial,sans-serif}
 .app-brands-az-group ul{list-style:none;margin:0;padding:0}
 .app-brands-az-group li{margin:0;border-top:1px solid #f1f1f1}
-.app-brands-az-group li span{display:block;padding:18px 0;color:#222;font:400 13px/1.35 Inter,Arial,sans-serif}
-body.app-shop-brands-open .app-brands-az-index{position:fixed;top:50%;right:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;width:16px;padding:0;border:0;background:transparent;transform:translateY(-50%)}
-body.app-shop-brands-open .app-brands-az-letter{display:flex;align-items:center;justify-content:center;width:16px;min-width:16px;height:11px;min-height:11px;padding:0;color:#aaa;text-decoration:none;font:600 10px/1 Inter,Arial,sans-serif}
+.app-brands-az-group li span{display:block;padding:20px 0;color:#222;font:400 13px/1.35 Inter,Arial,sans-serif}
+body.app-shop-brands-open .app-brands-az-index{position:fixed;top:50%;right:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;width:20px;padding:0;border:0;background:transparent;transform:translateY(-50%)}
+body.app-shop-brands-open .app-brands-az-letter{display:flex;align-items:center;justify-content:center;width:20px;min-width:20px;height:13px;min-height:13px;padding:0;color:#aaa;text-decoration:none;font:600 12px/1 Inter,Arial,sans-serif}
 body.app-shop-brands-open .app-brands-az-letter:active{color:#111}
+
+/* Hide scrollbar indicators across the app while keeping all scrolling enabled. */
+.app-shell *{scrollbar-width:none;-ms-overflow-style:none}
+.app-shell *::-webkit-scrollbar{display:none;width:0;height:0}
