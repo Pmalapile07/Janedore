@@ -714,12 +714,39 @@ let appBrandDirectoryLoaded = false;
 let appBrandDirectoryLoading = null;
 
 function appBuildBrandDirectoryHTML() {
-  const groups = [\n    {letter:'A',brands:['Brand A1','Brand A2','Brand A3']},\n    {letter:'B',brands:['Brand B1','Brand B2']},\n    {letter:'C',brands:['Brand C1','Brand C2','Brand C3','Brand C4']},\n    {letter:'D',brands:['Brand D1','Brand D2','Brand D3']},\n    {letter:'E',brands:['Brand E1','Brand E2','Brand E3','Brand E4','Brand E5']},\n    {letter:'F',brands:['Brand F1','Brand F2']},\n    {letter:'G',brands:['Brand G1','Brand G2','Brand G3']},\n    {letter:'H',brands:['Brand H1','Brand H2','Brand H3','Brand H4']},\n    {letter:'I',brands:['Brand I1','Brand I2']},\n    {letter:'J',brands:['Brand J1','Brand J2','Brand J3']},\n    {letter:'K',brands:['Brand K1','Brand K2']},\n    {letter:'L',brands:['Brand L1','Brand L2','Brand L3','Brand L4']},\n    {letter:'M',brands:['Brand M1','Brand M2','Brand M3']},\n    {letter:'N',brands:['Brand N1','Brand N2','Brand N3','Brand N4','Brand N5']},\n    {letter:'O',brands:['Brand O1','Brand O2']},\n    {letter:'P',brands:['Brand P1','Brand P2','Brand P3']},\n    {letter:'Q',brands:['Brand Q1','Brand Q2','Brand Q3','Brand Q4']},\n    {letter:'R',brands:['Brand R1','Brand R2']},\n    {letter:'S',brands:['Brand S1','Brand S2','Brand S3']},\n    {letter:'T',brands:['Brand T1','Brand T2','Brand T3','Brand T4','Brand T5']},\n    {letter:'U',brands:['Brand U1','Brand U2']},\n    {letter:'V',brands:['Brand V1','Brand V2','Brand V3','Brand V4']},\n    {letter:'W',brands:['Brand W1','Brand W2','Brand W3']},\n    {letter:'X',brands:['Brand X1','Brand X2']},\n    {letter:'Y',brands:['Brand Y1','Brand Y2','Brand Y3','Brand Y4']},\n    {letter:'Z',brands:['Brand Z1','Brand Z2','Brand Z3']}\n  ];
+  const groups = [
+    {letter:'A',brands:['Brand A1','Brand A2','Brand A3']},
+    {letter:'B',brands:['Brand B1','Brand B2']},
+    {letter:'C',brands:['Brand C1','Brand C2','Brand C3','Brand C4']},
+    {letter:'D',brands:['Brand D1','Brand D2','Brand D3']},
+    {letter:'E',brands:['Brand E1','Brand E2','Brand E3','Brand E4','Brand E5']},
+    {letter:'F',brands:['Brand F1','Brand F2']},
+    {letter:'G',brands:['Brand G1','Brand G2','Brand G3']},
+    {letter:'H',brands:['Brand H1','Brand H2','Brand H3','Brand H4']},
+    {letter:'I',brands:['Brand I1','Brand I2']},
+    {letter:'J',brands:['Brand J1','Brand J2','Brand J3']},
+    {letter:'K',brands:['Brand K1','Brand K2']},
+    {letter:'L',brands:['Brand L1','Brand L2','Brand L3','Brand L4']},
+    {letter:'M',brands:['Brand M1','Brand M2','Brand M3']},
+    {letter:'N',brands:['Brand N1','Brand N2','Brand N3','Brand N4','Brand N5']},
+    {letter:'O',brands:['Brand O1','Brand O2']},
+    {letter:'P',brands:['Brand P1','Brand P2','Brand P3']},
+    {letter:'Q',brands:['Brand Q1','Brand Q2','Brand Q3','Brand Q4']},
+    {letter:'R',brands:['Brand R1','Brand R2']},
+    {letter:'S',brands:['Brand S1','Brand S2','Brand S3']},
+    {letter:'T',brands:['Brand T1','Brand T2','Brand T3','Brand T4','Brand T5']},
+    {letter:'U',brands:['Brand U1','Brand U2']},
+    {letter:'V',brands:['Brand V1','Brand V2','Brand V3','Brand V4']},
+    {letter:'W',brands:['Brand W1','Brand W2','Brand W3']},
+    {letter:'X',brands:['Brand X1','Brand X2']},
+    {letter:'Y',brands:['Brand Y1','Brand Y2','Brand Y3','Brand Y4']},
+    {letter:'Z',brands:['Brand Z1','Brand Z2','Brand Z3']}
+  ];
   return '<div class="app-brands-az-list">' + groups.map(group =>
-      '<section class="app-brands-az-group"><h2>' + group.letter + '</h2><ul>' +
-      group.brands.map(name => '<li><span>' + name + '</span></li>').join('') +
-      '</ul></section>'
-    ).join('') + '</div>';
+    '<section class="app-brands-az-group"><h2>' + group.letter + '</h2><ul>' +
+    group.brands.map(name => '<li><span>' + name + '</span></li>').join('') +
+    '</ul></section>'
+  ).join('') + '</div>';
 }
 
 // The Shop Brands page uses design-only placeholder names for now.
