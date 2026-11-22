@@ -763,9 +763,9 @@ function appBuildBrandDirectoryHTML(brands) {
       const name = appFormatBrandDisplayName(brand.name || brand.brandName || brand.brand || '');
       const slug = String(brand.slug || brand.id || '');
       const logoUrl = /^https?:\/\//i.test(String(brand.logoUrl || '').trim()) ? String(brand.logoUrl).trim() : '';
-      const logo = '<span class="app-brands-az-logo" aria-hidden="true"' +
-        (logoUrl ? ' style="background-image:url(&quot;' + appBrandEscape(logoUrl) + '&quot;);background-size:cover;background-position:center;background-repeat:no-repeat"' : '') +
-        '></span>';
+      const logo = '<span class="app-brands-az-logo" aria-hidden="true">' +
+        (logoUrl ? '<img src="' + appBrandEscape(logoUrl) + '" alt="" loading="lazy">' : '') +
+        '</span>';
       return '<li><a href="/brands/' + encodeURIComponent(slug) + '">' + logo +
         '<span class="app-brands-az-name">' + appBrandEscape(name) + '</span>' +
         '<i class="ph ph-caret-right app-brands-az-chevron" aria-hidden="true"></i></a></li>';
