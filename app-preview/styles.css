@@ -614,8 +614,8 @@ body.app-shop-brands-open .app-header-top{position:relative}body.app-shop-brands
 body.app-shop-brands-open .app-brands-az-index{position:fixed;top:50%;right:0;z-index:1000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;width:20px;padding:0;border:0;background:transparent;visibility:visible;opacity:1;pointer-events:auto;transform:translateY(-50%)}
 body.app-shop-brands-open .app-brands-az-letter{display:flex;align-items:center;justify-content:center;width:20px;min-width:20px;height:15px;min-height:15px;padding:0;color:#aaa;text-decoration:none;font:600 11px/1 Inter,Arial,sans-serif}
 body.app-shop-brands-open .app-brands-az-letter:active{color:#111}
-/* Shared glass treatment for back controls across app screens. */
-.app-shop-back,.app-shop-brands-header-back,.app-product-back,.back{box-sizing:border-box;width:38px;height:38px;min-width:38px;border:1px solid rgba(255,255,255,.72);border-radius:50%;background:rgba(255,255,255,.22);color:#111;box-shadow:0 3px 14px rgba(0,0,0,.08),inset 0 1px 0 rgba(255,255,255,.72);backdrop-filter:blur(30px) saturate(180%);-webkit-backdrop-filter:blur(30px) saturate(180%)}
+/* Shared glass treatment for back and product share controls across app screens. */
+#app-product-share,.app-shop-back,.app-shop-brands-header-back,.app-product-back,.back{box-sizing:border-box;width:38px;height:38px;min-width:38px;border:1px solid rgba(255,255,255,.72);border-radius:50%;background:rgba(255,255,255,.22);color:#111;box-shadow:0 3px 14px rgba(0,0,0,.08),inset 0 1px 0 rgba(255,255,255,.72);backdrop-filter:blur(30px) saturate(180%);-webkit-backdrop-filter:blur(30px) saturate(180%)}
 .app-shop-back{top:calc(env(safe-area-inset-top,0px) + 5px);left:16px}
 .app-shop-brands-header-back{flex:0 0 38px;margin:0 4px 0 -8px;padding:0;font-size:22px}
 .app-product-back{width:38px;height:38px;min-width:38px;border:1px solid rgba(255,255,255,.72);background:rgba(255,255,255,.22);box-shadow:0 3px 14px rgba(0,0,0,.08),inset 0 1px 0 rgba(255,255,255,.72)}
