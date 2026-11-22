@@ -674,3 +674,8 @@ body.app-shop-brands-open .app-brands-az-letter.is-disabled{color:#cfcfcf}
 .app-discover-logo-placeholder{display:flex;align-items:center;justify-content:center;width:76px;height:76px;border-radius:50%;background:#f0f0f0;color:#888;font:500 18px/1 Inter,Arial,sans-serif}
 .app-discover-logo-card strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media(min-width:600px){.app-discover-page{max-width:430px;margin:0 auto}}
+
+/* Keep Discover copy minimal and let the images carry the page. */
+.app-discover-hero-copy{padding:14px 2px 0}
+.app-discover-hero-copy h2{font-size:23px}
+.app-discover-featured-copy>small{display:none}
