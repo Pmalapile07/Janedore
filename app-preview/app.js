@@ -740,6 +740,10 @@ function appBrandEscape(value) {
   }[char]));
 }
 
+function appFormatBrandDisplayName(value) {
+  return String(value == null ? '' : value).trim().toLocaleLowerCase().replace(/(^|[\\s'-])([a-z])/g, (match, separator, letter) => separator + letter.toLocaleUpperCase());
+}
+
 function appBuildBrandDirectoryHTML(brands) {
   const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ#'.split('');
   const groups = {};
@@ -757,7 +761,7 @@ function appBuildBrandDirectoryHTML(brands) {
 
   const list = letters.filter(letter => groups[letter]).map(letter => {
     const items = groups[letter].map(brand => {
-      const name = String(brand.name || brand.brandName || brand.brand || '').trim();
+      const name = appFormatBrandDisplayName(brand.name || brand.brandName || brand.brand || '');
       const slug = String(brand.slug || brand.id || '');
       const logoUrl = /^https?:\/\//i.test(String(brand.logoUrl || '').trim()) ? String(brand.logoUrl).trim() : '';
       const logo = logoUrl
