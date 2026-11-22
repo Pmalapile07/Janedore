@@ -433,7 +433,6 @@ fetch('/api/app-homepage', { headers: { Accept: 'application/json' } })
       item.className = 'app-category' + (category.slug === 'all' ? ' is-selected' : '');
       item.dataset.category = category.slug;
       item.setAttribute('role', 'button');
-      item.setAttribute('tabindex', '0');
       item.setAttribute('aria-pressed', String(category.slug === 'all'));
 
       const circle = document.createElement('span');
