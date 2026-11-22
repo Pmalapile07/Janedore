@@ -603,7 +603,7 @@ fetch('/api/app-new-in', { headers: { Accept: 'application/json' } })
         : '';
       return '<article class="app-new-in-card' + (product.stock <= 0 ? ' is-sold-out' : '') + '" data-product-id="' + escapeText(product.id || '') + '" role="button" tabindex="0" aria-label="View ' + escapeText(product.name) + '">' +
         '<div class="app-new-in-image">' + (badge ? '<span class="app-new-in-badge' + (badge === 'SALE' ? ' is-sale' : '') + '">' + escapeText(badge) + '</span>' : '') + image + '<button class="app-new-in-wishlist" type="button" aria-label="Add to wishlist" aria-pressed="false"><i class="ph ph-heart-straight" aria-hidden="true"></i></button></div>' +
-        '<div class="app-new-in-brand">' + escapeText(product.brand) + '</div>' +
+        '<div class="app-new-in-brand">' + escapeText(String(product.brand || '').trim().toLowerCase().replace(/(^|[\\s&'-])([a-z])/g, (_, separator, letter) => separator + letter.toUpperCase())) + '</div>' +
         '<div class="app-new-in-name">' + escapeText(product.name) + '</div>' +
         '<div class="app-new-in-price">' + price + '</div>' +
       '</article>';
