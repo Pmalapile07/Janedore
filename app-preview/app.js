@@ -785,29 +785,48 @@ function appBuildBrandDirectoryHTML(brands) {
     '<nav class="app-brands-az-index" aria-label="Jump to brand letter">' + index + '</nav>';
 }
 
-async function appLoadBrandDirectory(directory) {
-  if (!directory) return;
-  if (appBrandDirectoryLoaded) {
-    directory.innerHTML = appBuildBrandDirectoryHTML(appBrandDirectoryData);
-    return;
-  }
+function appPreloadBrandDirectory() {
+  if (appBrandDirectoryLoaded) return Promise.resolve(appBrandDirectoryData);
   if (appBrandDirectoryLoading) return appBrandDirectoryLoading;
 
-  directory.innerHTML = '<p class="app-brands-loading">Loading brands…</p>';
+  // Fetch active vendors during app startup so A–Z is ready before it is opened.
   appBrandDirectoryLoading = appProductDb.collection('vendors')
     .where('status', '==', 'active').get()
     .then(snapshot => {
       appBrandDirectoryData = snapshot.docs.map(doc => Object.assign({id:doc.id}, doc.data()))
         .filter(brand => String(brand.name || brand.brandName || brand.brand || '').trim());
       appBrandDirectoryLoaded = true;
-      directory.innerHTML = appBuildBrandDirectoryHTML(appBrandDirectoryData);
+      const directory = document.getElementById('app-shop-brands-directory');
+      if (directory && !directory.hidden) {
+        directory.innerHTML = appBuildBrandDirectoryHTML(appBrandDirectoryData);
+      }
+      return appBrandDirectoryData;
     })
     .catch(error => {
-      directory.innerHTML = '<p class="app-brands-loading">Brands are temporarily unavailable. Please try again.</p>';
-      console.warn('[APP BRANDS] Could not load A–Z directory:', error.message);
+      console.warn('[APP BRANDS] Could not preload A–Z directory:', error.message);
+      const directory = document.getElementById('app-shop-brands-directory');
+      if (directory && !directory.hidden) {
+        directory.innerHTML = '<p class="app-brands-loading">Brands are temporarily unavailable. Please try again.</p>';
+      }
+      return null;
     })
     .finally(() => { appBrandDirectoryLoading = null; });
   return appBrandDirectoryLoading;
+}
+
+function appLoadBrandDirectory(directory) {
+  if (!directory) return;
+  if (appBrandDirectoryLoaded) {
+    directory.innerHTML = appBuildBrandDirectoryHTML(appBrandDirectoryData);
+    return Promise.resolve(appBrandDirectoryData);
+  }
+  // A–Z uses the startup request; it never starts a second fetch on navigation.
+  return appPreloadBrandDirectory().then(brands => {
+    if (appBrandDirectoryLoaded) {
+      directory.innerHTML = appBuildBrandDirectoryHTML(appBrandDirectoryData);
+    }
+    return brands;
+  });
 }
 
 // Load the live vendor directory when the customer opens Shop → Brands.
@@ -878,6 +897,8 @@ fetch('/api/app-brands', { headers: { Accept: 'application/json' } })
 // APP PRODUCT PAGE: live product cards open a focused in-app detail view.
 const appProductView = document.getElementById('app-product-view');
 const appProductDb = firebase.firestore();
+// Start fetching A–Z brand data as soon as the app initializes.
+appPreloadBrandDirectory();
 const appProductCache = new Map();
 const appProductLoads = new Map();
 
