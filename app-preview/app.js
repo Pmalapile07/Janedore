@@ -316,26 +316,21 @@ function appNavigateToTab(tabName, activeButton) {
 navItems.forEach(button => {
   button.addEventListener('click', () => {
     const tabName = button.dataset.tab;
-    const reselectingHome = tabName === 'Home' && button.classList.contains('selected');
+    const reselectingTab = button.classList.contains('selected');
 
-    if (reselectingHome) {
-      // Tapping the already-selected Home tab again is a shortcut to the
-      // top-level Home screen, clearing its remembered subpage and scroll.
-      const homeMemory = appDefaultTabMemory();
-      homeMemory.scrollY = 0;
-      homeMemory.screen = 'tab';
-      homeMemory.productId = null;
-      homeMemory.productScrollY = 0;
-      homeMemory.productReturnToCollection = false;
-      homeMemory.collectionScrollY = 0;
-      appTabMemories.set('Home', homeMemory);
-      appCollectionMemory.scrollY = 0;
+    if (reselectingTab && tabName !== 'Cart') {
+      // Tapping an already-selected tab again returns it to its root screen
+      // and clears that tab's remembered subpage and scroll position.
+      const resetMemory = appDefaultTabMemory();
+      appTabMemories.set(tabName, resetMemory);
+      if (tabName === 'Home') {
+        appCollectionMemory.scrollY = 0;
+        const allCategory = appCategoryStrip && appCategoryStrip.querySelector('.app-category[data-category="all"]');
+        if (allCategory) appSelectHomeCategory(allCategory);
+      }
       appPersistScrollMemories();
-
-      const allCategory = appCategoryStrip && appCategoryStrip.querySelector('.app-category[data-category="all"]');
-      if (allCategory) appSelectHomeCategory(allCategory);
-      appSelectNavigationTab('Home', button);
-      appShowTabPage('Home');
+      appSelectNavigationTab(tabName, button);
+      appShowTabPage(tabName);
       window.scrollTo({top:0,behavior:'instant'});
       return;
     }
