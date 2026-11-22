@@ -669,3 +669,5 @@ body.app-shop-brands-open .app-brands-az-letter.is-disabled{color:#cfcfcf}
 
 /* Keep product brand names in their supplied capitalization throughout the app. */
 .app-new-in-brand{text-transform:none!important}
+
+.nav-item .brands-nav-mark{width:30px;height:30px;display:block;flex-shrink:0}
