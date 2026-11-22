@@ -568,8 +568,8 @@ body.app-cart-open .bottom-nav{display:grid!important;grid-template-columns:repe
 
 
 /* Keep the updated icon sizes and visible labels on the floating glass navigation. */
-.bottom-nav .nav-item i{font-size:20.5px;color:#000}
-.bottom-nav .nav-item .home-mark{width:29px;height:29px;color:#000}
+.bottom-nav .nav-item i{font-size:21.5px;color:#000}
+.bottom-nav .nav-item .home-mark{width:30px;height:30px;color:#000}
 .bottom-nav .nav-item .nav-label{display:block}
 
 
