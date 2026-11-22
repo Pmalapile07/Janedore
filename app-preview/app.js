@@ -192,6 +192,9 @@ function appUpdateHeaderTitle(tabName) {
   header.setAttribute('aria-label', isPageTitle ? pageTitles[tabName] : 'JANEDORE');
 }
 
+// Apply the initial tab's header state on page load, not only after navigation.
+appUpdateHeaderTitle(appActiveTab);
+
 function appSelectNavigationTab(tabName, activeButton) {
   appUpdateHeaderTitle(tabName);
   navItems.forEach(item => {
