@@ -183,7 +183,7 @@ function appUpdateHeaderTitle(tabName) {
     searchLabel.textContent = brandDirectoryOpen ? 'Search brands' : 'Search products and brands';
     searchLabel.setAttribute('aria-label', searchLabel.textContent);
   }
-  const pageTitles = { Shop: brandDirectoryOpen ? 'A–Z Brands' : 'Shop', Discover: 'Discovery' };
+  const pageTitles = { Shop: brandDirectoryOpen ? 'A–Z Brands' : 'Shop', Discover: 'Discover' };
   const isPageTitle = Object.prototype.hasOwnProperty.call(pageTitles, tabName);
   logo.hidden = isPageTitle;
   pageTitle.hidden = !isPageTitle;
