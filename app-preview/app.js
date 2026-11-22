@@ -603,7 +603,7 @@ fetch('/api/app-new-in', { headers: { Accept: 'application/json' } })
         : '';
       return '<article class="app-new-in-card' + (product.stock <= 0 ? ' is-sold-out' : '') + '" data-product-id="' + escapeText(product.id || '') + '" role="button" tabindex="0" aria-label="View ' + escapeText(product.name) + '">' +
         '<div class="app-new-in-image">' + (badge ? '<span class="app-new-in-badge' + (badge === 'SALE' ? ' is-sale' : '') + '">' + escapeText(badge) + '</span>' : '') + image + '<button class="app-new-in-wishlist" type="button" aria-label="Add to wishlist" aria-pressed="false"><i class="ph ph-heart-straight" aria-hidden="true"></i></button></div>' +
-        '<div class="app-new-in-brand">' + escapeText(String(product.brand || '').trim().toLowerCase().replace(/(^|[\\s&'-])([a-z])/g, (_, separator, letter) => separator + letter.toUpperCase())) + '</div>' +
+        '<div class="app-new-in-brand">' + escapeText(appFormatBrandName(product.brand)) + '</div>' +
         '<div class="app-new-in-name">' + escapeText(product.name) + '</div>' +
         '<div class="app-new-in-price">' + price + '</div>' +
       '</article>';
@@ -979,7 +979,7 @@ function appShopRenderProducts() {
       : '<span>R' + regular.toFixed(2) + '</span>';
     return '<article class="app-new-in-card' + (Number(product.stock) <= 0 ? ' is-sold-out' : '') + '" data-product-id="' + appProductEscape(product.id) + '" role="button" tabindex="0" aria-label="View ' + appProductEscape(product.name || product.title || 'Product') + '">' +
       '<div class="app-new-in-image">' + (badge ? '<span class="app-new-in-badge' + (badge === 'SALE' ? ' is-sale' : '') + '">' + badge + '</span>' : '') + (image ? '<img src="' + appProductEscape(image) + '" alt="' + appProductEscape(product.name || product.title || 'Product') + '" loading="lazy">' : '') + '<button class="app-new-in-wishlist" type="button" aria-label="Add to wishlist" aria-pressed="false"><i class="ph ph-heart-straight" aria-hidden="true"></i></button></div>' +
-      '<div class="app-new-in-brand">' + appProductEscape(product.brand || product.vendorName || '') + '</div>' +
+      '<div class="app-new-in-brand">' + appProductEscape(appFormatBrandName(product.brand || product.vendorName || '')) + '</div>' +
       '<div class="app-new-in-name">' + appProductEscape(product.name || product.title || 'Product') + '</div>' +
       '<div class="app-new-in-price">' + price + '</div></article>';
   }).join('');
@@ -1082,6 +1082,10 @@ let appGalleryImages = [];
 
 function appProductEscape(value) {
   return String(value == null ? '' : value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+}
+function appFormatBrandName(value) {
+  return String(value == null ? '' : value).trim().toLowerCase()
+    .replace(/(^|[\\s&'-])([a-z])/g, (_, separator, letter) => separator + letter.toUpperCase());
 }
 function appProductFormatMultiline(value) {
   let source = String(value == null ? '' : value).trim();
@@ -1712,7 +1716,7 @@ async function appOpenProduct(productId, pushHistory = true) {
       const image = appProductImages(item)[0] || item.imageUrl || '';
       return '<article class="app-new-in-card' + (stock <= 0 ? ' is-sold-out' : '') + '" data-product-id="' + appProductEscape(item.id) + '" role="button" tabindex="0" aria-label="View ' + appProductEscape(item.name || item.title || 'Product') + '">' +
         '<div class="app-new-in-image">' + (badge ? '<span class="app-new-in-badge' + (badge === 'SALE' ? ' is-sale' : '') + '">' + appProductEscape(badge) + '</span>' : '') + (image ? '<img src="' + appProductEscape(image) + '" alt="' + appProductEscape(item.name || item.title || 'Product') + '" loading="lazy">' : '') + '<button class="app-new-in-wishlist" type="button" aria-label="Add to wishlist" aria-pressed="false"><i class="ph ph-heart-straight" aria-hidden="true"></i></button></div>' +
-        '<div class="app-new-in-brand">' + appProductEscape(item.brand || item.vendorName || '') + '</div>' +
+        '<div class="app-new-in-brand">' + appProductEscape(appFormatBrandName(item.brand || item.vendorName || '')) + '</div>' +
         '<div class="app-new-in-name">' + appProductEscape(item.name || item.title || 'Product') + '</div>' +
         '<div class="app-new-in-price">' + price + '</div>' +
       '</article>';
@@ -2129,7 +2133,7 @@ function appCartRenderRecentlyViewed(renderVersion) {
       const image = appProductImages(product)[0] || product.imageUrl || '';
       return '<article class="app-new-in-card' + (Number(product.stock) <= 0 ? ' is-sold-out' : '') + '" data-product-id="' + appProductEscape(product.id || '') + '" role="button" tabindex="0" aria-label="View ' + appProductEscape(product.name || product.title || 'Product') + '">' +
         '<div class="app-new-in-image">' + (badge ? '<span class="app-new-in-badge' + (badge === 'SALE' ? ' is-sale' : '') + '">' + appProductEscape(badge) + '</span>' : '') + (image ? '<img src="' + appProductEscape(image) + '" alt="' + appProductEscape(product.name || product.title || 'Product') + '" loading="lazy">' : '') + '<button class="app-new-in-wishlist" type="button" aria-label="Add to wishlist" aria-pressed="false"><i class="ph ph-heart-straight" aria-hidden="true"></i></button></div>' +
-        '<div class="app-new-in-brand">' + appProductEscape(product.brand || '') + '</div>' +
+        '<div class="app-new-in-brand">' + appProductEscape(appFormatBrandName(product.brand || '')) + '</div>' +
         '<div class="app-new-in-name">' + appProductEscape(product.name || product.title || 'Product') + '</div>' +
         '<div class="app-new-in-price">' + price + '</div>' +
       '</article>';
