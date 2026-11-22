@@ -165,6 +165,15 @@ window.addEventListener('scroll', () => {
 });
 
 function appUpdateHeaderTitle(tabName) {
+  // Leaving Shop must always clear its directory-only header state before
+  // the shared header is updated, so the Brands back arrow cannot linger.
+  if (tabName !== 'Shop' && document.body.classList.contains('app-shop-brands-open')) {
+    document.body.classList.remove('app-shop-brands-open');
+    const shopGrid = document.querySelector('.app-shop-category-grid');
+    const brandsDirectory = document.getElementById('app-shop-brands-directory');
+    if (shopGrid) shopGrid.hidden = false;
+    if (brandsDirectory) brandsDirectory.hidden = true;
+  }
   const header = document.querySelector('.app-header-top');
   const logo = header?.querySelector('.app-logo');
   const pageTitle = header?.querySelector('.app-page-title');
