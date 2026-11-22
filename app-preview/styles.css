@@ -614,7 +614,7 @@ body.app-cart-open .bottom-nav{display:grid!important;grid-template-columns:repe
 body.app-shop-brands-open .app-brands-az-index{position:fixed;top:calc(50% + 12px);right:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;width:20px;padding:0;border:0;background:transparent;transform:translateY(-50%)}
 body.app-shop-brands-open .app-brands-az-letter{display:flex;align-items:center;justify-content:center;width:20px;min-width:20px;height:15px;min-height:15px;padding:0;color:#aaa;text-decoration:none;font:600 12px/1 Inter,Arial,sans-serif}
 body.app-shop-brands-open .app-brands-az-letter:active{color:#111}
-.app-brands-az-group li{display:flex;align-items:center;gap:11px;min-height:54px;margin:0;border-top:1px solid #f1f1f1}
+.app-brands-az-group li{display:flex;align-items:center;gap:11px;min-height:58px;margin:0;border-top:1px solid #f1f1f1}
 .app-brands-az-group li:first-child{border-top:0}
 .app-brands-az-group li:last-child{border-bottom:0}
 .app-brands-az-group li .app-brands-az-logo{display:block;box-sizing:border-box;flex:0 0 45px;width:45px;height:45px;min-width:45px;min-height:45px;padding:0;border:0;border-radius:50%;aspect-ratio:1/1;background:#F4F4F4}
