@@ -1533,7 +1533,7 @@ async function appOpenProduct(productId, pushHistory = true) {
       : '<div class="app-product-gallery-slide app-product-gallery-empty"></div>';
     const previewDots = document.getElementById('app-product-gallery-dots');
     previewDots.innerHTML = appGalleryImages.length > 1 ? appGalleryImages.map((_,i) => '<span class="app-product-gallery-dot' + (!i?' active':'') + '"></span>').join('') : '';
-    document.getElementById('app-product-brand').textContent = product.brand || product.vendorName || '';
+    document.getElementById('app-product-brand').textContent = appFormatBrandDisplayName(product.brand || product.vendorName || '');
     document.getElementById('app-product-name').textContent = product.name || product.title || '';
     const previewPrice = Number(product.price) || 0;
     const previewSale = Number(product.salePrice);
@@ -1612,7 +1612,7 @@ async function appOpenProduct(productId, pushHistory = true) {
       appUpdateProductStickyState();
     }
   };
-  document.getElementById('app-product-brand').textContent = product.brand || product.vendorName || '';
+  document.getElementById('app-product-brand').textContent = appFormatBrandDisplayName(product.brand || product.vendorName || '');
   document.getElementById('app-product-name').textContent = product.name || product.title || '';
   const regular = Number(product.price) || 0;
   const sale = Number(product.salePrice);
