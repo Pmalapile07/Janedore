@@ -42,9 +42,12 @@
       ['bath', 'Bath & towels', ''], ['cushions', 'Cushions & throws', ''], ['lighting', 'Lighting', ''],
       ['wall-art', 'Wall art', ''], ['storage', 'Storage', '']
     ] },
+    { slug: 'lifestyle', name: 'Lifestyle', categories: [
+      ['travel', 'Travel', ''], ['wellness', 'Wellness', ''], ['tech-accessories', 'Tech accessories', ''], ['leisure', 'Leisure', '']
+    ] },
     { slug: 'beauty', name: 'Beauty', categories: [
       // 'parfum' is the slug Scent products were already saved with.
-      ['parfum', 'Fragrance', ''], ['skincare', 'Skincare', ''], ['makeup', 'Makeup', ''], ['hair-care', 'Hair care', ''],
+      ['parfum', 'Fragrances', ''], ['skincare', 'Skincare', ''], ['makeup', 'Makeup', ''], ['hair-care', 'Hair care', ''],
       ['bath-body', 'Bath & body', ''], ['nails', 'Nails', ''], ['beauty-tools', 'Beauty tools', '']
     ] },
     { slug: 'kids', name: 'Kids', sizeSystem: 'kids', categories: [
