@@ -2008,7 +2008,7 @@ function appCartRenderRecentlyViewed(renderVersion) {
       track.innerHTML = '';
       return;
     }
-    track.innerHTML = visible.map(function(product) {
+    const cardsHTML = visible.map(function(product) {
       const regularPrice = Number(product.price) || 0;
       const salePrice = product.salePrice == null || product.salePrice === '' ? NaN : Number(product.salePrice);
       const sale = Number.isFinite(salePrice) && salePrice > 0 && salePrice < regularPrice;
@@ -2032,6 +2032,10 @@ function appCartRenderRecentlyViewed(renderVersion) {
         '<div class="app-new-in-price">' + price + '</div>' +
       '</article>';
     }).join('');
+    // Cached products are painted immediately, then refreshed from Firestore.
+    // Do not replace the slider DOM when the refreshed cards are identical:
+    // doing so reloads every image and makes Recently Viewed visibly flash.
+    if (track.innerHTML !== cardsHTML) track.innerHTML = cardsHTML;
     section.hidden = false;
     appBindSliderProgress(track, document.getElementById('app-cart-recent-progress'));
   }
