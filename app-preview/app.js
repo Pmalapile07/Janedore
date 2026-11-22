@@ -178,6 +178,7 @@ function appUpdateHeaderTitle(tabName) {
   const searchLabel = document.getElementById('app-search-label');
   if (!logo || !pageTitle) return;
   const brandDirectoryOpen = document.body.classList.contains('app-shop-brands-open');
+  document.body.classList.toggle('app-search-qr-visible', tabName === 'Home' || tabName === 'Shop');
   if (searchLabel) {
     searchLabel.textContent = brandDirectoryOpen ? 'Search brands' : 'Search products and brands';
     searchLabel.setAttribute('aria-label', searchLabel.textContent);
