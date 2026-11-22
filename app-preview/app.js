@@ -109,7 +109,10 @@ function appSaveCurrentTabMemory() {
   if (!appActiveTab) return;
   const memory = appTabMemories.get(appActiveTab) || appDefaultTabMemory();
   const collectionPage = document.getElementById('app-shop-page');
-  if (collectionPage && !collectionPage.hidden && (!appProductView || appProductView.hidden)) {
+  if (appActiveTab === 'Shop' && document.body.classList.contains('app-shop-brands-open')) {
+    memory.screen = 'brands';
+    memory.scrollY = window.scrollY;
+  } else if (collectionPage && !collectionPage.hidden && (!appProductView || appProductView.hidden)) {
     memory.screen = 'collection';
     memory.collectionScrollY = window.scrollY;
     if (appActiveTab === 'Home') {
@@ -143,7 +146,10 @@ window.addEventListener('scroll', () => {
     if (appCartView && !appCartView.hidden) return;
     const memory = appTabMemories.get(appActiveTab) || appDefaultTabMemory();
     const collectionPage = document.getElementById('app-shop-page');
-    if (appProductView && !appProductView.hidden) {
+    if (appActiveTab === 'Shop' && document.body.classList.contains('app-shop-brands-open')) {
+      memory.screen = 'brands';
+      memory.scrollY = window.scrollY;
+    } else if (appProductView && !appProductView.hidden) {
       memory.screen = 'product';
       memory.productId = appCurrentProduct && appCurrentProduct.id ? String(appCurrentProduct.id) : (appRenderedProductId || memory.productId || null);
       memory.productScrollY = window.scrollY;
@@ -165,15 +171,6 @@ window.addEventListener('scroll', () => {
 });
 
 function appUpdateHeaderTitle(tabName) {
-  // Leaving Shop must always clear its directory-only header state before
-  // the shared header is updated, so the Brands back arrow cannot linger.
-  if (tabName !== 'Shop' && document.body.classList.contains('app-shop-brands-open')) {
-    document.body.classList.remove('app-shop-brands-open');
-    const shopGrid = document.querySelector('.app-shop-category-grid');
-    const brandsDirectory = document.getElementById('app-shop-brands-directory');
-    if (shopGrid) shopGrid.hidden = false;
-    if (brandsDirectory) brandsDirectory.hidden = true;
-  }
   const header = document.querySelector('.app-header-top');
   const logo = header?.querySelector('.app-logo');
   const pageTitle = header?.querySelector('.app-page-title');
@@ -244,6 +241,18 @@ function appShowTabPage(tabName) {
   // Shop uses its own static category landing grid. The separate
   // all-products catalogue remains a Home destination and stays hidden on Shop.
   if (collectionPage) collectionPage.hidden = true;
+
+  // Restore the Shop Brands directory when returning to Shop.
+  if (tabName === 'Shop' && memory.screen === 'brands') {
+    const shopGrid = document.querySelector('.app-shop-category-grid');
+    const shopBrandsDirectory = document.getElementById('app-shop-brands-directory');
+    document.body.classList.add('app-shop-brands-open');
+    if (shopGrid) shopGrid.hidden = true;
+    if (shopBrandsDirectory) shopBrandsDirectory.hidden = false;
+    appUpdateHeaderTitle('Shop');
+    appRestoreScrollPosition(memory.scrollY || 0);
+    return;
+  }
 
   // Restore the Home collection only when returning to Home.
   if (tabName === 'Home' && memory.screen === 'collection' && collectionPage) {
