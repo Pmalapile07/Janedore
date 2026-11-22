@@ -178,7 +178,7 @@ function appUpdateHeaderTitle(tabName) {
   const searchLabel = document.getElementById('app-search-label');
   if (!logo || !pageTitle) return;
   const brandDirectoryOpen = document.body.classList.contains('app-shop-brands-open');
-  document.body.classList.toggle('app-search-qr-visible', tabName === 'Home' || tabName === 'Shop');
+  document.body.classList.toggle('app-search-qr-visible', tabName === 'Home' || tabName === 'Shop' || tabName === 'Discover');
   if (searchLabel) {
     searchLabel.textContent = brandDirectoryOpen ? 'Search brands' : 'Search products and brands';
     searchLabel.setAttribute('aria-label', searchLabel.textContent);
@@ -545,6 +545,26 @@ if (newInTrack) {
   window.addEventListener('resize', updateNewInProgress);
   requestAnimationFrame(updateNewInProgress);
 }
+
+// Keep both Discover brand-slider indicators in sync with horizontal scrolling.
+document.querySelectorAll('.app-discover-section').forEach(section => {
+  const track = section.querySelector('.app-discover-brand-track');
+  const progressBar = section.querySelector('.app-discover-progress');
+  const fill = progressBar && progressBar.querySelector('.app-new-in-progress-fill');
+  if (!track || !progressBar || !fill) return;
+  const updateProgress = () => {
+    const maxScroll = Math.max(0, track.scrollWidth - track.clientWidth);
+    const thumbRatio = track.scrollWidth > 0 ? Math.min(1, track.clientWidth / track.scrollWidth) : 1;
+    const travel = Math.max(0, progressBar.clientWidth * (1 - thumbRatio));
+    const progress = maxScroll > 0 ? track.scrollLeft / maxScroll : 0;
+    fill.style.width = (thumbRatio * 100) + '%';
+    fill.style.transform = 'translateX(' + (travel * progress) + 'px)';
+    progressBar.setAttribute('aria-valuenow', String(Math.round(progress * 100)));
+  };
+  track.addEventListener('scroll', updateProgress, { passive: true });
+  window.addEventListener('resize', updateProgress);
+  requestAnimationFrame(updateProgress);
+});
 
 // New In uses the same live Firestore products as the website homepage.
 fetch('/api/app-new-in', { headers: { Accept: 'application/json' } })
