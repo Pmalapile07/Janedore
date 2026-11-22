@@ -759,7 +759,7 @@ function appBuildBrandDirectoryHTML(brands) {
     const items = groups[letter].map(brand => {
       const name = String(brand.name || brand.brandName || brand.brand || '').trim();
       const slug = String(brand.slug || brand.id || '');
-      const logoUrl = /^https?:\\/\\//i.test(String(brand.logoUrl || '').trim()) ? String(brand.logoUrl).trim() : '';
+      const logoUrl = /^https?:\/\//i.test(String(brand.logoUrl || '').trim()) ? String(brand.logoUrl).trim() : '';
       const logo = logoUrl
         ? '<span class="app-brands-az-logo"><img src="' + appBrandEscape(logoUrl) + '" alt="" loading="lazy"></span>'
         : '<span class="app-brands-az-logo" aria-hidden="true"></span>';
