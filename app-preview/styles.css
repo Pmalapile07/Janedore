@@ -684,4 +684,4 @@ body.app-shop-brands-open .app-brands-az-letter.is-disabled{color:#cfcfcf}
 .app-discover-brand-row>strong{flex:1;min-width:0;color:#222;font:600 15px/1.2 Inter,Arial,sans-serif}
 .app-discover-brand-row-image{display:flex;align-items:center;justify-content:center;flex:0 0 58px;width:58px;height:58px;min-width:58px;min-height:58px;overflow:hidden;padding:0;border-radius:50%;background:#fff}
 .app-discover-brand-row-image img{display:block;width:100%;height:100%;border-radius:50%;object-fit:contain}
-.app-discover-popular-section{padding-top:48px}
+.app-discover-brand-list-section{padding-top:48px}
