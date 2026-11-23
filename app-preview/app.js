@@ -927,6 +927,7 @@ fetch('/api/app-brands', { headers: { Accept: 'application/json' } })
   .then(data => {
     const grid = document.getElementById('app-shop-brand-grid');
     if (!grid) return;
+    const escapeBrand = value => String(value == null ? '' : value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
     const brands = Array.isArray(data.brands) ? data.brands : [];
     const goToBrands = document.getElementById('app-discover-go-to-brands');
     const popularBrands = document.getElementById('app-discover-popular-brands');
@@ -952,7 +953,6 @@ fetch('/api/app-brands', { headers: { Accept: 'application/json' } })
       grid.innerHTML = '<p class="app-new-in-empty">Brands will appear here soon.</p>';
       return;
     }
-    const escapeBrand = value => String(value == null ? '' : value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
     grid.innerHTML = brands.map(brand => {
       const image = brand.heroImageUrl || brand.logoUrl || '';
       const style = image ? ' style="background-image:url(&quot;' + escapeBrand(image) + '&quot;)"' : '';
