@@ -657,14 +657,14 @@ fetch('/api/app-new-in', { headers: { Accept: 'application/json' } })
       const salePrice = product.salePrice == null || product.salePrice === '' ? NaN : Number(product.salePrice);
       const sale = Number.isFinite(salePrice) && salePrice > 0 && salePrice < regularPrice;
       const badge = Number(product.stock) <= 0
-        ? 'SOLD OUT'
+        ? 'Sold out'
         : (String(product.badge || '').trim().toLowerCase() === 'pre-order'
-          ? 'PRE-ORDER'
+          ? 'Pre-order'
           : sale
-            ? 'SALE'
+            ? 'Sale'
             : (product.badge && !['new','sale','sold out','sold','free delivery'].includes(String(product.badge).toLowerCase())
-              ? String(product.badge).toUpperCase()
-              : 'NEW'));
+              ? String(product.badge).trim()
+              : 'New'));
       const price = sale
         ? '<span class="app-new-in-old-price">R' + escapeText(regularPrice.toFixed(2)) + '</span><span class="app-new-in-sale-price">R' + escapeText(salePrice.toFixed(2)) + '</span>'
         : '<span>R' + escapeText(regularPrice.toFixed(2)) + '</span>';
@@ -672,7 +672,7 @@ fetch('/api/app-new-in', { headers: { Accept: 'application/json' } })
         ? '<img src="' + escapeText(product.imageUrl) + '" alt="' + escapeText(product.name) + '" loading="lazy">'
         : '';
       return '<article class="app-new-in-card' + (product.stock <= 0 ? ' is-sold-out' : '') + '" data-product-id="' + escapeText(product.id || '') + '" role="button" tabindex="0" aria-label="View ' + escapeText(product.name) + '">' +
-        '<div class="app-new-in-image">' + (badge ? '<span class="app-new-in-badge' + (badge === 'SALE' ? ' is-sale' : '') + '">' + escapeText(badge) + '</span>' : '') + image + '<button class="app-new-in-wishlist" type="button" aria-label="Add to wishlist" aria-pressed="false"><i class="ph ph-heart-straight" aria-hidden="true"></i></button></div>' +
+        '<div class="app-new-in-image">' + (badge ? '<span class="app-new-in-badge' + (badge === 'Sale' ? ' is-sale' : '') + '">' + escapeText(badge) + '</span>' : '') + image + '<button class="app-new-in-wishlist" type="button" aria-label="Add to wishlist" aria-pressed="false"><i class="ph ph-heart-straight" aria-hidden="true"></i></button></div>' +
         '<div class="app-new-in-brand">' + escapeText(appFormatBrandName(product.brand)) + '</div>' +
         '<div class="app-new-in-name">' + escapeText(product.name) + '</div>' +
         '<div class="app-new-in-price">' + price + '</div>' +
@@ -1068,13 +1068,13 @@ function appShopRenderProducts() {
     const regular = Number(product.price) || 0;
     const salePrice = Number(product.salePrice);
     const sale = Number.isFinite(salePrice) && salePrice > 0 && salePrice < regular;
-    const badge = Number(product.stock) <= 0 ? 'SOLD OUT' : (sale ? 'SALE' : '');
+    const badge = Number(product.stock) <= 0 ? 'Sold out' : (sale ? 'Sale' : '');
     const image = appProductImages(product)[0] || product.imageUrl || '';
     const price = sale
       ? '<span class="app-new-in-old-price">R' + regular.toFixed(2) + '</span><span class="app-new-in-sale-price">R' + salePrice.toFixed(2) + '</span>'
       : '<span>R' + regular.toFixed(2) + '</span>';
     return '<article class="app-new-in-card' + (Number(product.stock) <= 0 ? ' is-sold-out' : '') + '" data-product-id="' + appProductEscape(product.id) + '" role="button" tabindex="0" aria-label="View ' + appProductEscape(product.name || product.title || 'Product') + '">' +
-      '<div class="app-new-in-image">' + (badge ? '<span class="app-new-in-badge' + (badge === 'SALE' ? ' is-sale' : '') + '">' + badge + '</span>' : '') + (image ? '<img src="' + appProductEscape(image) + '" alt="' + appProductEscape(product.name || product.title || 'Product') + '" loading="lazy">' : '') + '<button class="app-new-in-wishlist" type="button" aria-label="Add to wishlist" aria-pressed="false"><i class="ph ph-heart-straight" aria-hidden="true"></i></button></div>' +
+      '<div class="app-new-in-image">' + (badge ? '<span class="app-new-in-badge' + (badge === 'Sale' ? ' is-sale' : '') + '">' + badge + '</span>' : '') + (image ? '<img src="' + appProductEscape(image) + '" alt="' + appProductEscape(product.name || product.title || 'Product') + '" loading="lazy">' : '') + '<button class="app-new-in-wishlist" type="button" aria-label="Add to wishlist" aria-pressed="false"><i class="ph ph-heart-straight" aria-hidden="true"></i></button></div>' +
       '<div class="app-new-in-brand">' + appProductEscape(appFormatBrandName(product.brand || product.vendorName || '')) + '</div>' +
       '<div class="app-new-in-name">' + appProductEscape(product.name || product.title || 'Product') + '</div>' +
       '<div class="app-new-in-price">' + price + '</div></article>';
@@ -1793,20 +1793,20 @@ async function appOpenProduct(productId, pushHistory = true) {
       const sale = Number.isFinite(salePrice) && salePrice > 0 && salePrice < regularPrice;
       const stock = Number(item.stock);
       const badge = stock <= 0
-        ? 'SOLD OUT'
+        ? 'Sold out'
         : (String(item.badge || '').trim().toLowerCase() === 'pre-order'
-          ? 'PRE-ORDER'
+          ? 'Pre-order'
           : sale
-            ? 'SALE'
+            ? 'Sale'
             : (item.badge && !['new','sale','sold out','sold','free delivery'].includes(String(item.badge).toLowerCase())
-              ? String(item.badge).toUpperCase()
-              : 'NEW'));
+              ? String(item.badge).trim()
+              : 'New'));
       const price = sale
         ? '<span class="app-new-in-old-price">R' + appProductEscape(regularPrice.toFixed(2)) + '</span><span class="app-new-in-sale-price">R' + appProductEscape(salePrice.toFixed(2)) + '</span>'
         : '<span>R' + appProductEscape(regularPrice.toFixed(2)) + '</span>';
       const image = appProductImages(item)[0] || item.imageUrl || '';
       return '<article class="app-new-in-card' + (stock <= 0 ? ' is-sold-out' : '') + '" data-product-id="' + appProductEscape(item.id) + '" role="button" tabindex="0" aria-label="View ' + appProductEscape(item.name || item.title || 'Product') + '">' +
-        '<div class="app-new-in-image">' + (badge ? '<span class="app-new-in-badge' + (badge === 'SALE' ? ' is-sale' : '') + '">' + appProductEscape(badge) + '</span>' : '') + (image ? '<img src="' + appProductEscape(image) + '" alt="' + appProductEscape(item.name || item.title || 'Product') + '" loading="lazy">' : '') + '<button class="app-new-in-wishlist" type="button" aria-label="Add to wishlist" aria-pressed="false"><i class="ph ph-heart-straight" aria-hidden="true"></i></button></div>' +
+        '<div class="app-new-in-image">' + (badge ? '<span class="app-new-in-badge' + (badge === 'Sale' ? ' is-sale' : '') + '">' + appProductEscape(badge) + '</span>' : '') + (image ? '<img src="' + appProductEscape(image) + '" alt="' + appProductEscape(item.name || item.title || 'Product') + '" loading="lazy">' : '') + '<button class="app-new-in-wishlist" type="button" aria-label="Add to wishlist" aria-pressed="false"><i class="ph ph-heart-straight" aria-hidden="true"></i></button></div>' +
         '<div class="app-new-in-brand">' + appProductEscape(appFormatBrandName(item.brand || item.vendorName || '')) + '</div>' +
         '<div class="app-new-in-name">' + appProductEscape(item.name || item.title || 'Product') + '</div>' +
         '<div class="app-new-in-price">' + price + '</div>' +
@@ -2230,20 +2230,20 @@ function appCartRenderRecentlyViewed(renderVersion) {
       const salePrice = product.salePrice == null || product.salePrice === '' ? NaN : Number(product.salePrice);
       const sale = Number.isFinite(salePrice) && salePrice > 0 && salePrice < regularPrice;
       const badge = Number(product.stock) <= 0
-        ? 'SOLD OUT'
+        ? 'Sold out'
         : (String(product.badge || '').trim().toLowerCase() === 'pre-order'
-          ? 'PRE-ORDER'
+          ? 'Pre-order'
           : sale
-            ? 'SALE'
+            ? 'Sale'
             : (product.badge && !['new','sale','sold out','sold','free delivery'].includes(String(product.badge).toLowerCase())
-              ? String(product.badge).toUpperCase()
-              : 'NEW'));
+              ? String(product.badge).trim()
+              : 'New'));
       const price = sale
         ? '<span class="app-new-in-old-price">R' + regularPrice.toFixed(2) + '</span><span class="app-new-in-sale-price">R' + salePrice.toFixed(2) + '</span>'
         : '<span>R' + regularPrice.toFixed(2) + '</span>';
       const image = appProductImages(product)[0] || product.imageUrl || '';
       return '<article class="app-new-in-card' + (Number(product.stock) <= 0 ? ' is-sold-out' : '') + '" data-product-id="' + appProductEscape(product.id || '') + '" role="button" tabindex="0" aria-label="View ' + appProductEscape(product.name || product.title || 'Product') + '">' +
-        '<div class="app-new-in-image">' + (badge ? '<span class="app-new-in-badge' + (badge === 'SALE' ? ' is-sale' : '') + '">' + appProductEscape(badge) + '</span>' : '') + (image ? '<img src="' + appProductEscape(image) + '" alt="' + appProductEscape(product.name || product.title || 'Product') + '" loading="lazy">' : '') + '<button class="app-new-in-wishlist" type="button" aria-label="Add to wishlist" aria-pressed="false"><i class="ph ph-heart-straight" aria-hidden="true"></i></button></div>' +
+        '<div class="app-new-in-image">' + (badge ? '<span class="app-new-in-badge' + (badge === 'Sale' ? ' is-sale' : '') + '">' + appProductEscape(badge) + '</span>' : '') + (image ? '<img src="' + appProductEscape(image) + '" alt="' + appProductEscape(product.name || product.title || 'Product') + '" loading="lazy">' : '') + '<button class="app-new-in-wishlist" type="button" aria-label="Add to wishlist" aria-pressed="false"><i class="ph ph-heart-straight" aria-hidden="true"></i></button></div>' +
         '<div class="app-new-in-brand">' + appProductEscape(appFormatBrandName(product.brand || '')) + '</div>' +
         '<div class="app-new-in-name">' + appProductEscape(product.name || product.title || 'Product') + '</div>' +
         '<div class="app-new-in-price">' + price + '</div>' +
@@ -2337,21 +2337,21 @@ function appRenderCart(skipHydration) {
     const product = appProductCache.get(String(item.productId || '')) || null;
     const badge = product
       ? (Number(product.stock) <= 0
-        ? 'SOLD OUT'
+        ? 'Sold out'
         : (String(product.badge || '').trim().toLowerCase() === 'pre-order'
-          ? 'PRE-ORDER'
+          ? 'Pre-order'
           : ((Number(product.salePrice) > 0 && Number(product.salePrice) < Number(product.price))
-            ? 'SALE'
+            ? 'Sale'
             : (product.badge && !['new','sale','sold out','sold','free delivery'].includes(String(product.badge).toLowerCase())
-              ? String(product.badge).toUpperCase()
-              : 'NEW'))))
+              ? String(product.badge).trim()
+              : 'New'))))
       : '';
     const quantityLeading = quantity <= 1
       ? '<button type="button" class="app-cart-qty-action" data-cart-action="remove" data-index="' + index + '" aria-label="Remove ' + appProductEscape(item.name || 'product') + '"><i class="ph ph-trash" aria-hidden="true"></i></button>'
       : '<button type="button" class="app-cart-qty-action" data-cart-action="minus" data-index="' + index + '" aria-label="Decrease quantity"><i class="ph ph-minus" aria-hidden="true"></i></button>';
     return '<article class="app-cart-item" data-cart-index="' + index + '" data-product-id="' + appProductEscape(item.productId || '') + '" role="button" tabindex="0" aria-label="View product details for ' + appProductEscape(item.name || 'Product') + '">' +
       '<div class="app-cart-item-image">' + (image ? '<img src="' + appProductEscape(image) + '" alt="">' : '') + '</div>' +
-      '<div class="app-cart-item-info"><span class="app-cart-item-badge-slot">' + (badge ? '<span class="app-cart-item-badge' + (badge === 'SALE' ? ' is-sale' : '') + '">' + appProductEscape(badge) + '</span>' : '') + '</span>' +
+      '<div class="app-cart-item-info"><span class="app-cart-item-badge-slot">' + (badge ? '<span class="app-cart-item-badge' + (badge === 'Sale' ? ' is-sale' : '') + '">' + appProductEscape(badge) + '</span>' : '') + '</span>' +
       '<p class="app-cart-item-brand">' + appProductEscape(item.brand || '') + '</p>' +
       '<h2>' + appProductEscape(item.name || 'Product') + '</h2><p class="app-cart-item-variant">' + appProductEscape((variant + size).replace(/^ · /, '')) + '</p>' +
       '<div class="app-cart-item-quantity-wrap"><div class="app-cart-item-controls">' + quantityLeading + '<span>' + quantity + '</span><button type="button" class="app-cart-qty-action" data-cart-action="plus" data-index="' + index + '" aria-label="Increase quantity"><i class="ph ph-plus" aria-hidden="true"></i></button></div></div></div>' +
