@@ -343,6 +343,12 @@ navItems.forEach(button => {
   });
 });
 
+const headerCartButton = document.getElementById('app-header-cart');
+if (headerCartButton) headerCartButton.addEventListener('click', () => {
+  if (appCartView && appCartView.hidden) appSaveCurrentTabMemory();
+  appCartOpen();
+});
+
 // The app reads the shared homepage hero and category tiles from the
 // same Firestore content managed in Admin. The labels below are placeholders
 // only until categories have been added in Admin > Categories.
@@ -1436,13 +1442,13 @@ function appHideAddedToast() {
 }
 function appUpdateCartIndicator() {
   const count = appProductCartItems().reduce((sum, item) => sum + Math.max(0, Number(item.qty) || 0), 0);
-  const badge = document.querySelector('.nav-cart-count');
+  const badge = document.querySelector('.app-header-cart-count');
   if (badge) {
     badge.textContent = count > 9 ? '9+' : String(count);
     badge.hidden = count < 1;
   }
-  const cartButton = document.querySelector('.nav-item[data-tab="Cart"]');
-  if (cartButton) cartButton.setAttribute('aria-label', count ? 'Shopping cart, ' + count + (count === 1 ? ' item' : ' items') : 'Shopping cart');
+  const cartButton = document.getElementById('app-header-cart');
+  if (cartButton) cartButton.setAttribute('aria-label', count ? 'Shopping bag, ' + count + (count === 1 ? ' item' : ' items') : 'Shopping bag');
 }
 let appProductReturnToCart = false;
 let appProductReturnToCollection = false;
@@ -2179,8 +2185,7 @@ function appCartOpen() {
   const bottom = document.querySelector('.bottom-nav');
   if (header) header.hidden = true;
   if (bottom) bottom.hidden = false;
-  const cartButton = navItems.find(function(item) { return item.dataset.tab === 'Cart'; });
-  if (cartButton) appSelectNavigationTab('Cart', cartButton);
+  // The bag now opens from the header; keep the current bottom tab selected.
   document.body.classList.remove('app-product-open');
   document.body.classList.add('app-cart-open');
   appCartView.hidden = false;
