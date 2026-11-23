@@ -697,7 +697,7 @@ body.app-shop-brands-open .app-brands-az-letter.is-disabled{color:#cfcfcf}
 .app-product-sticky-heading{min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;text-align:center;opacity:0;transform:translateY(-5px);transition:opacity .2s ease,transform .2s ease;pointer-events:none}
 .app-product-sticky-name{display:block;width:100%;overflow:hidden;color:#111;font:500 12px/1.2 Inter,Arial,sans-serif;white-space:nowrap;text-overflow:ellipsis}
 .app-product-sticky-price{display:block;color:#111;font:600 11px/1.2 Inter,Arial,sans-serif}
-body.app-product-scrolled .app-product-sticky-heading{opacity:1;transform:translateY(0)}
+
 body.app-product-header-solid .app-product-sticky-header{background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.06)}
 .app-product-image-actions .app-product-image-wishlist,.app-product-image-actions .app-product-share{transition:opacity .2s ease,transform .2s ease}
 body.app-product-open .app-product-sticky-header{display:grid}
