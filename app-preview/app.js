@@ -928,6 +928,26 @@ fetch('/api/app-brands', { headers: { Accept: 'application/json' } })
     const grid = document.getElementById('app-shop-brand-grid');
     if (!grid) return;
     const brands = Array.isArray(data.brands) ? data.brands : [];
+    const goToBrands = document.getElementById('app-discover-go-to-brands');
+    const popularBrands = document.getElementById('app-discover-popular-brands');
+    const renderBrandRows = list => list.map(brand => {
+      const name = brand.name || brand.brandName || brand.brand || 'Brand';
+      const slug = String(brand.slug || brand.id || '');
+      const image = brand.heroImageUrl || brand.logoUrl || '';
+      const imageHtml = image
+        ? '<img src="' + escapeBrand(image) + '" alt="" loading="lazy">'
+        : '';
+      return '<a class="app-discover-brand-row" href="/brands/' + encodeURIComponent(slug) + '">' +
+        '<span class="app-discover-brand-heart" aria-hidden="true"><i class="ph ph-heart-straight"></i></span>' +
+        '<strong>' + escapeBrand(name) + '</strong>' +
+        '<span class="app-discover-brand-row-image">' + imageHtml + '</span></a>';
+    }).join('');
+    if (goToBrands) goToBrands.innerHTML = brands.length
+      ? renderBrandRows(brands.slice(0, 2))
+      : '<p class="app-new-in-empty">Brands will appear here soon.</p>';
+    if (popularBrands) popularBrands.innerHTML = brands.length > 2
+      ? renderBrandRows(brands.slice(2))
+      : (brands.length ? renderBrandRows(brands) : '<p class="app-new-in-empty">Brands will appear here soon.</p>');
     if (!brands.length) {
       grid.innerHTML = '<p class="app-new-in-empty">Brands will appear here soon.</p>';
       return;
