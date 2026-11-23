@@ -56,6 +56,33 @@ appAuth.onAuthStateChanged(user => {
 
 const nav = document.querySelector('.bottom-nav');
 const navItems = [...document.querySelectorAll('.nav-item')];
+const appWishlistStorageKey = 'janedore-app-wishlist-v1';
+let appWishlistProductIds = new Set();
+try {
+  const savedWishlist = JSON.parse(localStorage.getItem(appWishlistStorageKey) || '[]');
+  if (Array.isArray(savedWishlist)) appWishlistProductIds = new Set(savedWishlist.map(String).filter(Boolean));
+} catch (error) {}
+function appUpdateWishlistIndicator() {
+  const count = appWishlistProductIds.size;
+  const badge = document.querySelector('.nav-wishlist-count');
+  if (badge) {
+    badge.textContent = count > 9 ? '9+' : String(count);
+    badge.hidden = count < 1;
+  }
+  const button = navItems.find(item => item.dataset.tab === 'Wishlist');
+  if (button) button.setAttribute('aria-label', count ? 'Wishlist, ' + count + (count === 1 ? ' saved item' : ' saved items') : 'Wishlist');
+}
+function appToggleWishlistProduct(productId) {
+  const id = String(productId || '');
+  if (!id) return false;
+  const next = !appWishlistProductIds.has(id);
+  if (next) appWishlistProductIds.add(id);
+  else appWishlistProductIds.delete(id);
+  try { localStorage.setItem(appWishlistStorageKey, JSON.stringify([...appWishlistProductIds])); } catch (error) {}
+  appUpdateWishlistIndicator();
+  return next;
+}
+appUpdateWishlistIndicator();
 const navIndicator = document.querySelector('.nav-indicator');
 
 function moveNavIndicator(item) {
@@ -522,13 +549,16 @@ document.addEventListener('click', event => {
   if (!button) return;
   event.preventDefault();
   event.stopPropagation();
-  const active = button.getAttribute('aria-pressed') === 'true';
-  button.setAttribute('aria-pressed', String(!active));
-  button.setAttribute('aria-label', active ? 'Add to wishlist' : 'Remove from wishlist');
+  const card = button.closest('[data-product-id]');
+  const productId = card && card.dataset.productId;
+  if (!productId) return;
+  const active = appToggleWishlistProduct(productId);
+  button.setAttribute('aria-pressed', String(active));
+  button.setAttribute('aria-label', active ? 'Remove from wishlist' : 'Add to wishlist');
   const icon = button.querySelector('i');
-  if (icon) icon.className = active ? 'ph ph-heart-straight' : 'ph-fill ph-heart-straight';
-  button.classList.toggle('is-wishlisted', !active);
-  appShowAddedToast(active ? 'Removed from wishlist' : 'Added to wishlist', active ? 'ph-heart-break' : 'ph-heart', 'wishlist');
+  if (icon) icon.className = active ? 'ph-fill ph-heart-straight' : 'ph ph-heart-straight';
+  button.classList.toggle('is-wishlisted', active);
+  appShowAddedToast(active ? 'Added to wishlist' : 'Removed from wishlist', active ? 'ph-heart' : 'ph-heart-break', 'wishlist');
 });
 
 // Keep the New In progress indicator in sync with horizontal scrolling.
@@ -1355,7 +1385,7 @@ function appRenderProductStickyBar(product, regular, sale) {
   document.getElementById('app-product-sticky-add').onclick = appAddCurrentProductToBag;
   document.getElementById('app-product-sticky-wish').onclick = event => {
     const button = event.currentTarget;
-    const next = button.getAttribute('aria-pressed') !== 'true';
+    const next = appToggleWishlistProduct(product.id);
     button.setAttribute('aria-pressed', String(next));
     button.setAttribute('aria-label', next ? 'Remove from wishlist' : 'Add to wishlist');
     button.classList.toggle('wished', next);
