@@ -935,13 +935,13 @@ fetch('/api/app-brands', { headers: { Accept: 'application/json' } })
       const name = brand.name || brand.brandName || brand.brand || 'Brand';
       const slug = String(brand.slug || brand.id || '');
       const image = brand.heroImageUrl || brand.logoUrl || '';
-      const imageHtml = image
-        ? '<img src="' + escapeBrand(image) + '" alt="" loading="lazy">'
+      const logoStyle = image
+        ? ' style="background-image:url(&quot;' + escapeBrand(image) + '&quot;);background-size:cover;background-position:center"'
         : '';
       return '<a class="app-shop-category-tile app-discover-brand-row" href="/brands/' + encodeURIComponent(slug) + '">' +
         '<span class="app-discover-brand-heart" aria-hidden="true"><i class="ph ph-heart-straight"></i></span>' +
         '<strong>' + escapeBrand(name) + '</strong>' +
-        '<span class="app-brands-az-logo app-discover-brand-row-image">' + imageHtml + '</span></a>';
+        '<span class="app-brands-az-logo app-discover-brand-row-image"' + logoStyle + '></span></a>';
     }).join('');
     if (goToBrands) goToBrands.innerHTML = brands.length
       ? renderBrandRows(brands.slice(0, 2))
