@@ -722,20 +722,26 @@ body.app-product-image-ended .app-product-sticky-heading{opacity:1;transform:tra
 
 /* Give the revealed product heading enough room to read comfortably. */
 body.app-product-open .app-product-sticky-header{
-  height:calc(88px + env(safe-area-inset-top,0px));
-  padding:env(safe-area-inset-top,0px) 48px 0;
+  height:calc(76px + env(safe-area-inset-top,0px));
+  padding:env(safe-area-inset-top,0px) 62px 0;
 }
 body.app-product-open .app-product-sticky-heading{
   width:100%;
-  gap:5px;
+  min-width:0;
+  max-width:100%;
+  gap:4px;
 }
 body.app-product-open .app-product-sticky-name{
+  display:block;
+  box-sizing:border-box;
   width:100%;
-  overflow:visible;
-  font-size:13px;
+  min-width:0;
+  max-width:100%;
+  overflow:hidden;
+  font-size:12px;
   line-height:1.25;
-  white-space:normal;
-  text-overflow:clip;
+  white-space:nowrap;
+  text-overflow:ellipsis;
   overflow-wrap:normal;
 }
 body.app-product-open .app-product-sticky-price{
