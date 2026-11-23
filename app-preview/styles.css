@@ -670,7 +670,8 @@ body.app-shop-brands-open .app-brands-az-letter.is-disabled{color:#cfcfcf}
 /* Keep product brand names in their supplied capitalization throughout the app. */
 .app-new-in-brand{text-transform:none!important}
 
-.nav-item .brands-nav-mark{width:21.5px;height:21.5px;display:block;flex-shrink:0}
-.nav-item .brands-nav-mark-filled{display:none}
-.nav-item.selected .brands-nav-mark-outline{display:none}
-.nav-item.selected .brands-nav-mark-filled{display:block}
+.nav-item .brands-nav-mark{width:21.5px;height:21.5px;flex-shrink:0}
+.nav-item .brands-nav-mark-outline{display:block!important}
+.nav-item .brands-nav-mark-filled{display:none!important}
+.nav-item.selected .brands-nav-mark-outline{display:none!important}
+.nav-item.selected .brands-nav-mark-filled{display:block!important}
