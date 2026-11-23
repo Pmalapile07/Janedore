@@ -268,21 +268,22 @@
       <section class="app-shop-brands-directory" id="app-shop-brands-directory" hidden aria-label="A to Z brands"></section>
     </main>
     <main class="app-tab-content app-discover-page" data-view="Discover" aria-label="Brands" hidden>
-      <header class="app-discover-page-heading"><h1>Brands</h1></header>
       <nav class="app-discover-brand-categories" aria-label="Brand categories">
-        <button class="is-active" type="button" data-brand-category="women">Women</button>
-        <button type="button" data-brand-category="men">Men</button>
-        <button type="button" data-brand-category="kids">Kids</button>
+        <div class="app-category-list">
+          <div class="app-category" role="button" tabindex="0" data-brand-category="women"><span class="app-category-circle" aria-hidden="true"></span><span>Women</span></div>
+          <div class="app-category" role="button" tabindex="0" data-brand-category="men"><span class="app-category-circle" aria-hidden="true"></span><span>Men</span></div>
+          <div class="app-category" role="button" tabindex="0" data-brand-category="kids"><span class="app-category-circle" aria-hidden="true"></span><span>Kids</span></div>
+        </div>
       </nav>
       <a class="app-discover-az-link" href="/brands">
         <span><strong>Brands A–Z</strong><small>Explore all the brands on JANEDORE</small></span>
         <i class="ph ph-caret-right" aria-hidden="true"></i>
       </a>
-      <section class="app-discover-brand-list-section" aria-label="Your go-to brands">
+      <section class="app-discover-brand-list-section app-shop-category-grid" aria-label="Your go-to brands">
         <h2>Your go-to brands</h2>
         <div class="app-discover-brand-list" id="app-discover-go-to-brands"><p class="app-new-in-empty">Loading brands…</p></div>
       </section>
-      <section class="app-discover-brand-list-section app-discover-popular-section" aria-label="Popular brands">
+      <section class="app-discover-brand-list-section app-shop-category-grid app-discover-popular-section" aria-label="Popular brands">
         <h2>Popular brands</h2>
         <div class="app-discover-brand-list" id="app-discover-popular-brands"><p class="app-new-in-empty">Loading brands…</p></div>
       </section>
