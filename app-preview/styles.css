@@ -679,7 +679,7 @@ body.app-shop-brands-open .app-brands-az-letter.is-disabled{color:#cfcfcf}
 
 
 .app-discover-brand-list{display:grid;grid-template-columns:minmax(0,1fr);gap:6px;padding:4px 6px 0;background:#fff}
-.app-discover-brand-row{display:flex;align-items:center;gap:18px;min-height:108.95px;padding:16px 18px!important;background:#F4F4F4!important;color:#222;text-decoration:none}
+.app-discover-brand-row{display:flex;align-items:center;gap:18px;min-height:123.95px;padding:16px 18px!important;background:#F4F4F4!important;color:#222;text-decoration:none}
 .app-discover-brand-heart{display:flex;align-items:center;justify-content:center;flex:0 0 24px;width:24px;margin:0 2px 0 0;font-size:20px;line-height:1}.app-discover-brand-heart i{font-size:20px;line-height:1}
 .app-discover-brand-row>strong{flex:1;min-width:0;color:#222;font:500 16px/1.2 Inter,Arial,sans-serif}
 .app-discover-brand-row-image{display:flex;align-items:center;justify-content:center;flex:0 0 58px;width:58px;height:58px;min-width:58px;min-height:58px;overflow:hidden;padding:0;border-radius:50%;background:#fff}
