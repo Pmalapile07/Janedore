@@ -938,10 +938,10 @@ fetch('/api/app-brands', { headers: { Accept: 'application/json' } })
       const imageHtml = image
         ? '<img src="' + escapeBrand(image) + '" alt="" loading="lazy">'
         : '';
-      return '<a class="app-discover-brand-row" href="/brands/' + encodeURIComponent(slug) + '">' +
+      return '<a class="app-shop-category-tile app-discover-brand-row" href="/brands/' + encodeURIComponent(slug) + '">' +
         '<span class="app-discover-brand-heart" aria-hidden="true"><i class="ph ph-heart-straight"></i></span>' +
         '<strong>' + escapeBrand(name) + '</strong>' +
-        '<span class="app-discover-brand-row-image">' + imageHtml + '</span></a>';
+        '<span class="app-brands-az-logo app-discover-brand-row-image">' + imageHtml + '</span></a>';
     }).join('');
     if (goToBrands) goToBrands.innerHTML = brands.length
       ? renderBrandRows(brands.slice(0, 2))
