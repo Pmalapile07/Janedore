@@ -753,3 +753,15 @@ body.app-product-open .app-product-sticky-price{
   font-size:12px;
   line-height:1.3;
 }
+
+/* Light editorial typography pass for home, shop and product-page section titles. */
+.app-new-in-heading h2,
+.app-home-shopping-tile span,
+.app-product-name,
+.app-product-view .app-new-in-name,
+.app-product-view .app-category-style-feature>.app-new-in-heading h2,
+.app-product-related h2,
+.app-product-frequently-bought h2,
+.app-cart-recent h2{
+  font-weight:300!important;
+}
