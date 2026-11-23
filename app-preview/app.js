@@ -80,6 +80,7 @@ function appToggleWishlistProduct(productId) {
   else appWishlistProductIds.delete(id);
   try { localStorage.setItem(appWishlistStorageKey, JSON.stringify([...appWishlistProductIds])); } catch (error) {}
   appUpdateWishlistIndicator();
+  appUpdateProductImageWishlist();
   return next;
 }
 appUpdateWishlistIndicator();
@@ -1427,6 +1428,7 @@ function appUpdateProductStickyState() {
   if (button) button.disabled = unavailable;
   if (buyButton) buyButton.disabled = unavailable;
   if (label) label.textContent = soldOut || (hasSizes && selectedStock <= 0) ? 'Sold out' : (needsSize ? 'Select a size' : 'Add to bag');
+  appUpdateProductImageWishlist();
 }
 function appProductCartItems() {
   try { return JSON.parse(localStorage.getItem('janedore_cart') || '[]'); } catch (_) { return []; }
@@ -1852,6 +1854,26 @@ document.getElementById('app-product-share').addEventListener('click', async () 
   const data = {title:appCurrentProduct.name || appCurrentProduct.title || 'Product',text:appCurrentProduct.name || '',url};
   if (navigator.share) { try { await navigator.share(data); } catch (error) { if (error.name !== 'AbortError') console.warn(error); } }
   else { try { await navigator.clipboard.writeText(url); alert('Product link copied.'); } catch (_) { window.prompt('Copy this product link:',url); } }
+});
+
+function appUpdateProductImageWishlist() {
+  const button = document.getElementById('app-product-image-wishlist');
+  if (!button) return;
+  const productId = appCurrentProduct && appCurrentProduct.id ? String(appCurrentProduct.id) : '';
+  const active = !!productId && appWishlistProductIds.has(productId);
+  button.setAttribute('aria-pressed', String(active));
+  button.setAttribute('aria-label', active ? 'Remove from wishlist' : 'Add to wishlist');
+  const icon = button.querySelector('i');
+  if (icon) icon.className = active ? 'ph-fill ph-heart-straight' : 'ph ph-heart-straight';
+}
+
+document.getElementById('app-product-image-wishlist').addEventListener('click', () => {
+  if (!appCurrentProduct || !appCurrentProduct.id) return;
+  const active = appToggleWishlistProduct(appCurrentProduct.id);
+  appShowAddedToast(active ? 'Added to wishlist' : 'Removed from wishlist', active ? 'ph-heart' : 'ph-heart-break', 'wishlist');
+});
+document.getElementById('app-product-image-bag').addEventListener('click', () => {
+  appCartOpen();
 });
 
 /* APP BAG — shares cart and discount storage with the website. */
