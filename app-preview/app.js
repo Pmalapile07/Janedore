@@ -931,6 +931,13 @@ fetch('/api/app-brands', { headers: { Accept: 'application/json' } })
     const brands = Array.isArray(data.brands) ? data.brands : [];
     const goToBrands = document.getElementById('app-discover-go-to-brands');
     const popularBrands = document.getElementById('app-discover-popular-brands');
+    const azSubtitle = document.getElementById('app-discover-az-subtitle');
+    if (azSubtitle) {
+      const names = brands.slice(0, 3).map(brand => brand.name || brand.brandName || brand.brand).filter(Boolean);
+      azSubtitle.textContent = names.length
+        ? names.join(', ') + ' and many more...'
+        : 'Discover more independent brands...';
+    }
     const renderBrandRows = list => list.map(brand => {
       const name = brand.name || brand.brandName || brand.brand || 'Brand';
       const slug = String(brand.slug || brand.id || '');
