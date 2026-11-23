@@ -382,8 +382,10 @@ function appUpdateProductHeaderOnScroll() {
   }
   const scrolled = window.scrollY > 18;
   const galleryBottom = gallery.getBoundingClientRect().bottom;
+  const stickyHeader = document.getElementById('app-product-sticky-header');
+  const headerBottom = stickyHeader ? stickyHeader.getBoundingClientRect().bottom : 58;
   document.body.classList.toggle('app-product-scrolled', scrolled);
-  document.body.classList.toggle('app-product-header-solid', galleryBottom <= (58 + (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('env(safe-area-inset-top)')) || 0)));
+  document.body.classList.toggle('app-product-header-solid', galleryBottom <= headerBottom);
 }
 window.addEventListener('scroll', appUpdateProductHeaderOnScroll, {passive:true});
 window.addEventListener('resize', appUpdateProductHeaderOnScroll);
@@ -1547,6 +1549,7 @@ function appShowProductView() {
   if (collectionPage) collectionPage.hidden = true;
   appProductView.hidden = false;
   document.body.classList.add('app-product-open');
+  appUpdateProductHeaderOnScroll();
   document.querySelectorAll('.app-tab-content').forEach(view => { view.hidden = true; });
   const header = document.querySelector('.app-header');
   const bottomNav = document.querySelector('.bottom-nav');
