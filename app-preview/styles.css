@@ -627,7 +627,7 @@ body.app-shop-brands-open .app-brands-az-letter.is-disabled{color:#cfcfcf}
 .app-brands-az-group li{display:flex;align-items:center;gap:11px;min-height:85px;margin:0;border-top:1px solid #f1f1f1}
 .app-brands-az-group li:first-child{border-top:0}
 .app-brands-az-group li:last-child{border-bottom:0}
-.app-brands-az-group li .app-brands-az-logo{display:flex;align-items:center;justify-content:center;box-sizing:border-box;flex:0 0 58px;width:58px;height:58px;min-width:58px;min-height:58px;padding:0;border:0;border-radius:50%;aspect-ratio:1/1;overflow:hidden;background:#fff}
+.app-brands-az-group li .app-brands-az-logo{display:flex;align-items:center;justify-content:center;box-sizing:border-box;flex:0 0 58px;width:58px;height:58px;min-width:58px;min-height:58px;padding:0;border:0;border-radius:50%;aspect-ratio:1/1;overflow:hidden;background:#F4F4F4}
 .app-brands-az-group li .app-brands-az-name{flex:1;min-width:0;color:#222;font:500 13px/1.35 Inter,Arial,sans-serif;text-transform:none}
 .app-brands-az-group li .app-brands-az-chevron{display:inline-flex;align-items:center;justify-content:center;flex:0 0 16px;width:16px;height:20px;margin-left:auto;padding:0;color:#c8c8c8;font-size:16px;font-weight:700;line-height:1}
 .app-brands-az-group li>a{display:flex;align-items:center;gap:11px;box-sizing:border-box;width:100%;min-height:85px;padding:6px 0;color:inherit;text-decoration:none}
