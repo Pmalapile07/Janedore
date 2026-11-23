@@ -718,3 +718,27 @@ body.app-product-open .app-product-image-actions .app-product-icon-button i{font
 body.app-product-image-ended .app-product-sticky-header{background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.06)}
 body.app-product-image-ended .app-product-sticky-heading{opacity:1;transform:translateY(0)}
 @media(prefers-reduced-motion:reduce){.app-product-sticky-header,.app-product-sticky-heading,.app-product-image-actions .app-product-image-wishlist,.app-product-image-actions .app-product-share{transition:none}}
+
+
+/* Give the revealed product heading enough room to read comfortably. */
+body.app-product-open .app-product-sticky-header{
+  height:calc(88px + env(safe-area-inset-top,0px));
+  padding:env(safe-area-inset-top,0px) 48px 0;
+}
+body.app-product-open .app-product-sticky-heading{
+  width:100%;
+  gap:5px;
+}
+body.app-product-open .app-product-sticky-name{
+  width:100%;
+  overflow:visible;
+  font-size:13px;
+  line-height:1.25;
+  white-space:normal;
+  text-overflow:clip;
+  overflow-wrap:normal;
+}
+body.app-product-open .app-product-sticky-price{
+  font-size:12px;
+  line-height:1.3;
+}
