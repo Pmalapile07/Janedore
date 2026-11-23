@@ -700,7 +700,7 @@ body.app-shop-brands-open .app-brands-az-letter.is-disabled{color:#cfcfcf}
 
 body.app-product-header-solid .app-product-sticky-header{background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.06)}
 .app-product-image-actions .app-product-image-wishlist,.app-product-image-actions .app-product-share{transition:opacity .2s ease,transform .2s ease}
-body.app-product-open .app-product-sticky-header{display:grid}
+/* Keep the sticky heading in the centred flex layout defined below. */
 @media(prefers-reduced-motion:reduce){.app-product-sticky-header,.app-product-sticky-heading,.app-product-image-actions .app-product-image-wishlist,.app-product-image-actions .app-product-share{transition:none}}
 
 
@@ -745,6 +745,11 @@ body.app-product-open .app-product-sticky-name{
   overflow-wrap:normal;
 }
 body.app-product-open .app-product-sticky-price{
+  display:flex;
+  align-items:baseline;
+  justify-content:center;
+  gap:6px;
+  width:100%;
   font-size:12px;
   line-height:1.3;
 }
