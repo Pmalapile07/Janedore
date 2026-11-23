@@ -232,7 +232,7 @@ body.app-product-open{overflow-x:hidden}
 .app-product-gallery-slide img{display:block;width:100%;height:100%;object-fit:cover}
 .app-product-gallery-empty,.app-product-gallery-loading{background:#f0f0f0}
 .app-product-image-actions{position:absolute;top:env(safe-area-inset-top,0px);left:0;right:0;z-index:4;width:100%;min-height:0;box-sizing:border-box;padding:8px;display:flex;align-items:center;justify-content:space-between;background:transparent;pointer-events:none}
-.app-product-right-actions{display:flex;align-items:center;gap:2px;margin-left:auto;pointer-events:auto}
+.app-product-right-actions{display:flex;flex-direction:column;align-items:center;gap:14px;margin-left:auto;pointer-events:auto}
 .app-product-right-actions .app-product-icon-button{width:38px}
 .app-product-icon-button{position:relative;width:38px;height:38px;min-width:38px;border:1px solid rgba(255,255,255,.72);border-radius:50%;background:rgba(255,255,255,.22);color:#111;display:flex;align-items:center;justify-content:center;padding:0;pointer-events:auto;box-shadow:0 3px 14px rgba(0,0,0,.08),inset 0 1px 0 rgba(255,255,255,.72);backdrop-filter:blur(30px) saturate(180%);-webkit-backdrop-filter:blur(30px) saturate(180%)}
 .app-product-icon-button i{font-size:21.5px;line-height:1}
