@@ -258,9 +258,9 @@ body.app-product-open{overflow-x:hidden}
 .app-product-option.selected{border-color:#111;background:#111;color:#fff}
 .app-product-quantity{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 0 24px;border-bottom:1px solid #ccc;margin:0 0 4px;font:500 14px Inter,Arial,sans-serif}
 .app-product-quantity-control{display:inline-flex;align-items:center;justify-content:space-between;gap:0;width:152px;min-height:40px;border:0;box-sizing:border-box}
-.app-product-quantity-control button{display:inline-flex;align-items:center;justify-content:center;width:36px;height:40px;padding:0;border:0;background:transparent;color:#111;font:300 27px/1 Inter,Arial,sans-serif}
+.app-product-quantity-control button{display:inline-flex;align-items:center;justify-content:center;width:36px;height:40px;padding:0;border:0;background:transparent;color:#111;font:300 26px/1 Inter,Arial,sans-serif}
 .app-product-quantity-control button:disabled{color:#999}
-.app-product-quantity-control span{min-width:24px;text-align:center;font-size:16px;font-weight:400;font-variant-numeric:tabular-nums}
+.app-product-quantity-control span{min-width:24px;text-align:center;font-size:15px;font-weight:400;font-variant-numeric:tabular-nums}
 .app-product-sticky-bar{position:static;width:100%;display:flex;align-items:stretch;gap:10px;margin:22px 0 4px;padding:0;background:transparent;box-shadow:none}
 .app-product-sticky-buy{flex:1;min-width:0;height:47px;margin:0;padding:0 20px;border:1px solid #111;border-radius:0;background:#fff;color:#111;display:flex;align-items:center;justify-content:center;font:500 14px/1 Inter,Arial,sans-serif;letter-spacing:0;text-transform:none;cursor:pointer}
 .app-product-sticky-buy:disabled{background:#fff;border-color:#fff;color:#999}
