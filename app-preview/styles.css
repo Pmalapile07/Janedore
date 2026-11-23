@@ -236,6 +236,8 @@ body.app-product-open{overflow-x:hidden}
 .app-product-right-actions .app-product-icon-button{width:38px}
 .app-product-icon-button{position:relative;width:38px;height:38px;min-width:38px;border:1px solid rgba(255,255,255,.72);border-radius:50%;background:rgba(255,255,255,.22);color:#111;display:flex;align-items:center;justify-content:center;padding:0;pointer-events:auto;box-shadow:0 3px 14px rgba(0,0,0,.08),inset 0 1px 0 rgba(255,255,255,.72);backdrop-filter:blur(30px) saturate(180%);-webkit-backdrop-filter:blur(30px) saturate(180%)}
 .app-product-icon-button i{font-size:21.5px;line-height:1}
+.app-product-image-actions .app-product-icon-button{border:0;border-radius:0;background:transparent;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
+.app-product-image-actions .app-product-icon-button i{font-size:21.5px;line-height:1}
 
 .app-product-cart-count[hidden]{display:none}
 .app-product-gallery-dots{position:relative;inset:auto;display:flex;justify-content:center;align-items:center;gap:6px;width:100%;min-height:24px;margin:0;padding:10px 0 2px;background:#fff;pointer-events:none}
