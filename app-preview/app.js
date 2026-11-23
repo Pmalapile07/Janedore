@@ -1400,26 +1400,16 @@ function appSelectProductVariant(index) {
 function appRenderProductStickyBar(product, regular, sale) {
   const bar = document.getElementById('app-product-sticky-bar');
   if (!bar) return;
-  const wished = bar.dataset.wishProductId === String(product.id) && bar.dataset.wished === 'true';
-  bar.dataset.wishProductId = String(product.id);
-  bar.dataset.wished = String(wished);
-  bar.innerHTML = '<button class="app-product-sticky-add" id="app-product-sticky-add" type="button"' +
-    ((Number.isFinite(Number(product.stock)) && Number(product.stock) <= 0) ? ' disabled' : '') +
-    '><span class="app-product-sticky-label">' + ((Number.isFinite(Number(product.stock)) && Number(product.stock) <= 0) ? 'Sold out' : 'Add to bag') +
-    '</span></button><button class="app-product-sticky-wish' + (wished ? ' wished' : '') + '" id="app-product-sticky-wish" type="button" aria-label="' + (wished ? 'Remove from wishlist' : 'Add to wishlist') + '" aria-pressed="' + wished + '"><i class="' + (wished ? 'ph-fill ph-heart-straight' : 'ph ph-heart-straight') + '" aria-hidden="true"></i></button>';
+  const unavailable = Number.isFinite(Number(product.stock)) && Number(product.stock) <= 0;
+  bar.innerHTML = '<button class="app-product-sticky-buy" id="app-product-sticky-buy" type="button"' +
+    (unavailable ? ' disabled' : '') +
+    '>Buy now</button><button class="app-product-sticky-add" id="app-product-sticky-add" type="button"' +
+    (unavailable ? ' disabled' : '') +
+    '><span class="app-product-sticky-label">' + (unavailable ? 'Sold out' : 'Add to bag') +
+    '</span></button>';
   bar.hidden = false;
   document.getElementById('app-product-sticky-add').onclick = appAddCurrentProductToBag;
-  document.getElementById('app-product-sticky-wish').onclick = event => {
-    const button = event.currentTarget;
-    const next = appToggleWishlistProduct(product.id);
-    button.setAttribute('aria-pressed', String(next));
-    button.setAttribute('aria-label', next ? 'Remove from wishlist' : 'Add to wishlist');
-    button.classList.toggle('wished', next);
-    const icon = button.querySelector('i');
-    if (icon) icon.className = next ? 'ph ph-fill ph-heart-straight' : 'ph ph-heart-straight';
-    bar.dataset.wished = String(next);
-    appShowAddedToast(next ? 'Added to wishlist' : 'Removed from wishlist', next ? 'ph-heart' : 'ph-heart-break', 'wishlist');
-  };
+  document.getElementById('app-product-sticky-buy').onclick = appBuyNowCurrentProduct;
   appUpdateProductStickyState();
 }
 function appUpdateProductStickyState() {
@@ -1427,12 +1417,15 @@ function appUpdateProductStickyState() {
   if (!bar || !appProductView || appProductView.hidden || !appCurrentProduct) return;
   const label = bar.querySelector('.app-product-sticky-label');
   const button = bar.querySelector('.app-product-sticky-add');
+  const buyButton = bar.querySelector('.app-product-sticky-buy');
   const p = appCurrentProduct, hasSizes = appProductHasSizes(p);
   const selectedStock = appProductSizeStock(p, appSelectedVariant, appSelectedSize || 'OS');
   const noAvailableSize = hasSizes && !(p.sizes || []).filter(s => s !== 'OS').some(s => appProductSizeStock(p, appSelectedVariant, s) > 0);
   const soldOut = Number(p.stock) <= 0 || noAvailableSize || (!hasSizes && selectedStock <= 0);
   const needsSize = hasSizes && !appSelectedSize && !soldOut;
-  if (button) button.disabled = soldOut || needsSize || (hasSizes && selectedStock <= 0);
+  const unavailable = soldOut || needsSize || (hasSizes && selectedStock <= 0);
+  if (button) button.disabled = unavailable;
+  if (buyButton) buyButton.disabled = unavailable;
   if (label) label.textContent = soldOut || (hasSizes && selectedStock <= 0) ? 'Sold out' : (needsSize ? 'Select a size' : 'Add to bag');
 }
 function appProductCartItems() {
@@ -2404,6 +2397,17 @@ document.getElementById('app-product-qty-plus').addEventListener('click', () => 
   appProductQuantity = Math.min(Number.isFinite(stock) && stock > 0 ? stock : 99,appProductQuantity+1);
   appUpdateQuantityControls();
 });
+function appBuyNowCurrentProduct() {
+  if (!appCurrentProduct) return;
+  const hasSizes = appProductHasSizes(appCurrentProduct);
+  const resolvedSize = hasSizes ? appSelectedSize : 'OS';
+  if ((hasSizes && !resolvedSize) || appProductSizeStock(appCurrentProduct, appSelectedVariant, resolvedSize) <= 0) {
+    appUpdateProductStickyState();
+    return;
+  }
+  appAddCurrentProductToBag();
+  appCartOpen();
+}
 function appAddCurrentProductToBag() {
 
   if (!appCurrentProduct) return;
