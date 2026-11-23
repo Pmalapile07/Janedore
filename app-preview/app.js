@@ -377,15 +377,15 @@ function appUpdateProductHeaderOnScroll() {
   const view = document.getElementById('app-product-view');
   const gallery = document.getElementById('app-product-gallery');
   if (!view || view.hidden || !gallery || !document.body.classList.contains('app-product-open')) {
-    document.body.classList.remove('app-product-scrolled','app-product-header-solid');
+    document.body.classList.remove('app-product-scrolled','app-product-header-solid','app-product-image-ended');
     return;
   }
-  const scrolled = window.scrollY > 18;
-  const galleryBottom = gallery.getBoundingClientRect().bottom;
   const stickyHeader = document.getElementById('app-product-sticky-header');
   const headerBottom = stickyHeader ? stickyHeader.getBoundingClientRect().bottom : 58;
-  document.body.classList.toggle('app-product-scrolled', scrolled);
-  document.body.classList.toggle('app-product-header-solid', galleryBottom <= headerBottom);
+  const galleryHasEnded = gallery.getBoundingClientRect().bottom <= headerBottom;
+  document.body.classList.toggle('app-product-scrolled', window.scrollY > 18);
+  document.body.classList.toggle('app-product-header-solid', galleryHasEnded);
+  document.body.classList.toggle('app-product-image-ended', galleryHasEnded);
 }
 window.addEventListener('scroll', appUpdateProductHeaderOnScroll, {passive:true});
 window.addEventListener('resize', appUpdateProductHeaderOnScroll);
