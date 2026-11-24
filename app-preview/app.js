@@ -72,7 +72,7 @@ function appUpdateWishlistIndicator() {
     badge.hidden = count < 1;
   }
   const button = navItems.find(item => item.dataset.tab === 'Wishlist');
-  if (button) button.setAttribute('aria-label', count ? 'Wishlist, ' + count + (count === 1 ? ' saved item' : ' saved items') : 'Wishlist');
+  if (button) button.setAttribute('aria-label', count ? 'Favorites, ' + count + (count === 1 ? ' saved item' : ' saved items') : 'Favorites');
 }
 function appUpdateWishlistCardIndicators(root = document) {
   const cards = [];
@@ -83,7 +83,7 @@ function appUpdateWishlistCardIndicators(root = document) {
     if (!button) return;
     const active = appWishlistProductIds.has(String(card.dataset.productId || ''));
     button.setAttribute('aria-pressed', String(active));
-    button.setAttribute('aria-label', active ? 'Remove from wishlist' : 'Add to wishlist');
+    button.setAttribute('aria-label', active ? 'Remove from favorites' : 'Add to favorites');
     const icon = button.querySelector('i');
     if (icon) icon.className = active ? 'ph-fill ph-heart-straight' : 'ph ph-heart-straight';
     button.classList.toggle('is-wishlisted', active);
@@ -619,11 +619,11 @@ document.addEventListener('click', event => {
   if (!productId) return;
   const active = appToggleWishlistProduct(productId);
   button.setAttribute('aria-pressed', String(active));
-  button.setAttribute('aria-label', active ? 'Remove from wishlist' : 'Add to wishlist');
+  button.setAttribute('aria-label', active ? 'Remove from favorites' : 'Add to favorites');
   const icon = button.querySelector('i');
   if (icon) icon.className = active ? 'ph-fill ph-heart-straight' : 'ph ph-heart-straight';
   button.classList.toggle('is-wishlisted', active);
-  appShowAddedToast(active ? 'Added to wishlist' : 'Removed from wishlist', active ? 'ph-heart' : 'ph-heart-break', 'wishlist');
+  appShowAddedToast(active ? 'Added to favorites' : 'Removed from favorites', active ? 'ph-heart' : 'ph-heart-break', 'wishlist');
 });
 
 // Keep the New In progress indicator in sync with horizontal scrolling.
@@ -983,7 +983,93 @@ document.addEventListener('click', event => {
   }
 });
 
-// Load the same active brand imagery used by the website's Shop by brand grid.
+// Load active brands for discovery, recently viewed history and Favorites.
+const appBrandFavoritesKey = 'janedore-app-favorite-brands-v1';
+const appRecentBrandsKey = 'janedore-app-recent-brands-v1';
+let appDiscoverBrands = [];
+function appReadBrandStorage(key) {
+  try { const value = JSON.parse(localStorage.getItem(key) || '[]'); return Array.isArray(value) ? value : []; } catch (_) { return []; }
+}
+function appWriteBrandStorage(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch (_) {}
+}
+function appBrandName(brand) {
+  return String(brand && (brand.name || brand.brandName || brand.brand) || 'Brand').trim();
+}
+function appBrandSlug(brand) {
+  return String(brand && (brand.slug || brand.id) || '');
+}
+function appBrandRowHTML(brand) {
+  const name = appBrandName(brand);
+  const slug = appBrandSlug(brand);
+  const logo = /^https?:\\/\\//i.test(String(brand.logoUrl || '').trim()) ? String(brand.logoUrl).trim() : '';
+  const favorite = appReadBrandStorage(appBrandFavoritesKey).some(item => String(item.slug) === slug);
+  const category = String(brand.category || brand.primaryCategory || 'Independent brand');
+  return '<article class="app-discover-brand-row" data-brand-slug="' + appBrandEscape(slug) + '">' +
+    '<a class="app-discover-brand-row-main" href="/brands/' + encodeURIComponent(slug) + '" data-brand-link>' +
+      '<span class="app-brands-az-logo app-discover-brand-row-image">' + (logo ? '<img src="' + appBrandEscape(logo) + '" alt="" loading="lazy">' : '<span>' + appBrandEscape(name.charAt(0).toUpperCase()) + '</span>') + '</span>' +
+      '<span class="app-discover-brand-row-copy"><strong>' + appBrandEscape(name) + '</strong><small>' + appBrandEscape(category) + '</small></span>' +
+    '</a>' +
+    '<button class="app-discover-brand-heart" type="button" data-brand-favorite="' + appBrandEscape(slug) + '" aria-label="' + (favorite ? 'Remove ' : 'Add ') + appBrandEscape(name) + (favorite ? ' from favorites' : ' to favorites') + '" aria-pressed="' + String(favorite) + '"><i class="' + (favorite ? 'ph-fill' : 'ph') + ' ph-heart-straight" aria-hidden="true"></i></button>' +
+  '</article>';
+}
+function appRenderRecentBrands() {
+  const target = document.getElementById('app-discover-recent-brands');
+  if (!target) return;
+  const recent = appReadBrandStorage(appRecentBrandsKey);
+  target.innerHTML = recent.length ? recent.map(appBrandRowHTML).join('') : '<p class="app-new-in-empty">Brands you view will appear here.</p>';
+}
+function appRenderFavoriteBrands() {
+  const target = document.getElementById('app-favorite-brands');
+  if (!target) return;
+  const favorites = appReadBrandStorage(appBrandFavoritesKey);
+  target.innerHTML = favorites.length ? favorites.map(appBrandRowHTML).join('') : '<p class="app-new-in-empty">Your favorite brands will appear here.</p>';
+}
+function appRecordRecentlyViewedBrand(brand) {
+  if (!brand) return;
+  const slug = appBrandSlug(brand);
+  if (!slug) return;
+  const recent = appReadBrandStorage(appRecentBrandsKey).filter(item => String(item.slug) !== slug);
+  recent.unshift({id:brand.id || slug,slug,name:appBrandName(brand),logoUrl:brand.logoUrl || '',category:brand.category || brand.primaryCategory || ''});
+  appWriteBrandStorage(appRecentBrandsKey, recent.slice(0, 12));
+  appRenderRecentBrands();
+}
+document.addEventListener('click', event => {
+  const favoriteButton = event.target.closest('[data-brand-favorite]');
+  if (favoriteButton) {
+    event.preventDefault();
+    event.stopPropagation();
+    const slug = favoriteButton.dataset.brandFavorite;
+    const brand = appDiscoverBrands.find(item => appBrandSlug(item) === slug) || appReadBrandStorage(appRecentBrandsKey).find(item => String(item.slug) === slug);
+    if (!brand) return;
+    const favorites = appReadBrandStorage(appBrandFavoritesKey);
+    const exists = favorites.some(item => String(item.slug) === slug);
+    const next = exists ? favorites.filter(item => String(item.slug) !== slug) : [{id:brand.id || slug,slug,name:appBrandName(brand),logoUrl:brand.logoUrl || '',category:brand.category || brand.primaryCategory || ''}, ...favorites];
+    appWriteBrandStorage(appBrandFavoritesKey, next);
+    appRenderFavoriteBrands();
+    document.querySelectorAll('[data-brand-favorite="' + CSS.escape(slug) + '"]').forEach(button => {
+      button.setAttribute('aria-pressed', String(!exists));
+      button.setAttribute('aria-label', (!exists ? 'Remove ' : 'Add ') + appBrandName(brand) + (!exists ? ' from favorites' : ' to favorites'));
+      const icon = button.querySelector('i');
+      if (icon) icon.className = (!exists ? 'ph-fill' : 'ph') + ' ph-heart-straight';
+    });
+    return;
+  }
+  const brandLink = event.target.closest('[data-brand-link]');
+  if (brandLink) {
+    const slug = brandLink.closest('[data-brand-slug]')?.dataset.brandSlug;
+    const brand = appDiscoverBrands.find(item => appBrandSlug(item) === slug) || appReadBrandStorage(appRecentBrandsKey).find(item => String(item.slug) === slug);
+    if (brand) appRecordRecentlyViewedBrand(brand);
+  }
+  if (event.target.closest('#app-discover-open-az')) {
+    const shopTab = navItems.find(item => item.dataset.tab === 'Shop');
+    if (shopTab) shopTab.click();
+    window.setTimeout(() => document.querySelector('.app-shop-brands-tile')?.click(), 60);
+  }
+});
+appRenderRecentBrands();
+appRenderFavoriteBrands();
+
 fetch('/api/app-brands', { headers: { Accept: 'application/json' } })
   .then(response => {
     if (!response.ok) throw new Error('Brands unavailable');
@@ -991,49 +1077,31 @@ fetch('/api/app-brands', { headers: { Accept: 'application/json' } })
   })
   .then(data => {
     const grid = document.getElementById('app-shop-brand-grid');
-    if (!grid) return;
-    const escapeBrand = value => String(value == null ? '' : value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
     const brands = Array.isArray(data.brands) ? data.brands : [];
-    const goToBrands = document.getElementById('app-discover-go-to-brands');
-    const popularBrands = document.getElementById('app-discover-popular-brands');
-    const azSubtitle = document.getElementById('app-discover-az-subtitle');
-    if (azSubtitle) {
-      const names = brands.slice(0, 3).map(brand => brand.name || brand.brandName || brand.brand).filter(Boolean);
-      azSubtitle.textContent = names.length
-        ? names.join(', ') + ' and many more...'
-        : 'Discover more independent brands...';
-    }
-    const renderBrandRows = list => list.map(brand => {
-      const name = brand.name || brand.brandName || brand.brand || 'Brand';
-      const slug = String(brand.slug || brand.id || '');
-      const logo = brand.logoUrl
-        ? '<img src="' + escapeBrand(brand.logoUrl) + '" alt="" loading="lazy">'
-        : '';
-      return '<a class="app-shop-category-tile app-discover-brand-row" href="/brands/' + encodeURIComponent(slug) + '">' +
-        '<span class="app-discover-brand-heart" aria-hidden="true"><i class="ph ph-heart-straight"></i></span>' +
-        '<strong>' + escapeBrand(name) + '</strong>' +
-        '<span class="app-brands-az-logo app-discover-brand-row-image">' + logo + '</span></a>';
-    }).join('');
-    if (goToBrands) goToBrands.innerHTML = brands.length
-      ? renderBrandRows(brands.slice(0, 2))
+    appDiscoverBrands = brands;
+    const discover = document.getElementById('app-discover-brands');
+    if (discover) discover.innerHTML = brands.length
+      ? brands.map(appBrandRowHTML).join('')
       : '<p class="app-new-in-empty">Brands will appear here soon.</p>';
-    if (popularBrands) popularBrands.innerHTML = brands.length > 2
-      ? renderBrandRows(brands.slice(2))
-      : (brands.length ? renderBrandRows(brands) : '<p class="app-new-in-empty">Brands will appear here soon.</p>');
+    appRenderRecentBrands();
+    appRenderFavoriteBrands();
+    if (!grid) return;
     if (!brands.length) {
       grid.innerHTML = '<p class="app-new-in-empty">Brands will appear here soon.</p>';
       return;
     }
     grid.innerHTML = brands.map(brand => {
       const image = brand.heroImageUrl || brand.logoUrl || '';
-      const style = image ? ' style="background-image:url(&quot;' + escapeBrand(image) + '&quot;)"' : '';
-      const logo = brand.logoUrl ? '<img src="' + escapeBrand(brand.logoUrl) + '" alt="" loading="lazy">' : '';
+      const style = image ? ' style="background-image:url(&quot;' + appBrandEscape(image) + '&quot;)"' : '';
+      const logo = brand.logoUrl ? '<img src="' + appBrandEscape(brand.logoUrl) + '" alt="" loading="lazy">' : '';
       return '<div class="app-shop-brand-card"><div class="app-shop-brand-image"' + style + '>' + logo + '</div></div>';
     }).join('');
   })
   .catch(error => {
     const grid = document.getElementById('app-shop-brand-grid');
+    const discover = document.getElementById('app-discover-brands');
     if (grid) grid.innerHTML = '<p class="app-new-in-empty">Brands are temporarily unavailable.</p>';
+    if (discover) discover.innerHTML = '<p class="app-new-in-empty">Brands are temporarily unavailable.</p>';
     console.warn('[APP BRANDS] Could not load brands:', error.message);
   });
 
@@ -1937,7 +2005,7 @@ function appUpdateProductImageWishlist() {
 document.getElementById('app-product-image-wishlist').addEventListener('click', () => {
   if (!appCurrentProduct || !appCurrentProduct.id) return;
   const active = appToggleWishlistProduct(appCurrentProduct.id);
-  appShowAddedToast(active ? 'Added to wishlist' : 'Removed from wishlist', active ? 'ph-heart' : 'ph-heart-break', 'wishlist');
+  appShowAddedToast(active ? 'Added to favorites' : 'Removed from favorites', active ? 'ph-heart' : 'ph-heart-break', 'wishlist');
 });
 document.getElementById('app-product-image-bag').addEventListener('click', () => {
   appCartOpen();
