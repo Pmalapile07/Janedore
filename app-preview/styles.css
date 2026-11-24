@@ -803,3 +803,6 @@ body.app-product-open .app-product-sticky-price{
 .app-favorites-page{padding:0 0 132px}
 .app-favorites-page .app-discover-brand-list-section{padding-top:22px}
 .app-favorites-page .app-new-in-heading{padding:0 16px 14px}
+
+.app-favorites-products{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:8px;row-gap:20px;padding:0 16px}
+.app-favorites-products .app-new-in-card{width:auto;min-width:0;max-width:none;flex:none}
