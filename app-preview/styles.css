@@ -118,7 +118,7 @@ body{background:#fff;color:var(--ink);font-family:Inter,Arial,sans-serif;-webkit
 /* First category editorial feature: homeware styling placeholders */
 .app-category-style-feature{padding:8px 12px 34px;overflow:hidden}
 .app-category-style-feature>.app-new-in-heading{margin-bottom:12px}
-.app-product-view .app-category-style-feature{padding:26px 0 30px;margin-top:0}
+.app-product-view .app-category-style-feature{padding:28px 0 30px;margin-top:0}
 .app-product-view .app-category-style-feature>.app-new-in-heading{display:block;padding:0 0 12px;margin:0}
 .app-product-view .app-category-style-feature>.app-new-in-heading h2{margin:0 0 5px;color:#111;font:600 18.5px/1.25 Inter,Arial,sans-serif}
 .app-product-view .app-category-style-feature>.app-new-in-heading p{margin:0;color:#777;font:400 12px/1.45 Inter,Arial,sans-serif}
@@ -266,7 +266,7 @@ body.app-product-open{overflow-x:hidden}
 .app-product-sticky-add{flex:1;min-width:0;height:47px;border:0;border-radius:5px;background:#111;color:#fff;display:flex;align-items:center;justify-content:center;padding:0 20px;font:500 14px/1 Inter,Arial,sans-serif;letter-spacing:0;text-transform:none}
 .app-product-sticky-add:disabled{background:#ccc;color:#fff}
 .app-product-sticky-bar[hidden]{display:none!important}
-.app-product-accordions{margin-top:28px;border-top:1px solid #e8e8e8}
+.app-product-accordions{margin-top:30px;border-top:1px solid #e8e8e8}
 .app-product-accordions details{border-bottom:1px solid #e8e8e8;padding:17px 0}
 .app-product-accordions summary{position:relative;list-style:none;cursor:pointer;padding-right:28px;font:500 14px Inter,Arial,sans-serif}
 .app-product-accordions summary::-webkit-details-marker{display:none}
@@ -277,7 +277,7 @@ body.app-product-open{overflow-x:hidden}
 .app-product-review{padding:10px 0;border-bottom:1px solid #eee}
 .app-product-review strong{color:#222;font-size:11px}
 .app-product-review p{margin:5px 0 0}
-.app-product-related{padding-top:26px;margin-left:-16px;margin-right:-16px;width:calc(100% + 32px);overflow:hidden}
+.app-product-related{padding-top:28px;margin-left:-16px;margin-right:-16px;width:calc(100% + 32px);overflow:hidden}
 .app-product-related h2{margin:0;color:#111;font:600 18.5px/1.25 Inter,Arial,sans-serif;letter-spacing:0;padding:0 16px 12px}
 @media(min-width:600px){.app-product-view{max-width:430px;margin:0 auto;min-height:850px}.app-product-gallery-slide{aspect-ratio:4/5}}
 
@@ -539,7 +539,7 @@ body.app-cart-open .bottom-nav{display:grid!important;grid-template-columns:repe
 
 
 /* Frequently bought with — same horizontal product-slider treatment as Suggested products. */
-.app-product-frequently-bought{padding-top:26px;margin-left:-16px;margin-right:-16px;width:calc(100% + 32px);overflow:hidden}
+.app-product-frequently-bought{padding-top:28px;margin-left:-16px;margin-right:-16px;width:calc(100% + 32px);overflow:hidden}
 .app-product-frequently-bought h2{margin:0;color:#111;font:600 18.5px/1.25 Inter,Arial,sans-serif;letter-spacing:0;padding:0 16px 12px}
 .app-product-frequently-bought-track{padding-left:16px!important;scroll-padding-left:16px}
 .app-product-frequently-bought-track::after{flex-basis:16px}
