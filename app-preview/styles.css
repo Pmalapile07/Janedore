@@ -164,6 +164,7 @@ body{background:#fff;color:var(--ink);font-family:Inter,Arial,sans-serif;-webkit
 
 
 /* JANEDORE opening screen */
+body.app-launch-welcome .app-shell{visibility:hidden}
 .app-welcome{position:fixed;inset:0;z-index:900;width:100%;height:100dvh;min-height:100dvh;overflow:hidden;padding:env(safe-area-inset-top) 24px env(safe-area-inset-bottom);display:flex;align-items:flex-end;justify-content:center;background-color:#fff;background-image:var(--app-welcome-background,none);background-size:cover;background-position:center;background-repeat:no-repeat;color:#fff}
 .app-welcome[hidden]{display:none!important}
 .app-welcome-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;z-index:0;display:block}
