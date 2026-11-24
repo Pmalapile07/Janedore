@@ -14,10 +14,12 @@ const guestButton = document.getElementById('app-continue-guest');
 let guestContinuedThisLaunch = false;
 
 function showAppHome() {
+  document.body.classList.remove('app-launch-welcome');
   if (welcomeScreen) welcomeScreen.hidden = true;
 }
 
 function showAppWelcome() {
+  document.body.classList.add('app-launch-welcome');
   if (welcomeScreen) welcomeScreen.hidden = false;
 }
 
