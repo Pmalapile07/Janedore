@@ -74,6 +74,22 @@ function appUpdateWishlistIndicator() {
   const button = navItems.find(item => item.dataset.tab === 'Wishlist');
   if (button) button.setAttribute('aria-label', count ? 'Wishlist, ' + count + (count === 1 ? ' saved item' : ' saved items') : 'Wishlist');
 }
+function appUpdateWishlistCardIndicators(root = document) {
+  const cards = [];
+  if (root.matches && root.matches('.app-new-in-card[data-product-id]')) cards.push(root);
+  if (root.querySelectorAll) cards.push(...root.querySelectorAll('.app-new-in-card[data-product-id]'));
+  cards.forEach(card => {
+    const button = card.querySelector('.app-new-in-wishlist');
+    if (!button) return;
+    const active = appWishlistProductIds.has(String(card.dataset.productId || ''));
+    button.setAttribute('aria-pressed', String(active));
+    button.setAttribute('aria-label', active ? 'Remove from wishlist' : 'Add to wishlist');
+    const icon = button.querySelector('i');
+    if (icon) icon.className = active ? 'ph-fill ph-heart-straight' : 'ph ph-heart-straight';
+    button.classList.toggle('is-wishlisted', active);
+  });
+}
+
 function appToggleWishlistProduct(productId) {
   const id = String(productId || '');
   if (!id) return false;
@@ -82,10 +98,20 @@ function appToggleWishlistProduct(productId) {
   else appWishlistProductIds.delete(id);
   try { localStorage.setItem(appWishlistStorageKey, JSON.stringify([...appWishlistProductIds])); } catch (error) {}
   appUpdateWishlistIndicator();
+  appUpdateWishlistCardIndicators();
   appUpdateProductImageWishlist();
   return next;
 }
 appUpdateWishlistIndicator();
+appUpdateWishlistCardIndicators();
+if (document.body && window.MutationObserver) {
+  const wishlistCardObserver = new MutationObserver(records => {
+    records.forEach(record => record.addedNodes.forEach(node => {
+      if (node.nodeType === 1) appUpdateWishlistCardIndicators(node);
+    }));
+  });
+  wishlistCardObserver.observe(document.body, {childList:true,subtree:true});
+}
 const navIndicator = document.querySelector('.nav-indicator');
 
 function moveNavIndicator(item) {
