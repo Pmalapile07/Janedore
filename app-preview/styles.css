@@ -171,10 +171,6 @@ body.app-launch-welcome .app-shell{visibility:hidden}
 .app-welcome::after{content:"";position:absolute;inset:0;z-index:0;background:linear-gradient(180deg,rgba(0,0,0,.18) 0%,rgba(0,0,0,.28) 48%,rgba(0,0,0,.58) 100%);pointer-events:none}
 .app-welcome-content{position:relative;z-index:1;width:100%;max-width:330px;display:flex;flex-direction:column;align-items:center;text-align:center;margin-bottom:max(24px,env(safe-area-inset-bottom))}
 .app-welcome-mark{display:block;width:142px;height:142px;object-fit:contain}
-.app-welcome-mark-j{stroke-dasharray:1;stroke-dashoffset:1;animation:app-welcome-mark-draw .85s ease-in-out forwards}
-.app-welcome-mark-dot{fill:#fff;stroke:none;transform-box:fill-box;transform-origin:center;animation:app-welcome-mark-drop .35s ease-out .72s both}
-@keyframes app-welcome-mark-draw{to{stroke-dashoffset:0}}
-@keyframes app-welcome-mark-drop{from{opacity:0;transform:translateY(-120px)}to{opacity:1;transform:translateY(0)}}
 .app-welcome-tagline{margin:-32px 0 42px;color:#fff;font:400 14px/1.4 Inter,Arial,sans-serif;letter-spacing:0}
 .app-welcome-actions{width:100%;display:flex;flex-direction:column;gap:12px}
 .app-welcome-signin,.app-welcome-create{min-height:50px;width:100%;display:flex;align-items:center;justify-content:center;border:1px solid #fff;border-radius:5px;text-decoration:none;font:500 14px/1 Inter,Arial,sans-serif}
@@ -182,7 +178,6 @@ body.app-launch-welcome .app-shell{visibility:hidden}
 .app-welcome-create{background:transparent;color:#fff}
 .app-welcome-guest{margin-top:28px;padding:4px 0;border:0;background:transparent;color:#fff;font:400 13px/1.4 Inter,Arial,sans-serif;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 
-@media(prefers-reduced-motion:reduce){.app-welcome-mark-j{animation:none;stroke-dashoffset:0}.app-welcome-mark-dot{animation:none;opacity:1}}
 
 
 /* Four editorial shopping destinations beneath Bestsellers */
