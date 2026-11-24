@@ -286,6 +286,7 @@ function appShowTabPage(tabName) {
   const collectionPage = document.getElementById('app-shop-page');
   if (collectionPage) collectionPage.hidden = true;
   appActiveTab = tabName;
+  document.body.classList.toggle('app-brands-tab', tabName === 'Discover');
   // The A–Z Brands header back button belongs only to the Shop directory.
   // Clear its state before any Home/other-tab restoration branch can return early.
   if (tabName !== 'Shop') document.body.classList.remove('app-shop-brands-open');
