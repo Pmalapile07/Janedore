@@ -704,7 +704,7 @@ fetch('/api/app-new-in', { headers: { Accept: 'application/json' } })
         ? '<img src="' + escapeText(product.imageUrl) + '" alt="' + escapeText(product.name) + '" loading="lazy">'
         : '';
       return '<article class="app-new-in-card' + (product.stock <= 0 ? ' is-sold-out' : '') + '" data-product-id="' + escapeText(product.id || '') + '" role="button" tabindex="0" aria-label="View ' + escapeText(product.name) + '">' +
-        '<div class="app-new-in-image">' + (badge ? '<span class="app-new-in-badge' + (badge === 'Sale' ? ' is-sale' : '') + '">' + escapeText(badge) + '</span>' : '') + image + '<button class="app-new-in-wishlist" type="button" aria-label="Add to wishlist" aria-pressed="false"><i class="ph ph-heart-straight" aria-hidden="true"></i></button></div>' +
+        '<div class="app-new-in-image">' + (badge ? '<span class="app-new-in-badge' + (badge === 'Sale' ? ' is-sale' : '') + '">' + escapeText(badge) + '</span>' : '') + image + '<button class="app-new-in-wishlist" type="button" aria-label="Add to favorites" aria-pressed="false"><i class="ph ph-heart-straight" aria-hidden="true"></i></button></div>' +
         '<div class="app-new-in-brand">' + escapeText(appFormatBrandName(product.brand)) + '</div>' +
         '<div class="app-new-in-name">' + escapeText(product.name) + '</div>' +
         '<div class="app-new-in-price">' + price + '</div>' +
@@ -1129,11 +1129,12 @@ function appRenderFavoriteProducts() {
     const name = product.name || product.title || 'Product';
     const price = Number(product.price) || 0;
     return '<article class="app-new-in-card" data-product-id="' + appProductEscape(id) + '" role="button" tabindex="0" aria-label="View ' + appProductEscape(name) + '">' +
-      '<div class="app-new-in-image">' + (image ? '<img src="' + appProductEscape(image) + '" alt="' + appProductEscape(name) + '" loading="lazy">' : '') + '</div>' +
+      '<div class="app-new-in-image">' + (image ? '<img src="' + appProductEscape(image) + '" alt="' + appProductEscape(name) + '" loading="lazy">' : '') + '<button class="app-new-in-wishlist" type="button" aria-label="Remove from favorites" aria-pressed="true"><i class="ph-fill ph-heart-straight" aria-hidden="true"></i></button></div>' +
       '<div class="app-new-in-brand">' + appProductEscape(appFormatBrandName(product.brand || product.vendorName || '')) + '</div>' +
       '<div class="app-new-in-name">' + appProductEscape(name) + '</div>' +
       '<div class="app-new-in-price">R' + price.toFixed(2) + '</div></article>';
   }).join('') : '<p class="app-new-in-empty">Your favorite products will appear here.</p>';
+  appUpdateWishlistCardIndicators(target);
 }
 let appShopLoaded = false;
 let appShopLoading = null;
@@ -2014,7 +2015,7 @@ function appUpdateProductImageWishlist() {
   const productId = appCurrentProduct && appCurrentProduct.id ? String(appCurrentProduct.id) : '';
   const active = !!productId && appWishlistProductIds.has(productId);
   button.setAttribute('aria-pressed', String(active));
-  button.setAttribute('aria-label', active ? 'Remove from wishlist' : 'Add to wishlist');
+  button.setAttribute('aria-label', active ? 'Remove from favorites' : 'Add to favorites');
   const icon = button.querySelector('i');
   if (icon) icon.className = active ? 'ph-fill ph-heart-straight' : 'ph ph-heart-straight';
 }
