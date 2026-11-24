@@ -588,7 +588,7 @@ body.app-cart-open .bottom-nav{display:grid!important;grid-template-columns:repe
 
 /* App Brands directory — shared active brand records, app-specific headers. */
 .app-shop-category-grid[hidden],.app-shop-brands-directory[hidden]{display:none!important}
-.app-shop-brands-directory{padding:18px 12px 120px}
+.app-shop-brands-directory{padding:16px 12px 120px}
 .app-category-home:has(.app-brands-feature-grid){padding:0 12px 120px}
 .app-brands-loading{padding:24px 0;color:#777;font:400 12px Inter,Arial,sans-serif}
 .app-brands-feature-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 8px;margin:0 0 20px}
@@ -609,7 +609,7 @@ body.app-cart-open .bottom-nav{display:grid!important;grid-template-columns:repe
 .app-header-top .app-shop-brands-header-back[hidden]{display:none!important}
 body.app-shop-brands-open .app-header-top{position:relative;padding-left:14px;padding-right:14px}body.app-shop-brands-open .app-header-top .app-page-title{position:absolute;left:50%;transform:translateX(-50%);margin:0;color:#111;font:600 14px/1.2 Inter,Arial,sans-serif;letter-spacing:0;text-align:center;text-transform:uppercase;white-space:nowrap;pointer-events:none}
 .app-brands-az-list{padding:0 2px 100px}
-.app-brands-az-group{position:relative;padding:19px 22px 8px 0;border:0;scroll-margin-top:112px}
+.app-brands-az-group{position:relative;padding:0 22px 8px 0;border:0;scroll-margin-top:112px}
 .app-brands-az-group h2{margin:0 0 13px;padding:0;color:#888;font:600 15.5px/1.2 Inter,Arial,sans-serif}
 .app-brands-az-group ul{list-style:none;margin:0;padding:0}
 .app-brands-az-group li{margin:0;border-top:1px solid #f1f1f1}
