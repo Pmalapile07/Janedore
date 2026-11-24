@@ -1003,7 +1003,7 @@ function appBrandSlug(brand) {
 function appBrandRowHTML(brand) {
   const name = appBrandName(brand);
   const slug = appBrandSlug(brand);
-  const logo = /^https?:\\/\\//i.test(String(brand.logoUrl || '').trim()) ? String(brand.logoUrl).trim() : '';
+  const logo = /^https?:\/\//i.test(String(brand.logoUrl || '').trim()) ? String(brand.logoUrl).trim() : '';
   const favorite = appReadBrandStorage(appBrandFavoritesKey).some(item => String(item.slug) === slug);
   const category = String(brand.category || brand.primaryCategory || 'Independent brand');
   return '<article class="app-discover-brand-row" data-brand-slug="' + appBrandEscape(slug) + '">' +
