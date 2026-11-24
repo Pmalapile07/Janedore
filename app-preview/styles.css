@@ -624,6 +624,9 @@ body.app-shop-brands-open .app-brands-az-letter.is-disabled{color:#cfcfcf}
 /* Shared glass treatment for back and product share controls across app screens. */
 #app-product-share,.app-shop-back,.app-shop-search,.app-shop-brands-header-back,.app-product-back,.back{box-sizing:border-box;width:38px;height:38px;min-width:38px;border:1px solid rgba(255,255,255,.72);border-radius:50%;background:rgba(255,255,255,.22);color:#111;box-shadow:0 3px 14px rgba(0,0,0,.08),inset 0 1px 0 rgba(255,255,255,.72);backdrop-filter:blur(30px) saturate(180%);-webkit-backdrop-filter:blur(30px) saturate(180%)}
 .app-shop-back{top:calc(env(safe-area-inset-top,0px) + 5px);left:16px}
+/* Keep the A–Z Brands and All Products back buttons plain, without the glass/white circle. */
+.app-shop-back,.app-shop-brands-header-back{border:0;background:transparent;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
+
 .app-shop-brands-header-back{flex:0 0 38px;margin:0 4px 0 -8px;padding:0;font-size:22px}
 .app-product-back{width:38px;height:38px;min-width:38px;border:1px solid rgba(255,255,255,.72);background:rgba(255,255,255,.22);box-shadow:0 3px 14px rgba(0,0,0,.08),inset 0 1px 0 rgba(255,255,255,.72)}
 /* Match every page back-chevron's inner spacing and glyph box to the product-page control. */
