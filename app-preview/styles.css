@@ -231,7 +231,7 @@ body.app-product-open{overflow-x:hidden}
 .app-product-gallery-slide{flex:0 0 100%;width:100%;aspect-ratio:4/5;scroll-snap-align:start;background:#f4f4f4}
 .app-product-gallery-slide img{display:block;width:100%;height:100%;object-fit:cover}
 .app-product-gallery-empty,.app-product-gallery-loading{background:#f0f0f0}
-.app-product-image-actions{position:absolute;top:env(safe-area-inset-top,0px);left:0;right:0;z-index:4;width:100%;min-height:0;box-sizing:border-box;padding:8px;display:flex;align-items:center;justify-content:space-between;background:transparent;pointer-events:none}
+.app-product-image-actions{position:absolute;top:env(safe-area-inset-top,0px);left:0;right:0;z-index:4;width:100%;min-height:0;box-sizing:border-box;padding:8px 16px;display:flex;align-items:center;justify-content:space-between;background:transparent;pointer-events:none}
 .app-product-right-actions{display:flex;flex-direction:column;align-items:center;gap:14px;margin-left:auto;pointer-events:auto}
 .app-product-right-actions .app-product-icon-button{width:38px}
 .app-product-icon-button{position:relative;width:38px;height:38px;min-width:38px;border:1px solid rgba(255,255,255,.72);border-radius:50%;background:rgba(255,255,255,.22);color:#111;display:flex;align-items:center;justify-content:center;padding:0;pointer-events:auto;box-shadow:0 3px 14px rgba(0,0,0,.08),inset 0 1px 0 rgba(255,255,255,.72);backdrop-filter:blur(30px) saturate(180%);-webkit-backdrop-filter:blur(30px) saturate(180%)}
@@ -360,7 +360,7 @@ body.app-product-open .app-product-content{padding-bottom:120px}
 .app-new-in-heading{padding-left:16px;padding-right:16px}
 .app-new-in-track{padding-left:16px;scroll-padding-left:16px}
 .app-new-in-track::after{flex-basis:16px}
-.app-product-image-actions{padding-left:8px;padding-right:8px}
+.app-product-image-actions{padding-left:16px;padding-right:16px}
 .app-product-related-track{padding-left:16px!important;scroll-padding-left:16px}
 .app-product-related-track::after{flex-basis:16px}
 
@@ -520,7 +520,7 @@ body.app-cart-open .bottom-nav{display:grid!important;grid-template-columns:repe
 /* App all-products destination */
 .app-shop-page{min-height:100dvh;background:#fff;padding:0 0 120px}
 .app-shop-header{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:center;min-height:calc(48px + env(safe-area-inset-top,0px));margin:0;padding:env(safe-area-inset-top,0px) 16px 0;background:#fff}
-.app-shop-back,.app-shop-search{position:absolute;top:calc(env(safe-area-inset-top,0px) + 5px);display:flex;align-items:center;justify-content:center;width:34px;height:38px;padding:0;border:0;background:transparent;color:#111;font-size:22px}.app-shop-back{left:16px}.app-shop-search{right:12px}.app-shop-search i{font-size:20px;line-height:1}
+.app-shop-back,.app-shop-search{position:absolute;top:calc(env(safe-area-inset-top,0px) + 5px);display:flex;align-items:center;justify-content:center;width:34px;height:38px;padding:0;border:0;background:transparent;color:#111;font-size:22px}.app-shop-back{left:12px}.app-shop-search{right:12px}.app-shop-search i{font-size:20px;line-height:1}
 .app-shop-header h1{margin:0;color:#111;font:600 14px/1.2 Inter,Arial,sans-serif;letter-spacing:0;text-align:center;text-transform:uppercase}
 .app-shop-toolbar{display:grid;grid-template-columns:1fr 1fr;align-items:stretch;margin:8px 0 0;padding:0;border-top:1px solid #eee;border-bottom:1px solid #eee}
 .app-shop-toolbar button{display:flex;align-items:center;justify-content:center;min-height:44px;padding:3px 0;border:0;background:transparent;color:#111;font:500 11px Inter,Arial,sans-serif;letter-spacing:0;text-transform:uppercase}
@@ -605,9 +605,9 @@ body.app-cart-open .bottom-nav{display:grid!important;grid-template-columns:repe
 .app-brands-az-group li{margin:0}
 .app-brands-az-group li a{display:block;padding:10px 0;color:#222;text-decoration:none;font:400 13px/1.35 Inter,Arial,sans-serif}
 
-.app-header-top .app-shop-brands-header-back{display:flex;flex:0 0 38px;align-items:center;justify-content:center;width:38px;height:38px;margin:0 4px 0 0;padding:0;border:0;background:transparent;color:#111;font-size:22px}
+.app-header-top .app-shop-brands-header-back{display:flex;flex:0 0 38px;align-items:center;justify-content:center;width:38px;height:38px;margin:0;padding:0;border:0;background:transparent;color:#111;font-size:22px}
 .app-header-top .app-shop-brands-header-back[hidden]{display:none!important}
-body.app-shop-brands-open .app-header-top{position:relative}body.app-shop-brands-open .app-header-top .app-page-title{position:absolute;left:50%;transform:translateX(-50%);margin:0;color:#111;font:600 14px/1.2 Inter,Arial,sans-serif;letter-spacing:0;text-align:center;text-transform:uppercase;white-space:nowrap;pointer-events:none}
+body.app-shop-brands-open .app-header-top{position:relative;padding-left:14px;padding-right:14px}body.app-shop-brands-open .app-header-top .app-page-title{position:absolute;left:50%;transform:translateX(-50%);margin:0;color:#111;font:600 14px/1.2 Inter,Arial,sans-serif;letter-spacing:0;text-align:center;text-transform:uppercase;white-space:nowrap;pointer-events:none}
 .app-brands-az-list{padding:0 2px 100px}
 .app-brands-az-group{position:relative;padding:19px 22px 8px 0;border:0;scroll-margin-top:112px}
 .app-brands-az-group h2{margin:0 0 13px;padding:0;color:#888;font:600 15.5px/1.2 Inter,Arial,sans-serif}
@@ -626,12 +626,12 @@ body.app-shop-brands-open .app-brands-az-letter.is-disabled{color:#cfcfcf}
 /* Keep the A–Z Brands and All Products back buttons plain, without the glass/white circle. */
 .app-shop-back,.app-shop-brands-header-back,.app-shop-search{border:0;background:transparent;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
 
-.app-shop-brands-header-back{flex:0 0 38px;margin:0 4px 0 0;padding:0;font-size:22px}
+.app-shop-brands-header-back{flex:0 0 38px;margin:0;padding:0;font-size:22px}
 .app-product-back{width:38px;height:38px;min-width:38px;border:1px solid rgba(255,255,255,.72);background:rgba(255,255,255,.22);box-shadow:0 3px 14px rgba(0,0,0,.08),inset 0 1px 0 rgba(255,255,255,.72)}
 /* Match every page back-chevron's inner spacing and glyph box to the product-page control. */
 .app-shop-back i,.app-shop-brands-header-back i,.back i{display:block;box-sizing:content-box;width:24px;height:24px;font-size:21.5px;line-height:24px;text-align:center}
 /* Keep the product back control fixed at the original top-left image position. */
-.app-product-image-actions .app-product-back{position:absolute;top:5px;left:16px;margin:0}
+/* Product back button stays in the same flex row as its action group, using the shared 16px content inset. */
 
 .app-brands-az-group li{display:flex;align-items:center;gap:11px;min-height:85px;margin:0;border-top:1px solid #f1f1f1}
 .app-brands-az-group li:first-child{border-top:0}
@@ -710,8 +710,8 @@ body.app-product-header-solid .app-product-sticky-header{background:#fff;box-sha
 
 
 /* Corrected product scroll behaviour: pin the original controls without resizing or relocating them. */
-body.app-product-open .app-product-image-actions{position:fixed;top:env(safe-area-inset-top,0px);left:50%;right:auto;width:100%;max-width:430px;box-sizing:border-box;padding-left:8px;padding-right:8px;transform:translateX(-50%);z-index:122}
-body.app-product-open .app-product-image-actions .app-product-back{position:absolute;top:5px;left:16px;width:38px;height:38px;min-width:38px}
+body.app-product-open .app-product-image-actions{position:fixed;top:env(safe-area-inset-top,0px);left:50%;right:auto;width:100%;max-width:430px;box-sizing:border-box;padding-left:16px;padding-right:16px;transform:translateX(-50%);z-index:122}
+body.app-product-open .app-product-image-actions .app-product-back{position:relative;top:auto;left:auto;width:38px;height:38px;min-width:38px;flex:0 0 38px}
 body.app-product-open .app-product-image-actions .app-product-right-actions{position:relative;display:flex;flex-direction:column;align-items:center;gap:14px;margin-left:auto;margin-right:0}
 body.app-product-open .app-product-image-actions .app-product-right-actions .app-product-icon-button{box-sizing:border-box;width:38px;height:38px;min-width:38px;flex:0 0 38px}
 body.app-product-scrolled .app-product-image-wishlist,body.app-product-scrolled .app-product-share{opacity:0;transform:translateY(-18px);pointer-events:none}
