@@ -627,12 +627,12 @@ body.app-shop-brands-open .app-brands-az-letter.is-disabled{color:#cfcfcf}
 /* Keep the A–Z Brands and All Products back buttons plain, without the glass/white circle. */
 .app-shop-back,.app-shop-brands-header-back{border:0;background:transparent;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
 
-.app-shop-brands-header-back{flex:0 0 38px;margin:0 4px 0 -8px;padding:0;font-size:22px}
+.app-shop-brands-header-back{flex:0 0 38px;margin:0 4px 0 0;padding:0;font-size:22px}
 .app-product-back{width:38px;height:38px;min-width:38px;border:1px solid rgba(255,255,255,.72);background:rgba(255,255,255,.22);box-shadow:0 3px 14px rgba(0,0,0,.08),inset 0 1px 0 rgba(255,255,255,.72)}
 /* Match every page back-chevron's inner spacing and glyph box to the product-page control. */
 .app-shop-back i,.app-shop-brands-header-back i,.back i{display:block;box-sizing:content-box;width:24px;height:24px;font-size:21.5px;line-height:24px;text-align:center}
 /* Keep the product back control fixed at the original top-left image position. */
-.app-product-image-actions .app-product-back{position:absolute;top:5px;left:4px;margin:0}
+.app-product-image-actions .app-product-back{position:absolute;top:5px;left:8px;margin:0}
 
 .app-brands-az-group li{display:flex;align-items:center;gap:11px;min-height:85px;margin:0;border-top:1px solid #f1f1f1}
 .app-brands-az-group li:first-child{border-top:0}
@@ -712,7 +712,7 @@ body.app-product-header-solid .app-product-sticky-header{background:#fff;box-sha
 
 /* Corrected product scroll behaviour: pin the original controls without resizing or relocating them. */
 body.app-product-open .app-product-image-actions{position:fixed;top:env(safe-area-inset-top,0px);left:50%;right:auto;width:100%;max-width:430px;box-sizing:border-box;padding-left:8px;padding-right:8px;transform:translateX(-50%);z-index:122}
-body.app-product-open .app-product-image-actions .app-product-back{position:absolute;top:5px;left:4px;width:38px;height:38px;min-width:38px}
+body.app-product-open .app-product-image-actions .app-product-back{position:absolute;top:5px;left:8px;width:38px;height:38px;min-width:38px}
 body.app-product-open .app-product-image-actions .app-product-right-actions{position:relative;display:flex;flex-direction:column;align-items:center;gap:14px;margin-left:auto;margin-right:0}
 body.app-product-open .app-product-image-actions .app-product-right-actions .app-product-icon-button{box-sizing:border-box;width:38px;height:38px;min-width:38px;flex:0 0 38px}
 body.app-product-scrolled .app-product-image-wishlist,body.app-product-scrolled .app-product-share{opacity:0;transform:translateY(-18px);pointer-events:none}
