@@ -758,3 +758,30 @@ body.app-product-open .app-product-sticky-price{
   font-size:12px;
   line-height:1.3;
 }
+
+
+/* Dark glass bottom navigation with a near-black active selector. */
+.bottom-nav{
+  background:rgba(28,28,30,.76);
+  border-color:rgba(255,255,255,.18);
+  box-shadow:0 4px 22px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.12);
+}
+.nav-indicator{
+  background:rgba(0,0,0,.92);
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 2px 9px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.06);
+  backdrop-filter:blur(12px) saturate(150%);
+  -webkit-backdrop-filter:blur(12px) saturate(150%);
+}
+.bottom-nav .nav-item,
+.bottom-nav .nav-item i,
+.bottom-nav .nav-item .home-mark,
+.bottom-nav .nav-item .nav-label{
+  color:#fff;
+}
+.bottom-nav .nav-item.selected,
+.bottom-nav .nav-item.selected i,
+.bottom-nav .nav-item.selected .home-mark,
+.bottom-nav .nav-item.selected .nav-label{
+  color:#fff;
+}
