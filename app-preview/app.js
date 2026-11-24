@@ -1108,6 +1108,20 @@ document.addEventListener('click', event => {
     window.setTimeout(() => document.querySelector('.app-shop-brands-tile')?.click(), 60);
   }
 });
+document.addEventListener('click', event => {
+  const card = event.target.closest('.app-discover-brand-products .app-new-in-card[data-product-id]');
+  if (!card || event.target.closest('.app-new-in-wishlist')) return;
+  event.preventDefault();
+  event.stopPropagation();
+  appOpenProduct(card.dataset.productId);
+});
+document.addEventListener('keydown', event => {
+  const card = event.target.closest('.app-discover-brand-products .app-new-in-card[data-product-id]');
+  if (!card || (event.key !== 'Enter' && event.key !== ' ')) return;
+  event.preventDefault();
+  event.stopPropagation();
+  appOpenProduct(card.dataset.productId);
+});
 appRenderRecentBrands();
 appRenderFavoriteBrands();
 
@@ -1126,6 +1140,7 @@ fetch('/api/app-brands', { headers: { Accept: 'application/json' } })
       : '<p class="app-new-in-empty">Brands will appear here soon.</p>';
     appRenderRecentBrands();
     appRenderFavoriteBrands();
+    appRenderBrandProductSliders();
     if (!grid) return;
     if (!brands.length) {
       grid.innerHTML = '<p class="app-new-in-empty">Brands will appear here soon.</p>';
