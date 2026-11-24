@@ -813,6 +813,6 @@ body.app-product-open .app-product-sticky-price{
 .app-discover-brand-unit .app-discover-brand-row{margin:0}
 .app-discover-brand-products{overflow:hidden;padding-top:10px}
 .app-discover-brand-products .app-new-in-track{padding-left:0;scroll-padding-left:0}
-.app-discover-brand-products .app-new-in-track::after{flex-basis:16px}
-.app-discover-brand-products .app-new-in-card{flex-basis:calc((100% - 24px)/2)}
+.app-discover-brand-products .app-new-in-track::after{display:none}
+.app-discover-brand-products .app-new-in-card{flex-basis:calc((100% - 8px)/2)}
 .app-discover-brand-products .app-new-in-empty{padding:12px 0}
