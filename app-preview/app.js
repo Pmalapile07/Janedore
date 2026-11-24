@@ -100,6 +100,7 @@ function appToggleWishlistProduct(productId) {
   appUpdateWishlistIndicator();
   appUpdateWishlistCardIndicators();
   appUpdateProductImageWishlist();
+  if (typeof appRenderFavoriteProducts === 'function') appRenderFavoriteProducts();
   return next;
 }
 appUpdateWishlistIndicator();
@@ -886,7 +887,7 @@ function appBuildBrandDirectoryHTML(brands) {
       const logo = '<span class="app-brands-az-logo" aria-hidden="true">' +
         (logoUrl ? '<img src="' + appBrandEscape(logoUrl) + '" alt="" loading="lazy">' : '') +
         '</span>';
-      return '<li><a href="/brands/' + encodeURIComponent(slug) + '">' + logo +
+      return '<li><a href="/brands/' + encodeURIComponent(slug) + '" data-brand-link data-brand-slug="' + appBrandEscape(slug) + '">' + logo +
         '<span class="app-brands-az-name">' + appBrandEscape(name) + '</span>' +
         '<i class="ph ph-caret-right app-brands-az-chevron" aria-hidden="true"></i></a></li>';
     }).join('');
@@ -1040,7 +1041,7 @@ document.addEventListener('click', event => {
     event.preventDefault();
     event.stopPropagation();
     const slug = favoriteButton.dataset.brandFavorite;
-    const brand = appDiscoverBrands.find(item => appBrandSlug(item) === slug) || appReadBrandStorage(appRecentBrandsKey).find(item => String(item.slug) === slug);
+    const brand = appDiscoverBrands.find(item => appBrandSlug(item) === slug) || appBrandDirectoryData.find(item => appBrandSlug(item) === slug) || appReadBrandStorage(appRecentBrandsKey).find(item => String(item.slug) === slug);
     if (!brand) return;
     const favorites = appReadBrandStorage(appBrandFavoritesKey);
     const exists = favorites.some(item => String(item.slug) === slug);
@@ -1118,6 +1119,22 @@ const appProductLoads = new Map();
 
 let appHomeSelectedCategory = 'all';
 const appShopProducts = [];
+function appRenderFavoriteProducts() {
+  const target = document.getElementById('app-favorite-products');
+  if (!target) return;
+  const products = [...appWishlistProductIds].map(id => appProductCache.get(String(id)) || appShopProducts.find(item => String(item.id) === String(id))).filter(Boolean);
+  target.innerHTML = products.length ? products.map(product => {
+    const id = String(product.id || '');
+    const image = appProductImages(product)[0] || product.imageUrl || '';
+    const name = product.name || product.title || 'Product';
+    const price = Number(product.price) || 0;
+    return '<article class="app-new-in-card" data-product-id="' + appProductEscape(id) + '" role="button" tabindex="0" aria-label="View ' + appProductEscape(name) + '">' +
+      '<div class="app-new-in-image">' + (image ? '<img src="' + appProductEscape(image) + '" alt="' + appProductEscape(name) + '" loading="lazy">' : '') + '</div>' +
+      '<div class="app-new-in-brand">' + appProductEscape(appFormatBrandName(product.brand || product.vendorName || '')) + '</div>' +
+      '<div class="app-new-in-name">' + appProductEscape(name) + '</div>' +
+      '<div class="app-new-in-price">R' + price.toFixed(2) + '</div></article>';
+  }).join('') : '<p class="app-new-in-empty">Your favorite products will appear here.</p>';
+}
 let appShopLoaded = false;
 let appShopLoading = null;
 
