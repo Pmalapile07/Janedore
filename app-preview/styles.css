@@ -792,7 +792,7 @@ body.app-shop-brands-open .app-brands-az-letter.is-disabled{color:#cfcfcf}
 
 
 /* Product search header: compact trailing Favorites trigger with a vertical actions menu. */
-.app-product-search-header{position:relative;overflow:visible}
+.app-product-search-header{position:sticky;top:0;z-index:75;overflow:visible;background:#fff}
 .app-product-search-header .app-shop-search-row{position:relative;gap:8px}
 .app-product-search-header .app-shop-search-row .app-search-field{flex:1 1 auto;min-width:0}
 .app-product-actions-trigger{display:flex;flex:0 0 34px;align-items:center;justify-content:center;width:34px;height:42.5px;margin:0;padding:0;border:0;background:transparent;color:#111;cursor:pointer}
