@@ -1298,6 +1298,25 @@ document.getElementById('app-shop-collection-back')?.addEventListener('click', (
 document.getElementById('app-product-search-back')?.addEventListener('click', appProductClose);
 const appProductActionsTrigger = document.getElementById('app-product-actions-trigger');
 const appProductActionsMenu = document.getElementById('app-product-actions-menu');
+function appSetProductActionsTrigger(action) {
+  if (!appProductActionsTrigger) return;
+  const icon = appProductActionsTrigger.querySelector('i');
+  const icons = {
+    favorites: ['ph ph-heart-straight', 'Favorites'],
+    share: ['ph ph-share', 'Share'],
+    report: ['ph ph-flag', 'Report product']
+  };
+  const selected = icons[action] || icons.favorites;
+  if (icon) icon.className = selected[0];
+  appProductActionsTrigger.setAttribute('aria-label', selected[1]);
+}
+function appSyncProductActionsTrigger() {
+  const productId = String(appCurrentProduct?.id || '');
+  const isFavorite = productId && appWishlistProductIds.has(productId);
+  const icon = appProductActionsTrigger?.querySelector('i');
+  if (icon) icon.className = isFavorite ? 'ph-fill ph-heart-straight' : 'ph ph-heart-straight';
+  if (appProductActionsTrigger) appProductActionsTrigger.setAttribute('aria-label', 'Favorites');
+}
 function appCloseProductActionsMenu() {
   if (!appProductActionsMenu || !appProductActionsTrigger) return;
   appProductActionsMenu.hidden = true;
@@ -1322,10 +1341,14 @@ appProductActionsMenu?.addEventListener('click', async event => {
   appCloseProductActionsMenu();
   if (action.dataset.productAction === 'favorites') {
     const added = appToggleWishlistProduct(productId);
+    const triggerIcon = appProductActionsTrigger?.querySelector('i');
+    if (triggerIcon) triggerIcon.className = added ? 'ph-fill ph-heart-straight' : 'ph ph-heart-straight';
+    appSetProductActionsTrigger('favorites');
     appShowAddedToast(added ? 'Added to favorites' : 'Removed from favorites', added ? 'ph-heart' : 'ph-heart-break', 'wishlist');
     return;
   }
   if (action.dataset.productAction === 'share') {
+    appSetProductActionsTrigger('share');
     const shareData = { title: productName + ' | JANEDORE', text: 'Take a look at ' + productName, url: productUrl };
     if (navigator.share) {
       try { await navigator.share(shareData); } catch (error) { if (error && error.name !== 'AbortError') console.warn('[APP PRODUCT SHARE]', error); }
@@ -1340,6 +1363,7 @@ appProductActionsMenu?.addEventListener('click', async event => {
     return;
   }
   if (action.dataset.productAction === 'report') {
+    appSetProductActionsTrigger('report');
     const subject = encodeURIComponent('Report product: ' + productName);
     const body = encodeURIComponent('I would like to report this product.\\n\\nProduct: ' + productName + '\\nProduct ID: ' + productId + '\\nLink: ' + productUrl + '\\n\\nReason for reporting: ');
     location.href = 'mailto:support@janedore.co.za?subject=' + subject + '&body=' + body;
@@ -1859,6 +1883,7 @@ async function appOpenProduct(productId, pushHistory = true) {
   // The full Firestore document is hydrated in the background below.
   if (product && appRenderedProductId !== id) {
     appCurrentProduct = product;
+    appSyncProductActionsTrigger();
     appProductQuantity = 1;
     appSelectedVariant = 0;
     appSelectedSize = null;
@@ -1926,6 +1951,7 @@ async function appOpenProduct(productId, pushHistory = true) {
     return;
   }
   appCurrentProduct = product;
+  appSyncProductActionsTrigger();
   appRenderedProductId = id;
   appProductQuantity = 1;
   appSelectedVariant = 0;
