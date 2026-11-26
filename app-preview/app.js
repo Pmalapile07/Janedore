@@ -1301,12 +1301,18 @@ const appProductActionsMenu = document.getElementById('app-product-actions-menu'
 function appSetProductActionsTrigger(action) {
   if (!appProductActionsTrigger) return;
   const icon = appProductActionsTrigger.querySelector('i');
+  if (action === 'favorites') {
+    const productId = String(appCurrentProduct?.id || '');
+    const isFavorite = productId && appWishlistProductIds.has(productId);
+    if (icon) icon.className = isFavorite ? 'ph-fill ph-heart-straight' : 'ph ph-heart-straight';
+    appProductActionsTrigger.setAttribute('aria-label', 'Favorites');
+    return;
+  }
   const icons = {
-    favorites: ['ph ph-heart-straight', 'Favorites'],
     share: ['ph ph-share', 'Share'],
     report: ['ph ph-flag', 'Report product']
   };
-  const selected = icons[action] || icons.favorites;
+  const selected = icons[action] || icons.share;
   if (icon) icon.className = selected[0];
   appProductActionsTrigger.setAttribute('aria-label', selected[1]);
 }
