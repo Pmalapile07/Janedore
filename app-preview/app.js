@@ -403,39 +403,6 @@ navItems.forEach(button => {
   });
 });
 
-// Keep the product navigation pinned while the page scrolls. The image actions
-// disappear on scroll; the sticky header becomes white once the gallery has passed.
-function appUpdateProductHeaderOnScroll() {
-  const view = document.getElementById('app-product-view');
-  const gallery = document.getElementById('app-product-gallery');
-  if (!view || view.hidden || !gallery || !document.body.classList.contains('app-product-open')) {
-    document.body.classList.remove('app-product-scrolled','app-product-header-solid','app-product-image-ended');
-    return;
-  }
-  const stickyHeader = document.getElementById('app-product-sticky-header');
-  const headerBottom = stickyHeader ? stickyHeader.getBoundingClientRect().bottom : 58;
-  const galleryHasEnded = gallery.getBoundingClientRect().bottom <= headerBottom;
-  document.body.classList.toggle('app-product-scrolled', window.scrollY > 18);
-  document.body.classList.toggle('app-product-header-solid', galleryHasEnded);
-  document.body.classList.toggle('app-product-image-ended', galleryHasEnded);
-}
-window.addEventListener('scroll', appUpdateProductHeaderOnScroll, {passive:true});
-window.addEventListener('resize', appUpdateProductHeaderOnScroll);
-const appStickyProductName = document.getElementById('app-product-sticky-name');
-const appStickyProductPrice = document.getElementById('app-product-sticky-price');
-const appMainProductName = document.getElementById('app-product-name');
-const appMainProductPrice = document.getElementById('app-product-price');
-function appSyncStickyProductHeading() {
-  if (appStickyProductName && appMainProductName) appStickyProductName.textContent = appMainProductName.textContent;
-  if (appStickyProductPrice && appMainProductPrice) appStickyProductPrice.innerHTML = appMainProductPrice.innerHTML;
-}
-if (appMainProductName && appMainProductPrice) {
-  const stickyHeadingObserver = new MutationObserver(appSyncStickyProductHeading);
-  stickyHeadingObserver.observe(appMainProductName,{childList:true,subtree:true,characterData:true});
-  stickyHeadingObserver.observe(appMainProductPrice,{childList:true,subtree:true,characterData:true,attributes:true});
-  appSyncStickyProductHeading();
-}
-
 const headerCartButton = document.getElementById('app-header-cart');
 if (headerCartButton) headerCartButton.addEventListener('click', () => {
   if (appCartView && appCartView.hidden) appSaveCurrentTabMemory();
