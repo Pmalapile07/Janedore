@@ -195,7 +195,19 @@ function appSaveCurrentTabMemory() {
 }
 
 let appScrollSaveQueued = false;
+let appShopLastScrollY = window.scrollY;
 window.addEventListener('scroll', () => {
+  const collectionPageForDirection = document.getElementById('app-shop-page');
+  const collectionCountForDirection = document.getElementById('app-shop-product-count');
+  const currentScrollY = window.scrollY;
+  if (collectionPageForDirection && !collectionPageForDirection.hidden && collectionCountForDirection) {
+    if (currentScrollY <= 8 || currentScrollY > appShopLastScrollY + 2) {
+      collectionCountForDirection.classList.remove('is-scrolling-up');
+    } else if (currentScrollY < appShopLastScrollY - 2) {
+      collectionCountForDirection.classList.add('is-scrolling-up');
+    }
+  }
+  appShopLastScrollY = currentScrollY;
   if (appScrollSaveQueued) return;
   appScrollSaveQueued = true;
   requestAnimationFrame(() => {
@@ -1227,7 +1239,7 @@ function appShopRenderProducts() {
     };
     return (aliases[selectedCategory] || [selectedCategory]).some(term => categoryText.includes(term));
   });
-  const countLabel = document.getElementById('app-shop-product-count');
+  const countLabel = document.getElementById('app-shop-item-count');
   if (countLabel) {
     const count = products.length;
     countLabel.textContent = count + (count === 1 ? ' item' : ' items');
@@ -1301,6 +1313,13 @@ appShopLoadProducts();
 function appOpenHomeCollection(category) {
   if (category) appHomeSelectedCategory = category;
   else appHomeSelectedCategory = 'all';
+  const collectionName = document.getElementById('app-shop-collection-name');
+  if (collectionName) {
+    const rawName = String(appHomeSelectedCategory || 'all').replace(/[-_]+/g, ' ').trim();
+    collectionName.textContent = rawName.toLowerCase() === 'all' ? 'All Products' : rawName.replace(/\b\w/g, letter => letter.toUpperCase());
+  }
+  const collectionCount = document.getElementById('app-shop-product-count');
+  if (collectionCount) collectionCount.classList.remove('is-scrolling-up');
   if (appProductView && !appProductView.hidden) appProductView.hidden = true;
   appSaveCurrentTabMemory();
   const homeView = tabViews.find(view => view.dataset.view === 'Home');
