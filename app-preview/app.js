@@ -1678,7 +1678,6 @@ function appShowProductView() {
   if (collectionPage) collectionPage.hidden = true;
   appProductView.hidden = false;
   document.body.classList.add('app-product-open');
-  appUpdateProductHeaderOnScroll();
   document.querySelectorAll('.app-tab-content').forEach(view => { view.hidden = true; });
   const header = document.querySelector('.app-header');
   const bottomNav = document.querySelector('.bottom-nav');
