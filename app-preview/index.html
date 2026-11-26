@@ -308,6 +308,12 @@
             <span class="app-shop-search-hint" aria-label="Search anything"><span class="app-shop-search-muted">Search </span><span class="app-shop-search-emphasis">anything</span></span>
             <svg class="app-search-qr" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3"/><path d="M16 4h3a1 1 0 0 1 1 1v3"/><path d="M20 16v3a1 1 0 0 1-1 1h-3"/><path d="M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M7.5 12h9"/></svg>
           </div>
+          <button class="app-product-actions-trigger" id="app-product-actions-trigger" type="button" aria-label="Product actions" aria-expanded="false" aria-controls="app-product-actions-menu"><i class="ph ph-heart-straight" aria-hidden="true"></i></button>
+          <div class="app-product-actions-menu" id="app-product-actions-menu" role="menu" hidden>
+            <button type="button" role="menuitem" data-product-action="favorites"><i class="ph ph-heart-straight" aria-hidden="true"></i><span>Favorites</span></button>
+            <button type="button" role="menuitem" data-product-action="share"><i class="ph ph-share" aria-hidden="true"></i><span>Share</span></button>
+            <button type="button" role="menuitem" data-product-action="report"><i class="ph ph-flag" aria-hidden="true"></i><span>Report product</span></button>
+          </div>
         </div>
       </header>
       <div class="app-product-gallery" id="app-product-gallery">
