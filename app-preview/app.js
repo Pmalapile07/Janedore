@@ -1756,6 +1756,25 @@ function appProductShowLoading() {
   document.getElementById('app-product-price').textContent = '';
   document.getElementById('app-product-description').textContent = '';
 }
+function appProductBadgeLabel(product) {
+  const regular = Number(product && product.price) || 0;
+  const salePrice = product && product.salePrice == null ? NaN : Number(product.salePrice);
+  const isSale = Number.isFinite(salePrice) && salePrice > 0 && salePrice < regular;
+  if (Number(product && product.stock) <= 0) return 'Sold out';
+  const configured = String(product && product.badge || '').trim();
+  if (configured.toLowerCase() === 'pre-order') return 'Pre-order';
+  if (isSale) return 'Sale';
+  if (configured && !['new','sale','sold out','sold','free delivery'].includes(configured.toLowerCase())) return configured;
+  return 'New';
+}
+function appRenderProductPageBadge(product) {
+  const badge = document.getElementById('app-product-page-badge');
+  if (!badge) return;
+  const label = product ? appProductBadgeLabel(product) : '';
+  badge.textContent = label;
+  badge.hidden = !label;
+  badge.classList.toggle('is-sale', label.toLowerCase() === 'sale');
+}
 async function appOpenProduct(productId, pushHistory = true) {
   const id = String(productId || '').trim();
   if (!id) return;
@@ -1794,6 +1813,7 @@ async function appOpenProduct(productId, pushHistory = true) {
       : '<div class="app-product-gallery-slide app-product-gallery-empty"></div>';
     const previewDots = document.getElementById('app-product-gallery-dots');
     previewDots.innerHTML = appGalleryImages.length > 1 ? appGalleryImages.map((_,i) => '<span class="app-product-gallery-dot' + (!i?' active':'') + '"></span>').join('') : '';
+    appRenderProductPageBadge(product);
     document.getElementById('app-product-brand').textContent = appFormatBrandDisplayName(product.brand || product.vendorName || '');
     document.getElementById('app-product-name').textContent = product.name || product.title || '';
     const previewPrice = Number(product.price) || 0;
@@ -1861,6 +1881,7 @@ async function appOpenProduct(productId, pushHistory = true) {
     : '<div class="app-product-gallery-slide app-product-gallery-empty"></div>';
   const dots = document.getElementById('app-product-gallery-dots');
   dots.innerHTML = appGalleryImages.length > 1 ? appGalleryImages.map((_,i) => '<span class="app-product-gallery-dot' + (!i?' active':'') + '"></span>').join('') : '';
+  appRenderProductPageBadge(product);
   gallery.onscroll = () => {
     const index = Math.round(gallery.scrollLeft / Math.max(1,gallery.clientWidth));
     [...dots.children].forEach((dot,i)=>dot.classList.toggle('active',i===index));
