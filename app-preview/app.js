@@ -1750,6 +1750,7 @@ function appProductClose() {
 }
 function appProductShowLoading() {
   appShowProductView();
+  appRenderProductPageBadge(null);
   document.getElementById('app-product-gallery-track').innerHTML = '<div class="app-product-gallery-loading"></div>';
   document.getElementById('app-product-brand').textContent = '';
   document.getElementById('app-product-name').textContent = 'Loading product…';
