@@ -1321,28 +1321,6 @@ function appOpenHomeCollection(category) {
   appShopLoadProducts();
   appRestoreScrollPosition(0);
 }
-const appShopBack = document.getElementById('app-shop-back');
-if (appShopBack) appShopBack.addEventListener('click', () => {
-  const collectionPage = document.getElementById('app-shop-page');
-  if (collectionPage) {
-    appCollectionMemory.scrollY = window.scrollY;
-    collectionPage.hidden = true;
-    appHomeScreen = 'home';
-    const homeMemory = appTabMemories.get('Home') || appDefaultTabMemory();
-    homeMemory.screen = 'tab';
-    homeMemory.collectionScrollY = appCollectionMemory.scrollY;
-    homeMemory.productId = null;
-    homeMemory.productScrollY = 0;
-    homeMemory.productReturnToCollection = false;
-    appTabMemories.set('Home',homeMemory);
-    appPersistScrollMemories();
-  }
-  const homeButton = navItems.find(item => item.dataset.tab === 'Home');
-  if (homeButton) {
-    appSelectNavigationTab('Home', homeButton);
-    appShowTabPage('Home');
-  }
-});
 const appProductReviewsCache = new Map();
 let appRenderedProductId = '';
 let appCurrentProduct = null;
@@ -2054,18 +2032,6 @@ document.addEventListener('keydown', event => {
   const card = event.target.closest && event.target.closest('.app-new-in-card[data-product-id], .app-product-related-card[data-product-id]');
   if (card && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); appOpenProduct(card.dataset.productId); }
 });
-document.getElementById('app-product-back').addEventListener('click', () => {
-  if (history.state && history.state.appProductId) history.back();
-  else appProductClose();
-});
-// Product-page cart action is wired to the native app bag below.
-document.getElementById('app-product-share').addEventListener('click', async () => {
-  if (!appCurrentProduct) return;
-  const url = location.href;
-  const data = {title:appCurrentProduct.name || appCurrentProduct.title || 'Product',text:appCurrentProduct.name || '',url};
-  if (navigator.share) { try { await navigator.share(data); } catch (error) { if (error.name !== 'AbortError') console.warn(error); } }
-  else { try { await navigator.clipboard.writeText(url); alert('Product link copied.'); } catch (_) { window.prompt('Copy this product link:',url); } }
-});
 
 function appUpdateProductImageWishlist() {
   const button = document.getElementById('app-product-image-wishlist');
@@ -2078,14 +2044,6 @@ function appUpdateProductImageWishlist() {
   if (icon) icon.className = active ? 'ph-fill ph-heart-straight' : 'ph ph-heart-straight';
 }
 
-document.getElementById('app-product-image-wishlist').addEventListener('click', () => {
-  if (!appCurrentProduct || !appCurrentProduct.id) return;
-  const active = appToggleWishlistProduct(appCurrentProduct.id);
-  appShowAddedToast(active ? 'Added to favorites' : 'Removed from favorites', active ? 'ph-heart' : 'ph-heart-break', 'wishlist');
-});
-document.getElementById('app-product-image-bag').addEventListener('click', () => {
-  appCartOpen();
-});
 
 /* APP BAG — shares cart and discount storage with the website. */
 const appCartView = document.getElementById('app-cart-view');
