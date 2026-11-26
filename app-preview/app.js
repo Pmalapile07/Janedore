@@ -1327,6 +1327,7 @@ function appOpenHomeCollection(category) {
 document.getElementById('app-shop-collection-back')?.addEventListener('click', () => {
   document.querySelector('.bottom-nav [data-tab="Home"]')?.click();
 });
+document.getElementById('app-product-search-back')?.addEventListener('click', appProductClose);
 const appProductReviewsCache = new Map();
 let appRenderedProductId = '';
 let appCurrentProduct = null;
