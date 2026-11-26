@@ -224,7 +224,8 @@ body.app-launch-welcome .app-shell{visibility:hidden}
 /* Focused app product page: no site header or bottom navigation. */
 body.app-product-open{overflow-x:hidden}
 .app-product-view[hidden]{display:none!important}
-.app-product-view{position:relative;z-index:30;width:100%;min-height:100dvh;background:#fff;padding-top:env(safe-area-inset-top,0px);padding-bottom:40px}
+.app-product-view{position:relative;z-index:30;width:100%;min-height:100dvh;background:#fff;padding-top:0;padding-bottom:40px}
+.app-product-search-header{position:relative;top:auto;z-index:31;flex:0 0 auto}
 .app-product-gallery{position:relative;width:100%;overflow:hidden;background:#fff}
 .app-product-gallery-track{display:flex;width:100%;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .app-product-gallery-track::-webkit-scrollbar{display:none}
