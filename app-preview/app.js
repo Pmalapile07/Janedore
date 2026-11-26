@@ -1298,8 +1298,11 @@ function appOpenHomeCollection(category) {
   else appHomeSelectedCategory = 'all';
   const collectionName = document.getElementById('app-shop-collection-name');
   if (collectionName) {
-    const rawName = String(appHomeSelectedCategory || 'all').replace(/[-_]+/g, ' ').trim();
-    collectionName.textContent = rawName.toLowerCase() === 'all' ? 'All Products' : rawName.replace(/\b\w/g, letter => letter.toUpperCase());
+    const rawName = String(appHomeSelectedCategory || 'all').replace(/[-_]+/g, ' ').trim().toLowerCase();
+    const label = rawName === 'all' ? 'all products' : rawName;
+    collectionName.textContent = label;
+    const searchHint = collectionName.closest('.app-shop-search-hint');
+    if (searchHint) searchHint.setAttribute('aria-label', 'Search ' + label);
   }
   if (appProductView && !appProductView.hidden) appProductView.hidden = true;
   appSaveCurrentTabMemory();
