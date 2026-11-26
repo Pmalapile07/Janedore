@@ -1741,12 +1741,14 @@ function appHideAddedToast() {
 function appUpdateCartIndicator() {
   const count = appProductCartItems().reduce((sum, item) => sum + Math.max(0, Number(item.qty) || 0), 0);
   const label = count ? 'Shopping bag, ' + count + (count === 1 ? ' item' : ' items') : 'Shopping bag';
-  document.querySelectorAll('.app-header-cart-count,.app-product-cart-count').forEach(badge => {
+  document.querySelectorAll('.app-header-cart-count,.app-product-cart-count,.nav-cart-count').forEach(badge => {
     badge.textContent = count > 9 ? '9+' : String(count);
     badge.hidden = count < 1;
   });
   const cartButton = document.getElementById('app-header-cart');
   if (cartButton) cartButton.setAttribute('aria-label', label);
+  const navCartButton = document.querySelector('.nav-item[data-tab="Cart"]');
+  if (navCartButton) navCartButton.setAttribute('aria-label', label);
   const productCartButton = document.getElementById('app-product-image-bag');
   if (productCartButton) productCartButton.setAttribute('aria-label', label);
 }
