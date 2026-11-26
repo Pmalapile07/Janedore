@@ -802,3 +802,8 @@ body.app-shop-brands-open .app-brands-az-letter.is-disabled{color:#cfcfcf}
 .app-product-actions-menu button{display:flex;align-items:center;gap:12px;width:100%;min-height:44px;padding:0 14px;border:0;background:transparent;color:#111;text-align:left;font:400 13px/1.2 Inter,Arial,sans-serif;cursor:pointer}
 .app-product-actions-menu button:active{background:#f5f5f5}
 .app-product-actions-menu button i{display:flex;align-items:center;justify-content:center;flex:0 0 20px;width:20px;font-size:19px;line-height:1}
+
+
+/* Increase product-card brand names by 1px on Home and collection pages only. */
+.app-tab-content[data-view="Home"] .app-new-in-brand,
+.app-category-home .app-new-in-brand{font-size:12px}
