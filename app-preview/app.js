@@ -2552,6 +2552,11 @@ function appRenderCart(skipHydration) {
   }
   const subtotal = appCartSubtotal(items);
   const discountAmount = appCartDiscountAmount(items, subtotal);
+  const stickyCount = document.getElementById('app-cart-sticky-count');
+  const stickySubtotal = document.getElementById('app-cart-sticky-subtotal');
+  const totalItemCount = items.reduce(function(total, item) { return total + Math.max(1, Number(item.qty) || 1); }, 0);
+  if (stickyCount) stickyCount.textContent = 'Total item (' + totalItemCount + ')';
+  if (stickySubtotal) stickySubtotal.textContent = appCartFormat(Math.max(0, subtotal - discountAmount));
   const cards = items.map(function(item, index) {
     const quantity = Math.max(1, Number(item.qty) || 1);
     const image = typeof item.thumbnail === 'string' && /^https:\/\//i.test(item.thumbnail) ? item.thumbnail : '';
