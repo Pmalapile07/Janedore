@@ -375,6 +375,7 @@ body.app-product-open .app-product-content{padding-bottom:120px}
 
 /* App bag: keep the main navigation visible and reserve space above it. */
 body.app-cart-open .bottom-nav{display:none!important}
+body.app-cart-open.app-cart-empty-state .bottom-nav{display:grid!important}
 .app-cart-view{padding-bottom:calc(112px + env(safe-area-inset-bottom,0px))}
 .app-cart-content{padding-bottom:28px}
 
