@@ -1649,15 +1649,20 @@ function appRenderProductStickyBar(product, regular, sale) {
   const bar = document.getElementById('app-product-sticky-bar');
   if (!bar) return;
   const unavailable = Number.isFinite(Number(product.stock)) && Number(product.stock) <= 0;
-  bar.innerHTML = '<button class="app-product-sticky-buy" id="app-product-sticky-buy" type="button"' +
-    (unavailable ? ' disabled' : '') +
-    '>Buy now</button><button class="app-product-sticky-add" id="app-product-sticky-add" type="button"' +
+  const price = document.getElementById('app-product-price');
+  bar.innerHTML = '<div class="app-product-sticky-price" id="app-product-sticky-price">' + (price ? price.innerHTML : '') +
+    '</div><button class="app-product-sticky-favorite" id="app-product-sticky-favorite" type="button" aria-label="Add to favorites" aria-pressed="false"><i class="ph ph-heart-straight" aria-hidden="true"></i></button>' +
+    '<button class="app-product-sticky-add" id="app-product-sticky-add" type="button"' +
     (unavailable ? ' disabled' : '') +
     '><span class="app-product-sticky-label">' + (unavailable ? 'Sold out' : 'Add to bag') +
     '</span></button>';
   bar.hidden = false;
   document.getElementById('app-product-sticky-add').onclick = appAddCurrentProductToBag;
-  document.getElementById('app-product-sticky-buy').onclick = appBuyNowCurrentProduct;
+  document.getElementById('app-product-sticky-favorite').onclick = function() {
+    if (!appCurrentProduct) return;
+    const added = appToggleWishlistProduct(String(appCurrentProduct.id || ''));
+    appShowAddedToast(added ? 'Added to favorites' : 'Removed from favorites', added ? 'ph-heart' : 'ph-heart-break', 'wishlist');
+  };
   appUpdateProductStickyState();
 }
 function appUpdateProductStickyState() {
@@ -1665,7 +1670,6 @@ function appUpdateProductStickyState() {
   if (!bar || !appProductView || appProductView.hidden || !appCurrentProduct) return;
   const label = bar.querySelector('.app-product-sticky-label');
   const button = bar.querySelector('.app-product-sticky-add');
-  const buyButton = bar.querySelector('.app-product-sticky-buy');
   const p = appCurrentProduct, hasSizes = appProductHasSizes(p);
   const selectedStock = appProductSizeStock(p, appSelectedVariant, appSelectedSize || 'OS');
   const noAvailableSize = hasSizes && !(p.sizes || []).filter(s => s !== 'OS').some(s => appProductSizeStock(p, appSelectedVariant, s) > 0);
@@ -1673,7 +1677,6 @@ function appUpdateProductStickyState() {
   const needsSize = hasSizes && !appSelectedSize && !soldOut;
   const unavailable = soldOut || needsSize || (hasSizes && selectedStock <= 0);
   if (button) button.disabled = unavailable;
-  if (buyButton) buyButton.disabled = unavailable;
   if (label) label.textContent = soldOut || (hasSizes && selectedStock <= 0) ? 'Sold out' : (needsSize ? 'Select a size' : 'Add to bag');
   appUpdateProductImageWishlist();
 }
@@ -1912,6 +1915,8 @@ async function appOpenProduct(productId, pushHistory = true) {
     document.getElementById('app-product-price').innerHTML = Number.isFinite(previewSale) && previewSale > 0 && previewSale < previewPrice
       ? '<span class="app-product-sale-price">' + appProductMoney(previewSale) + '</span><s>' + appProductMoney(previewPrice) + '</s>'
       : appProductMoney(previewPrice);
+    const stickyPrice = document.getElementById('app-product-sticky-price');
+    if (stickyPrice) stickyPrice.innerHTML = document.getElementById('app-product-price').innerHTML;
     document.getElementById('app-product-description').innerHTML = appProductFormatMultiline(product.description || 'No description available.');
     document.getElementById('app-product-shipping').textContent = product.shippingReturns || 'Please see the delivery and returns information at checkout.';
     appRenderProductOptions(product, 0);
@@ -2120,7 +2125,7 @@ document.addEventListener('keydown', event => {
 });
 
 function appUpdateProductImageWishlist() {
-  const button = document.getElementById('app-product-image-wishlist');
+  const button = document.getElementById('app-product-sticky-favorite');
   if (!button) return;
   const productId = appCurrentProduct && appCurrentProduct.id ? String(appCurrentProduct.id) : '';
   const active = !!productId && appWishlistProductIds.has(productId);
@@ -2777,7 +2782,7 @@ function appAddCurrentProductToBag() {
   if (label && button && !button.disabled) {
     label.textContent = 'Added';
     setTimeout(() => {
-      if (label.isConnected && appCurrentProduct) label.textContent = button.closest('.app-product-sticky-bar').classList.contains('minimized') ? 'Add' : 'Add to bag';
+      if (label.isConnected && appCurrentProduct) label.textContent = 'Add to bag';
     }, 1400);
   }
 }
