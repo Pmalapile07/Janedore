@@ -806,4 +806,4 @@ body.app-shop-brands-open .app-brands-az-letter.is-disabled{color:#cfcfcf}
 
 /* Increase product-card brand names by 1px on Home and collection pages only. */
 .app-tab-content[data-view="Home"] .app-new-in-brand{font-size:12px;font-weight:600}
-.app-category-home .app-new-in-brand{font-size:12px}
+.app-category-home .app-new-in-brand{font-size:12px;font-weight:600}
