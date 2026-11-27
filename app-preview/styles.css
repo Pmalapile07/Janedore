@@ -332,7 +332,7 @@ body.app-product-open{overflow-x:hidden}
 .app-cart-item-controls>span{min-width:22px;text-align:center;font:500 12px/1 Inter,Arial,sans-serif;font-variant-numeric:tabular-nums}
 .app-cart-item-controls .app-cart-qty-action{display:flex;align-items:center;justify-content:center;width:26px;height:26px;padding:0;border:0;border-radius:50%;background:transparent;color:#111;cursor:pointer}
 .app-cart-item-controls .app-cart-qty-action i{font-size:15px;line-height:1}
-.app-cart-item-badge{position:static;display:inline-flex;align-items:center;padding:4px 8px;background:#F4F4F4;color:#111;font:500 12px/1 Inter,Arial,sans-serif;letter-spacing:0;text-transform:none}
+.app-cart-item-badge{position:static;display:inline-flex;align-items:center;padding:4px 8px;background:#F4F4F4;color:#111;font:500 12px/1 Inter,Arial,sans-serif;letter-spacing:0;text-transform:uppercase}
 .app-cart-item-badge.is-sale{background:#D62828;color:#fff}
 .app-cart-item-price{align-self:end;justify-self:end;white-space:nowrap;font:500 12px Inter,Arial,sans-serif}
 .app-cart-summary{margin-top:22px;padding:18px 0;border-top:0}
