@@ -1385,7 +1385,6 @@ document.addEventListener('keydown', event => {
 const appProductReviewsCache = new Map();
 let appRenderedProductId = '';
 let appCurrentProduct = null;
-let appProductQuantity = 1;
 
 let appSelectedVariant = 0;
 let appGalleryImages = [];
@@ -1629,7 +1628,6 @@ function appRenderProductOptions(product, variantIndex) {
   root.querySelectorAll('[data-app-size]').forEach(button => button.addEventListener('click', () => {
     appSelectedSize = button.dataset.appSize;
     appRenderProductOptions(product, appSelectedVariant);
-    appUpdateQuantityControls();
     appUpdateProductStickyState();
   }));
   root.querySelectorAll('[data-app-variant]').forEach(button => button.addEventListener('click', () => appSelectProductVariant(Number(button.dataset.appVariant))));
@@ -1639,7 +1637,6 @@ function appSelectProductVariant(index) {
   appSelectedVariant = index;
   appSelectedSize = null;
   appRenderProductOptions(appCurrentProduct, index);
-  appUpdateQuantityControls();
   appUpdateProductStickyState();
   const first = appGalleryOwners.findIndex(owner => owner === index);
   const track = document.getElementById('app-product-gallery-track');
@@ -1895,7 +1892,6 @@ async function appOpenProduct(productId, pushHistory = true) {
   if (product && appRenderedProductId !== id) {
     appCurrentProduct = product;
     appSyncProductActionsTrigger();
-    appProductQuantity = 1;
     appSelectedVariant = 0;
     appSelectedSize = null;
     const previewGallery = appProductGallery(product);
@@ -1920,8 +1916,6 @@ async function appOpenProduct(productId, pushHistory = true) {
     document.getElementById('app-product-description').innerHTML = appProductFormatMultiline(product.description || 'No description available.');
     document.getElementById('app-product-shipping').textContent = product.shippingReturns || 'Please see the delivery and returns information at checkout.';
     appRenderProductOptions(product, 0);
-    document.getElementById('app-product-qty').textContent = '1';
-    document.getElementById('app-product-qty-minus').disabled = true;
     appRenderProductStickyBar(product, previewPrice, previewSale);
     appUpdateProductStickyState();
   }
@@ -1966,7 +1960,6 @@ async function appOpenProduct(productId, pushHistory = true) {
   appCurrentProduct = product;
   appSyncProductActionsTrigger();
   appRenderedProductId = id;
-  appProductQuantity = 1;
   appSelectedVariant = 0;
   appSelectedSize = null;
   const productGallery = appProductGallery(product);
@@ -1987,7 +1980,6 @@ async function appOpenProduct(productId, pushHistory = true) {
       appSelectedVariant = owner;
       appSelectedSize = null;
       appRenderProductOptions(appCurrentProduct, appSelectedVariant);
-      appUpdateQuantityControls();
       appUpdateProductStickyState();
     }
   };
@@ -1999,9 +1991,6 @@ async function appOpenProduct(productId, pushHistory = true) {
     ? '<span class="app-product-sale-price">' + appProductMoney(sale) + '</span><s>' + appProductMoney(regular) + '</s>'
     : appProductMoney(regular);
   appRenderProductOptions(product, appSelectedVariant);
-  document.getElementById('app-product-qty').textContent = '1';
-  document.getElementById('app-product-qty-minus').disabled = true;
-  appUpdateQuantityControls();
   document.getElementById('app-product-description').innerHTML = appProductFormatMultiline(product.description || 'No description available.') +
     (product.compositionCare ? '<p><strong>Composition &amp; care</strong><br>' + appProductFormatMultiline(product.compositionCare) + '</p>' : '') +
     (product.measurements ? '<p><strong>Measurements</strong><br>' + appProductFormatMultiline(product.measurements) + '</p>' : '');
@@ -2716,23 +2705,6 @@ if (appCartContent) {
   });
 }
 
-function appUpdateQuantityControls() {
-  const stock = appCurrentProduct ? appProductSizeStock(appCurrentProduct, appSelectedVariant, appSelectedSize || 'OS') : 0;
-  const max = stock > 0 ? stock : 99;
-  appProductQuantity = Math.max(1, Math.min(appProductQuantity, max));
-  document.getElementById('app-product-qty').textContent = String(appProductQuantity);
-  document.getElementById('app-product-qty-minus').disabled = appProductQuantity <= 1;
-  document.getElementById('app-product-qty-plus').disabled = stock <= 0 || appProductQuantity >= max;
-}
-document.getElementById('app-product-qty-minus').addEventListener('click', () => {
-  appProductQuantity = Math.max(1,appProductQuantity-1);
-  appUpdateQuantityControls();
-});
-document.getElementById('app-product-qty-plus').addEventListener('click', () => {
-  const stock = Number(appCurrentProduct && appCurrentProduct.stock);
-  appProductQuantity = Math.min(Number.isFinite(stock) && stock > 0 ? stock : 99,appProductQuantity+1);
-  appUpdateQuantityControls();
-});
 function appBuyNowCurrentProduct() {
   if (!appCurrentProduct) return;
   const hasSizes = appProductHasSizes(appCurrentProduct);
@@ -2755,7 +2727,7 @@ function appAddCurrentProductToBag() {
   }
   const items = appProductCartItems();
   const existing = items.find(item => item.productId === appCurrentProduct.id && item.size === resolvedSize && Number(item.variantIndex || 0) === appSelectedVariant);
-  if (existing) existing.qty = (Number(existing.qty) || 0) + appProductQuantity;
+  if (existing) existing.qty = (Number(existing.qty) || 0) + 1;
   else {
     const variant = (appCurrentProduct.variants || [])[appSelectedVariant] || {};
     items.push({
@@ -2763,7 +2735,7 @@ function appAddCurrentProductToBag() {
       vendorId:appCurrentProduct.vendorId || 'vendor-janedore',
       variantIndex:appSelectedVariant,
       size:resolvedSize,
-      qty:appProductQuantity,
+      qty:1,
       name:appCurrentProduct.name || appCurrentProduct.title || '',
       brand:appCurrentProduct.brand || '',
       price:appCurrentProduct.price,
