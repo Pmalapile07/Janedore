@@ -1601,6 +1601,7 @@ function appProductSizeStock(product, variantIndex, size) {
 function appProductHasSizes(product) {
   return (Array.isArray(product && product.sizes) ? product.sizes : []).some(size => size !== 'OS');
 }
+let appProductQuantity = 1;
 let appSelectedSize = null;
 let appGalleryOwners = [];
 function appRenderProductOptions(product, variantIndex) {
@@ -1610,13 +1611,13 @@ function appRenderProductOptions(product, variantIndex) {
   if (sizes.length && (!appSelectedSize || !sizes.includes(appSelectedSize) || appProductSizeStock(product, variantIndex, appSelectedSize) <= 0)) {
     appSelectedSize = sizes.find(size => appProductSizeStock(product, variantIndex, size) > 0) || null;
   }
-  const sizeHtml = sizes.length ? '<div class="app-product-sizes"><div class="app-product-option-label">Select a size</div><div class="app-product-size-list">' +
+  const sizeHtml = sizes.length ? '<div class="app-product-sizes"><div class="app-product-size-list">' +
     sizes.map(size => {
       const available = appProductSizeStock(product, variantIndex, size) > 0;
       return '<button type="button" class="app-product-size-button' + (appSelectedSize === size ? ' selected' : '') + (!available ? ' out-of-stock' : '') + '" data-app-size="' + appProductEscape(size) + '"' + (!available ? ' disabled aria-disabled="true"' : '') + ' aria-label="' + appProductEscape(size + (!available ? ', sold out' : '')) + '">' + appProductEscape(size) + '</button>';
-    }).join('') + '</div></div>' : '';
+    }).join('') + '</div><div class="app-product-size-guide">Size guide</div></div>' : '';
   const variants = Array.isArray(product.variants) ? product.variants : [];
-  const colourHtml = variants.length ? '<div class="app-product-colours"><div class="app-product-option-label">Select a colour</div><div class="app-product-colour-list">' +
+  const colourHtml = variants.length ? '<div class="app-product-colours"><div class="app-product-option-label">Options (' + variants.length + ')</div><div class="app-product-colour-list">' +
     variants.map((variant, index) => {
       const imgs = variant.images || {};
       const thumb = variant.swatchImage || [imgs.ghost,imgs.model,imgs.detail].map(list => Array.isArray(list) ? list[0] : '').find(Boolean) || '';
@@ -1627,7 +1628,9 @@ function appRenderProductOptions(product, variantIndex) {
   root.innerHTML = sizeHtml + colourHtml;
   root.querySelectorAll('[data-app-size]').forEach(button => button.addEventListener('click', () => {
     appSelectedSize = button.dataset.appSize;
+    appUpdateQuantityControls();
     appRenderProductOptions(product, appSelectedVariant);
+  appUpdateQuantityControls();
     appUpdateProductStickyState();
   }));
   root.querySelectorAll('[data-app-variant]').forEach(button => button.addEventListener('click', () => appSelectProductVariant(Number(button.dataset.appVariant))));
@@ -1637,6 +1640,7 @@ function appSelectProductVariant(index) {
   appSelectedVariant = index;
   appSelectedSize = null;
   appRenderProductOptions(appCurrentProduct, index);
+  appUpdateQuantityControls();
   appUpdateProductStickyState();
   const first = appGalleryOwners.findIndex(owner => owner === index);
   const track = document.getElementById('app-product-gallery-track');
@@ -1916,6 +1920,7 @@ async function appOpenProduct(productId, pushHistory = true) {
     document.getElementById('app-product-description').innerHTML = appProductFormatMultiline(product.description || 'No description available.');
     document.getElementById('app-product-shipping').textContent = product.shippingReturns || 'Please see the delivery and returns information at checkout.';
     appRenderProductOptions(product, 0);
+    appUpdateQuantityControls();
     appRenderProductStickyBar(product, previewPrice, previewSale);
     appUpdateProductStickyState();
   }
@@ -1962,6 +1967,7 @@ async function appOpenProduct(productId, pushHistory = true) {
   appRenderedProductId = id;
   appSelectedVariant = 0;
   appSelectedSize = null;
+  appProductQuantity = 1;
   const productGallery = appProductGallery(product);
   appGalleryImages = productGallery.images;
   appGalleryOwners = productGallery.owners;
@@ -2705,6 +2711,26 @@ if (appCartContent) {
   });
 }
 
+function appUpdateQuantityControls() {
+  const stock = appCurrentProduct ? appProductSizeStock(appCurrentProduct, appSelectedVariant, appSelectedSize || 'OS') : 0;
+  const max = stock > 0 ? stock : 99;
+  appProductQuantity = Math.max(1, Math.min(appProductQuantity, max));
+  const value = document.getElementById('app-product-qty');
+  const minus = document.getElementById('app-product-qty-minus');
+  const plus = document.getElementById('app-product-qty-plus');
+  if (value) value.textContent = String(appProductQuantity);
+  if (minus) minus.disabled = appProductQuantity <= 1;
+  if (plus) plus.disabled = stock <= 0 || appProductQuantity >= max;
+}
+document.getElementById('app-product-qty-minus').addEventListener('click', () => {
+  appProductQuantity = Math.max(1, appProductQuantity - 1);
+  appUpdateQuantityControls();
+});
+document.getElementById('app-product-qty-plus').addEventListener('click', () => {
+  const stock = appCurrentProduct ? appProductSizeStock(appCurrentProduct, appSelectedVariant, appSelectedSize || 'OS') : 0;
+  appProductQuantity = Math.min(stock > 0 ? stock : 99, appProductQuantity + 1);
+  appUpdateQuantityControls();
+});
 function appBuyNowCurrentProduct() {
   if (!appCurrentProduct) return;
   const hasSizes = appProductHasSizes(appCurrentProduct);
@@ -2727,7 +2753,7 @@ function appAddCurrentProductToBag() {
   }
   const items = appProductCartItems();
   const existing = items.find(item => item.productId === appCurrentProduct.id && item.size === resolvedSize && Number(item.variantIndex || 0) === appSelectedVariant);
-  if (existing) existing.qty = (Number(existing.qty) || 0) + 1;
+  if (existing) existing.qty = (Number(existing.qty) || 0) + appProductQuantity;
   else {
     const variant = (appCurrentProduct.variants || [])[appSelectedVariant] || {};
     items.push({
@@ -2735,7 +2761,7 @@ function appAddCurrentProductToBag() {
       vendorId:appCurrentProduct.vendorId || 'vendor-janedore',
       variantIndex:appSelectedVariant,
       size:resolvedSize,
-      qty:1,
+      qty:appProductQuantity,
       name:appCurrentProduct.name || appCurrentProduct.title || '',
       brand:appCurrentProduct.brand || '',
       price:appCurrentProduct.price,
