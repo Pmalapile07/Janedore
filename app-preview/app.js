@@ -2555,8 +2555,13 @@ function appRenderCart(skipHydration) {
   const stickyCount = document.getElementById('app-cart-sticky-count');
   const stickySubtotal = document.getElementById('app-cart-sticky-subtotal');
   const totalItemCount = items.reduce(function(total, item) { return total + Math.max(1, Number(item.qty) || 1); }, 0);
+  const discountedSubtotal = Math.max(0, subtotal - discountAmount);
   if (stickyCount) stickyCount.textContent = 'Total item (' + totalItemCount + ')';
-  if (stickySubtotal) stickySubtotal.textContent = appCartFormat(Math.max(0, subtotal - discountAmount));
+  if (stickySubtotal) stickySubtotal.textContent = appCartFormat(discountedSubtotal);
+  const stickyItems = document.getElementById('app-cart-sticky-items');
+  const stickyVat = document.getElementById('app-cart-sticky-vat');
+  if (stickyItems) stickyItems.textContent = appCartFormat(discountedSubtotal);
+  if (stickyVat) stickyVat.textContent = appCartFormat(discountedSubtotal * 15 / 115);
   const cards = items.map(function(item, index) {
     const quantity = Math.max(1, Number(item.qty) || 1);
     const image = typeof item.thumbnail === 'string' && /^https:\/\//i.test(item.thumbnail) ? item.thumbnail : '';
@@ -2609,8 +2614,44 @@ function appRenderCart(skipHydration) {
   }
 }
 if (appCartView) {
+  let sheetPointerStartY = null;
+  let sheetPointerDragged = false;
+  let suppressSheetHandleClick = false;
+  const sheetHandle = document.getElementById('app-cart-sheet-handle');
+  const stickySheet = document.getElementById('app-cart-sticky-checkout');
+  function setCartSheetExpanded(expanded) {
+    if (!stickySheet || !sheetHandle) return;
+    stickySheet.classList.toggle('is-expanded', expanded);
+    sheetHandle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+    sheetHandle.setAttribute('aria-label', expanded ? 'Collapse order summary' : 'Expand order summary');
+    const breakdown = document.getElementById('app-cart-sheet-breakdown');
+    if (breakdown) breakdown.setAttribute('aria-hidden', expanded ? 'false' : 'true');
+  }
+  if (sheetHandle) {
+    sheetHandle.addEventListener('pointerdown', function(event) {
+      sheetPointerStartY = event.clientY;
+      sheetPointerDragged = false;
+      if (sheetHandle.setPointerCapture) sheetHandle.setPointerCapture(event.pointerId);
+    });
+    sheetHandle.addEventListener('pointerup', function(event) {
+      if (sheetPointerStartY === null) return;
+      const deltaY = event.clientY - sheetPointerStartY;
+      sheetPointerStartY = null;
+      if (Math.abs(deltaY) > 12) {
+        sheetPointerDragged = true;
+        suppressSheetHandleClick = true;
+        setCartSheetExpanded(deltaY < 0);
+      }
+    });
+    sheetHandle.addEventListener('pointercancel', function() { sheetPointerStartY = null; });
+  }
   appCartView.addEventListener('click', function(event) {
     if (event.target.closest('#app-cart-back')) { appCartClose(false); return; }
+    if (event.target.closest('#app-cart-sheet-handle')) {
+      if (suppressSheetHandleClick) { suppressSheetHandleClick = false; return; }
+      setCartSheetExpanded(!stickySheet.classList.contains('is-expanded'));
+      return;
+    }
     if (event.target.closest('#app-cart-checkout')) { window.location.href = '/checkout'; return; }
   });
 }
