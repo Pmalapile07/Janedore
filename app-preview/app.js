@@ -2327,6 +2327,7 @@ async function appCartApplyPromoCode() {
     return;
   }
   const items = appProductCartItems();
+  document.body.classList.remove('app-cart-empty-state');
   const subtotal = appCartSubtotal(items);
   appCartPromoPending = true;
   appCartPromoFeedback = null;
@@ -2524,7 +2525,7 @@ function appCartOpen() {
 function appCartClose(fromHistory) {
   if (!appCartView || appCartView.hidden) return;
   appCartView.hidden = true;
-  document.body.classList.remove('app-cart-open');
+  document.body.classList.remove('app-cart-open', 'app-cart-empty-state');
   document.querySelectorAll('.app-tab-content').forEach(function(view) { view.hidden = view.dataset.view !== appCartReturnTab; });
   const header = document.querySelector('.app-header');
   const bottom = document.querySelector('.bottom-nav');
@@ -2543,6 +2544,7 @@ function appRenderCart(skipHydration) {
   const stepper = document.querySelector('.app-checkout-steps');
   appUpdateCartIndicator();
   if (!items.length) {
+    document.body.classList.add('app-cart-empty-state');
     if (stepper) stepper.hidden = true;
     const stickyCheckout = document.getElementById('app-cart-sticky-checkout');
     if (stickyCheckout) stickyCheckout.hidden = true;
@@ -2598,11 +2600,8 @@ function appRenderCart(skipHydration) {
   appCartContent.innerHTML = (deliveryBanner ? '<div class="app-cart-delivery-slot" id="app-cart-delivery-slot">' + deliveryBanner + '</div>' : '') +
     '<div class="app-cart-items">' + cards + '</div>' +
     appCartPromoHtml() +
-    '<div class="app-cart-summary">' +
-    discountRow +
-    '<div class="app-cart-total-row"><span>Delivery</span><span>Calculated at checkout</span></div>' +
-    '<div class="app-cart-total-head"><span>Subtotal</span><strong>' + appCartFormat(Math.max(0, subtotal - discountAmount)) + '</strong></div>' +
-    '</div>' + recentSection;
+    (discountRow ? '<div class="app-cart-summary">' + discountRow + '</div>' : '') +
+    recentSection;
   if (stepper) stepper.hidden = false;
   const stickyCheckout = document.getElementById('app-cart-sticky-checkout');
   if (stickyCheckout) stickyCheckout.hidden = false;
