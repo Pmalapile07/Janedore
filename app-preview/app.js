@@ -1546,7 +1546,7 @@ function appRenderProductOptions(product, variantIndex) {
     variants.map((variant, index) => {
       const imgs = variant.images || {};
       const thumb = variant.swatchImage || [imgs.ghost,imgs.model,imgs.detail].map(list => Array.isArray(list) ? list[0] : '').find(Boolean) || '';
-      const style = thumb && /^https:\/\//i.test(thumb) ? 'background-image:url(&quot;' + appProductEscape(thumb) + '&quot;)' : 'background-color:' + appProductEscape(variant.swatch || '#eee');
+      const style = thumb && /^https:\/\//i.test(thumb) ? 'background-image:url(&quot;' + appProductEscape(thumb) + '&quot;)' : (variant.swatch ? 'background-color:' + appProductEscape(variant.swatch) : 'background-color:transparent');
       const label = variant.color || variant.colour || ('Colour ' + (index + 1));
       return '<button type="button" class="app-product-colour-swatch' + (index === variantIndex ? ' selected' : '') + '" data-app-variant="' + index + '" style="' + style + '" aria-label="' + appProductEscape(label) + '" title="' + appProductEscape(label) + '"></button>';
     }).join('') + '</div></div>' : '';
