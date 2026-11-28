@@ -1297,36 +1297,6 @@ document.getElementById('app-shop-collection-back')?.addEventListener('click', (
 
 document.getElementById('app-product-search-back')?.addEventListener('click', appProductClose);
 
-const appProductImageBag = document.getElementById('app-product-image-bag');
-const appProductImageFavorite = document.getElementById('app-product-image-favorite');
-const appProductImageShare = document.getElementById('app-product-share');
-appProductImageBag?.addEventListener('click', event => {
-  event.preventDefault();
-  event.stopPropagation();
-  appAddCurrentProductToBag();
-});
-appProductImageFavorite?.addEventListener('click', event => {
-  event.preventDefault();
-  event.stopPropagation();
-  if (!appCurrentProduct) return;
-  const added = appToggleWishlistProduct(String(appCurrentProduct.id || ''));
-  appShowAddedToast(added ? 'Added to favorites' : 'Removed from favorites', added ? 'ph-heart' : 'ph-heart-break', 'wishlist');
-});
-appProductImageShare?.addEventListener('click', async event => {
-  event.preventDefault();
-  event.stopPropagation();
-  if (!appCurrentProduct) return;
-  const productName = String(appCurrentProduct.name || appCurrentProduct.title || 'Product');
-  const productUrl = location.origin + location.pathname + '#product/' + encodeURIComponent(String(appCurrentProduct.id || ''));
-  const shareData = {title:productName + ' | JANEDORE',text:'Take a look at ' + productName,url:productUrl};
-  if (navigator.share) {
-    try { await navigator.share(shareData); } catch (error) { if (error && error.name !== 'AbortError') console.warn('[APP PRODUCT SHARE]', error); }
-  } else if (navigator.clipboard && navigator.clipboard.writeText) {
-    try { await navigator.clipboard.writeText(productUrl); appShowAddedToast('Product link copied', 'ph-copy'); }
-    catch (error) { console.warn('[APP PRODUCT SHARE]', error); }
-  } else window.prompt('Copy this product link', productUrl);
-});
-
 const appProductHeaderCart = document.getElementById('app-product-header-cart');
 appProductHeaderCart?.addEventListener('click', event => {
   event.preventDefault();
@@ -1708,8 +1678,6 @@ function appUpdateCartIndicator() {
   if (cartButton) cartButton.setAttribute('aria-label', label);
   const navCartButton = document.querySelector('.nav-item[data-tab="Cart"]');
   if (navCartButton) navCartButton.setAttribute('aria-label', label);
-  const productCartButton = document.getElementById('app-product-image-bag');
-  if (productCartButton) productCartButton.setAttribute('aria-label', label);
   const productHeaderCart = document.getElementById('app-product-header-cart');
   if (productHeaderCart) productHeaderCart.setAttribute('aria-label', label);
 }
@@ -2077,15 +2045,6 @@ document.addEventListener('keydown', event => {
 });
 
 function appUpdateProductImageWishlist() {
-  const imageFavorite = document.getElementById('app-product-image-favorite');
-  if (imageFavorite) {
-    const active = !!(appCurrentProduct && appWishlistProductIds.has(String(appCurrentProduct.id || '')));
-    const icon = imageFavorite.querySelector('i');
-    if (icon) icon.className = active ? 'ph-fill ph-heart-straight' : 'ph ph-heart-straight';
-    imageFavorite.classList.toggle('is-wishlisted', active);
-    imageFavorite.setAttribute('aria-pressed', String(active));
-    imageFavorite.setAttribute('aria-label', active ? 'Remove from favorites' : 'Add to favorites');
-  }
   const button = document.getElementById('app-product-sticky-favorite');
   if (!button) return;
   const productId = appCurrentProduct && appCurrentProduct.id ? String(appCurrentProduct.id) : '';
