@@ -1296,92 +1296,16 @@ document.getElementById('app-shop-collection-back')?.addEventListener('click', (
 });
 
 document.getElementById('app-product-search-back')?.addEventListener('click', appProductClose);
-const appProductActionsTrigger = document.getElementById('app-product-actions-trigger');
-const appProductActionsMenu = document.getElementById('app-product-actions-menu');
-function appSetProductActionsTrigger(action) {
-  if (!appProductActionsTrigger) return;
-  const icon = appProductActionsTrigger.querySelector('i');
-  if (action === 'favorites') {
-    const productId = String(appCurrentProduct?.id || '');
-    const isFavorite = productId && appWishlistProductIds.has(productId);
-    if (icon) icon.className = isFavorite ? 'ph-fill ph-heart-straight' : 'ph ph-heart-straight';
-    appProductActionsTrigger.setAttribute('aria-label', 'Favorites');
-    return;
-  }
-  const icons = {
-    share: ['ph ph-share', 'Share'],
-    report: ['ph ph-flag', 'Report product']
-  };
-  const selected = icons[action] || icons.share;
-  if (icon) icon.className = selected[0];
-  appProductActionsTrigger.setAttribute('aria-label', selected[1]);
-}
-function appSyncProductActionsTrigger() {
-  const productId = String(appCurrentProduct?.id || '');
-  const isFavorite = productId && appWishlistProductIds.has(productId);
-  const icon = appProductActionsTrigger?.querySelector('i');
-  if (icon) icon.className = isFavorite ? 'ph-fill ph-heart-straight' : 'ph ph-heart-straight';
-  if (appProductActionsTrigger) appProductActionsTrigger.setAttribute('aria-label', 'Favorites');
-}
-function appCloseProductActionsMenu() {
-  if (!appProductActionsMenu || !appProductActionsTrigger) return;
-  appProductActionsMenu.hidden = true;
-  appProductActionsTrigger.setAttribute('aria-expanded', 'false');
-}
-appProductActionsTrigger?.addEventListener('click', event => {
+const appProductHeaderCart = document.getElementById('app-product-header-cart');
+appProductHeaderCart?.addEventListener('click', event => {
   event.preventDefault();
   event.stopPropagation();
-  const opening = appProductActionsMenu.hidden;
-  appProductActionsMenu.hidden = !opening;
-  appProductActionsTrigger.setAttribute('aria-expanded', String(opening));
+  if (appCartView && appCartView.hidden) appSaveCurrentTabMemory();
+  appCartOpen();
 });
-appProductActionsMenu?.addEventListener('click', async event => {
-  const action = event.target.closest('[data-product-action]');
-  if (!action || !appCurrentProduct) return;
-  event.preventDefault();
-  event.stopPropagation();
-  const product = appCurrentProduct;
-  const productName = String(product.name || product.title || 'Product');
-  const productId = String(product.id || '');
-  const productUrl = location.origin + location.pathname + '#product/' + encodeURIComponent(productId);
-  appCloseProductActionsMenu();
-  if (action.dataset.productAction === 'favorites') {
-    const added = appToggleWishlistProduct(productId);
-    const triggerIcon = appProductActionsTrigger?.querySelector('i');
-    if (triggerIcon) triggerIcon.className = added ? 'ph-fill ph-heart-straight' : 'ph ph-heart-straight';
-    appSetProductActionsTrigger('favorites');
-    appShowAddedToast(added ? 'Added to favorites' : 'Removed from favorites', added ? 'ph-heart' : 'ph-heart-break', 'wishlist');
-    return;
-  }
-  if (action.dataset.productAction === 'share') {
-    appSetProductActionsTrigger('share');
-    const shareData = { title: productName + ' | JANEDORE', text: 'Take a look at ' + productName, url: productUrl };
-    if (navigator.share) {
-      try { await navigator.share(shareData); } catch (error) { if (error && error.name !== 'AbortError') console.warn('[APP PRODUCT SHARE]', error); }
-    } else if (navigator.clipboard && navigator.clipboard.writeText) {
-      try {
-        await navigator.clipboard.writeText(productUrl);
-        appShowAddedToast('Product link copied', 'ph-copy');
-      } catch (error) { console.warn('[APP PRODUCT SHARE]', error); }
-    } else {
-      window.prompt('Copy this product link', productUrl);
-    }
-    return;
-  }
-  if (action.dataset.productAction === 'report') {
-    appSetProductActionsTrigger('report');
-    const subject = encodeURIComponent('Report product: ' + productName);
-    const body = encodeURIComponent('I would like to report this product.\\n\\nProduct: ' + productName + '\\nProduct ID: ' + productId + '\\nLink: ' + productUrl + '\\n\\nReason for reporting: ');
-    location.href = 'mailto:support@janedore.co.za?subject=' + subject + '&body=' + body;
-  }
-});
-document.addEventListener('click', event => {
-  if (appProductActionsMenu && !appProductActionsMenu.hidden && !event.target.closest('.app-product-search-header')) appCloseProductActionsMenu();
-});
-document.addEventListener('keydown', event => {
-  if (event.key === 'Escape') appCloseProductActionsMenu();
-});
-
+function appSetProductActionsTrigger() {}
+function appSyncProductActionsTrigger() {}
+function appCloseProductActionsMenu() {}
 const appProductReviewsCache = new Map();
 let appRenderedProductId = '';
 let appCurrentProduct = null;
