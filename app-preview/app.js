@@ -1679,6 +1679,8 @@ function appUpdateCartIndicator() {
   if (navCartButton) navCartButton.setAttribute('aria-label', label);
   const productCartButton = document.getElementById('app-product-image-bag');
   if (productCartButton) productCartButton.setAttribute('aria-label', label);
+  const productHeaderCart = document.getElementById('app-product-header-cart');
+  if (productHeaderCart) productHeaderCart.setAttribute('aria-label', label);
 }
 let appProductReturnToCart = false;
 let appProductReturnToCollection = false;
