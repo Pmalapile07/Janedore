@@ -303,9 +303,9 @@ body.app-product-open{overflow-x:hidden}
 .app-product-size-button.out-of-stock{border:1px dashed #777;background:#fff;color:#888;text-decoration:line-through}
 .app-product-size-button:disabled{cursor:not-allowed}
 .app-product-size-guide{align-self:flex-end;color:#111;font:500 11px/1.3 Inter,Arial,sans-serif;text-decoration:underline;text-underline-offset:3px;text-transform:uppercase}
-.app-product-colour-swatch{box-sizing:border-box;flex:0 0 56px;width:56px;height:56px;padding:0;border:0;border-radius:0;background-position:center;background-size:contain;background-repeat:no-repeat;background-color:#f4f4f4}
+.app-product-colour-swatch{box-sizing:border-box;flex:0 0 112px;width:112px;height:112px;padding:0;border:0;border-radius:0;background-position:center;background-size:contain;background-repeat:no-repeat;background-color:transparent}
 .app-product-colour-swatch.selected{border:0}
-.app-product-colour-swatch:focus-visible,.app-product-size-button:focus-visible{outline:2px solid #111;outline-offset:2px}
+.app-product-colour-swatch:focus-visible{outline:2px solid #111;outline-offset:2px}
 .app-product-accordions{margin-top:60px;border-top:1px solid #e8e8e8}
 .app-product-quantity{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 0 24px;border-bottom:0;margin:0 0 4px;font:500 14px Inter,Arial,sans-serif}
 .app-product-quantity-control{display:inline-flex;align-items:center;justify-content:space-between;gap:0;width:128px;min-height:34px;border:0;box-sizing:border-box}
