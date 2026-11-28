@@ -302,7 +302,7 @@ body.app-product-open{overflow-x:hidden}
 .app-product-size-button.selected{border-width:1px;background:#fff;color:#111}
 .app-product-size-button.out-of-stock{border:1px dashed #777;background:#fff;color:#888;text-decoration:line-through}
 .app-product-size-button:disabled{cursor:not-allowed}
-.app-product-size-guide{align-self:flex-end;color:#111;font:500 12px/1.3 Inter,Arial,sans-serif;text-decoration:underline;text-underline-offset:3px};text-transform:uppercase
+.app-product-size-guide{align-self:flex-end;color:#111;font:500 12px/1.3 Inter,Arial,sans-serif;text-decoration:underline;text-underline-offset:3px;text-transform:uppercase}
 .app-product-colour-swatch{box-sizing:border-box;flex:0 0 48px;width:48px;height:48px;padding:0;border:1px solid #ddd;border-radius:0;background-position:center;background-size:contain;background-repeat:no-repeat;background-color:#f4f4f4}
 .app-product-colour-swatch.selected{border:1px solid #111}
 .app-product-colour-swatch:focus-visible,.app-product-size-button:focus-visible{outline:2px solid #111;outline-offset:2px}
